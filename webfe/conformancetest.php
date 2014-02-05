@@ -163,7 +163,6 @@ position:center;
 <div id = "not">
         <br>    <br>   
 <p id = "note2"> <a target="_blank" href="http://www-itec.uni-klu.ac.at/dash/?page_id=605">Link</a> to MPD conformance tool  </p>
- <p id = "note2"> Please report issues <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">here</a>.</p>   
 
 
 </div>
@@ -482,5 +481,11 @@ window.open(urlto, "_blank");
 
 }
 </script>
+
+<footer>
+ <center> <p>v0.7
+         <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
+ </center>
+</footer>
 </body>
 </html>
