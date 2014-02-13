@@ -422,6 +422,9 @@ function process_mpd($mpdurl)
                 if($name == 'MPD')
                 {
                     $dir = $base->nodeValue;
+					if ($dir==='./')
+		               $dir = dirname($GLOBALS["url"]);
+
                 }
             }
         
@@ -614,14 +617,25 @@ function process_mpd($mpdurl)
                     if(!empty($timehash))
                     {
                         $segmentno = sizeof($timehash);
-                        $startnumber = 0 ;
+                        $startnumber = 1 ;
 			$timehashmask = $timehash;
                     }
 
+                $signlocation = strpos($media,'%');
+                     if($signlocation!==false)
+                     {
+                          if ($signlocation-strpos($media,'Number')===6)
+                          {
+                                $media = str_replace('$Number','',$media);
+                           }
+
+                      }
 
                     for  ($i =0;$i<$segmentno;$i++ ) 
                     {
                         $segmenturl = str_replace (array('$Bandwidth$','$Number$','$RepresentationID$','$Time$'),array($bandwidth,$i+$startnumber,$id,$timehashmask[$i]),$media);
+                          $segmenturl = sprintf($segmenturl,$startnumber+$i);
+					   $segmenturl = str_replace('$','',$segmenturl);
                         $segmenturl = $direct."/".$segmenturl;
                         $segm_url[]=$segmenturl;
                     }
