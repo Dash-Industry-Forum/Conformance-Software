@@ -5,7 +5,8 @@ This package, for now, only provides the Web-FE of MPEG-DASH/DASH-IF ISO-Segment
 
 Tested for:
 
-1) Chrome for Window, Linux, and OS X. 2) IE.
+1) Chrome for Window, Linux, and OS X.
+2) IE.
 
 Not working for: Firefox, Safari.
 
