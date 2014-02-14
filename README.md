@@ -16,4 +16,4 @@ The web front-end exposes all features supported by MPEG-DASH/DASH-IF ISO Segmen
 
 Dynamic MPDs.
 Sub-representations.
-(list to be reviewed and completed)
+(list to be reviewed and completed)....
