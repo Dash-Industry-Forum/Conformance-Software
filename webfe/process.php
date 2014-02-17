@@ -23,7 +23,7 @@ unset($_SESSION['init_flag']);
 //$url = "http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd";
 
 //$url = "http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/2/MultiRate.mpd";
-//$url = "http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/2/MultiRate.mpd";
+
 //$url = "CENC_SD_time_MPD.mpd";
 			$adaptsetdepth=array();
 			$depth = array();
