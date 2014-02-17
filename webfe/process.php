@@ -23,6 +23,7 @@ unset($_SESSION['init_flag']);
 //$url = "http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd";
 
 //$url = "http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/2/MultiRate.mpd";
+//$url = "http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/2/MultiRate.mpd";
 //$url = "CENC_SD_time_MPD.mpd";
 			$adaptsetdepth=array();
 			$depth = array();
@@ -83,9 +84,6 @@ if(isset($_SESSION['type']))
 if(isset($_SESSION['minBufferTime']))
     $minBufferTime = $_SESSION['minBufferTime'];
     
-if(isset($_SESSION['profiles']))
-    $profiles = $_SESSION['profiles'];
-
 
 $string_info = '<!doctype html>
 <html lang="en">
@@ -175,13 +173,39 @@ function loadLeafInfoFile($fileName)
 
 }
 
-function checkAlignment($leafInfoA,$leafInfoB,$opfile,$checkSubSegAlignment)
+function checkAlignment($leafInfoA,$leafInfoB,$opfile,$segmentAlignment,$subsegmentAlignment,$bitstreamSwitching)
 {
     if($leafInfoA['numTracks'] != $leafInfoB['numTracks'])
     {
         fprintf($opfile,"Error: Number of tracks logged %d for representation with id \"%s\" not equal to the number of indexed tracks %d for representation id \"%s\"\n",$leafInfoA['numTracks'],$leafInfoA['id'],$leafInfoB['numTracks'],$leafInfoB['id']);
+        if($bitstreamSwitching=="true")
+            fprintf($opfile,"Bitstream switching not possible, validation failed for bitstreamSwitching\n");
         return;
     }
+
+    if($bitstreamSwitching=="true")
+    {
+        for($i = 0 ; $i < $leafInfoA['numTracks'] ; $i++)
+        {
+            $correspondingTrackFound = false;
+            
+            for($j = 0 ; $j < $leafInfoB['numTracks'] ; $j++)
+            {
+                if($leafInfoA['trackTypeInfo'][$i]['track_ID'] == $leafInfoB['trackTypeInfo'][$j]['track_ID'] && $leafInfoA['trackTypeInfo'][$i]['componentSubType'] == $leafInfoB['trackTypeInfo'][$j]['componentSubType'])
+                {
+                    $correspondingTrackFound = true;
+                    break;
+                }
+            }
+            
+            if(!$correspondingTrackFound)
+                fprintf($opfile,"Error: No corresponding track found in representation id \"%s\" for representation id \"%s\" track ID \"%s\" with type \"%s\", bitstream switching is not possible: Section 7.3.3.2. of ISO/IEC 23009-1:2012(E): The track IDs for the same media content component are identical for each Representation in each Adaptation Set \n",$leafInfoB['id'],$leafInfoA['id'],$leafInfoA['trackTypeInfo'][$i]['track_ID'],$leafInfoA['trackTypeInfo'][$i]['componentSubType']);            
+        }
+    }
+
+    if($segmentAlignment != "true" && $subsegmentAlignment != "true" )
+        return;
+    
     //fprintf($opfile,"Error: test 123\n");
     for($i = 0 ; $i < $leafInfoA['numTracks'] ; $i++)
     {
@@ -193,7 +217,7 @@ function checkAlignment($leafInfoA,$leafInfoB,$opfile,$checkSubSegAlignment)
             
         for($j = 0 ; $j < ($leafInfoA['numLeafs'][$i]-1) ; $j++)
         {
-            if($checkSubSegAlignment || ($leafInfoA['leafInfo'][$i][$j+1]['firstInSegment'] > 0))
+            if($subsegmentAlignment=="true" || ($leafInfoA['leafInfo'][$i][$j+1]['firstInSegment'] > 0))
             {
                 if($leafInfoA['leafInfo'][$i][$j+1]['earliestPresentationTime'] <= $leafInfoB['leafInfo'][$i][$j]['lastPresentationTime'])
                 {
@@ -233,6 +257,11 @@ function crossRepresentationProcess()
             $subsegmentAlignment = $AdaptationSetAttr['subsegmentAlignment'];
         else
             $subsegmentAlignment = "false";
+            
+        if(!empty($AdaptationSetAttr['bitstreamSwitching']))
+            $bitstreamSwitching = $AdaptationSetAttr['bitstreamSwitching'];
+        else
+            $bitstreamSwitching = "false";
         
         if (!($opfile = fopen(".\\temp\\".$foldername."\\Adapt".$i."_infofile.txt", 'w')))
         {
@@ -242,7 +271,7 @@ function crossRepresentationProcess()
         
         fprintf($opfile,"Cross representation checks for adaptation set with id \"%s\":\n",$AdaptationSetAttr['id']);
 
-        if($segmentAlignment == "true" || $subsegmentAlignment == "true")
+        if($segmentAlignment == "true" || $subsegmentAlignment == "true" || $bitstreamSwitching == "true" )
         {
             $leafInfo=array();
             
@@ -256,7 +285,7 @@ function crossRepresentationProcess()
             {
                 for ($k = $j+1;$k<sizeof($AdaptationSetAttr['Representation']['bandwidth']);$k++)
                 {
-                    checkAlignment($leafInfo[$j],$leafInfo[$k],$opfile,$subsegmentAlignment);
+                    checkAlignment($leafInfo[$j],$leafInfo[$k],$opfile,$segmentAlignment,$subsegmentAlignment,$bitstreamSwitching);
                 }              
             }            
         }
@@ -337,6 +366,12 @@ function process_mpd($mpdurl)
         $MPD = $dom->getElementsByTagName('MPD')->item(0);
 
         $type = $MPD->getAttribute ( 'type');
+		if($type === 'dynamic')
+		{
+		            echo 'dynamic';
+					exit;
+
+		}
         $minBufferTime = $MPD->getAttribute('minBufferTime');
         $profiles = $MPD -> getAttribute('profiles');
         $mediaPresentationDuration = $MPD ->getAttribute('mediaPresentationDuration');
@@ -394,6 +429,9 @@ function process_mpd($mpdurl)
                 if($name == 'MPD')
                 {
                     $dir = $base->nodeValue;
+					if ($dir==='./')
+		               $dir = dirname($GLOBALS["url"]);
+
                 }
             }
         
@@ -582,23 +620,35 @@ function process_mpd($mpdurl)
                     $init = str_replace (array('$Bandwidth$','$RepresentationID$'),array($bandwidth,$id),$initialization);
                     $initurl = $direct."/".$init;
                     $segm_url[] = $initurl; 
-
+                   $timehashmask=0;
                     if(!empty($timehash))
                     {
                         $segmentno = sizeof($timehash);
-                        $startnumber = 0 ;
+                        $startnumber = 1 ;
+			$timehashmask = $timehash;
                     }
-                    else
-                        $timehash=0;
 
+$signlocation = strpos($media,'%');
+                     if($signlocation!==false)
+					 {
+                          if ($signlocation-strpos($media,'Number')===6)
+						  {
+						  $media = str_replace('$Number','',$media);
+						  
+						  }
+						  
+					 }
+					 
                     for  ($i =0;$i<$segmentno;$i++ ) 
                     {
-                        $segmenturl = str_replace (array('$Bandwidth$','$Number$','$RepresentationID$','$Time$'),array($bandwidth,$i+$startnumber,$id,$timehash[$i]),$media);
-                        $segmenturl = $direct."/".$segmenturl;
+                        $segmenturl = str_replace (array('$Bandwidth$','$Number$','$RepresentationID$','$Time$'),array($bandwidth,$i+$startnumber,$id,$timehashmask[$i]),$media);
+                          $segmenturl = sprintf($segmenturl,$startnumber+$i);
+					   $segmenturl = str_replace('$','',$segmenturl);
+						$segmenturl = $direct."/".$segmenturl;
                         $segm_url[]=$segmenturl;
                     }
                     
-                    unset ($timehash);
+                    //unset ($timehash);
                     $adapt_url[] = $segm_url;
                     //print_r2($segm_url);
                     $segm_url= array();	
@@ -659,7 +709,6 @@ function process_mpd($mpdurl)
 
         $_SESSION['type'] = $type;
         $_SESSION['minBufferTime'] = $minBufferTime;
-        $_SESSION['profiles'] = $profiles;
 
         echo $stri;
     }
@@ -678,6 +727,11 @@ function process_mpd($mpdurl)
         if ($count1>=sizeof($period_url))
         {
             crossRepresentationProcess();
+			$missingexist = file_exists ($locate.'\missinglink.txt');
+			if($missingexist){
+			$temp_string = str_replace (array('$Template$'),array("missinglink"),$string_info);
+        file_put_contents($locate.'\missinglink.html',$temp_string);
+		}
 			$file_error[] = "done";
 			for($i=0;$i<sizeof($Period_arr);$i++){
 			            $searchadapt = file_get_contents($locate.'\\Adapt'. $i .'_infofile.txt');
@@ -687,7 +741,12 @@ function process_mpd($mpdurl)
                 $file_error[] = "temp".'/'.$foldername.'/'.'Adapt'. $i .'_infofile.html';
          }
             session_destroy();
+			if($missingexist){
+               $file_error[]="temp".'/'.$foldername.'/missinglink.html';
 
+			   }
+			   else 
+			   $file_error[]="noerror";
 	   $send_string = json_encode($file_error);
 
 
@@ -722,8 +781,38 @@ function process_mpd($mpdurl)
             $timeSeconds=str_replace("S","",$timeSeconds);
             $processArguments=" -minbuffertime ".$timeSeconds." -bandwidth ";
             $processArguments=$processArguments.$Period_arr[$count1]['Representation']['bandwidth'][$count2]." ";
-            if($Period_arr[$count1]['startWithSAP'] != "")
-                $processArguments=$processArguments."-startwithsap ".$Period_arr[$count1]['startWithSAP']." ";
+            
+            if($type=== "dynamic")
+                $processArguments=$processArguments."-dynamic ";
+            
+            if($Period_arr[$count1]['Representation']['startWithSAP'][$count2] != "")
+                $processArguments=$processArguments."-startwithsap ".$Period_arr[$count1]['Representation']['startWithSAP'][$count2]." ";
+                
+            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-on-demand:2011") !== false)
+                $processArguments=$processArguments."-isoondemand ";
+                
+            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-live:2011") !== false)
+                $processArguments=$processArguments."-isolive ";
+                
+            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-main:2011") !== false)
+                $processArguments=$processArguments."-isomain ";
+
+            $dash264=false;
+            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"http://dashif.org/guidelines/dash264") !== false)
+            {
+                   $processArguments=$processArguments."-dash264base ";
+                   $dash264=true;
+            }
+                
+            // Checked in php along with segment and subsegment alignment
+            //if($Period_arr[$count1]['bitstreamSwitching'] === "true")
+            //    $processArguments=$processArguments."-bss ";
+                
+            if($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true)
+            {
+                $processArguments=$processArguments."-dash264enc ";
+            }
+            
             exec("validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments );
             rename($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt");
             $temp_string = str_replace (array('$Template$'),array($repno."_infofile"),$string_info);
@@ -769,7 +858,8 @@ function process_mpd($mpdurl)
 
 function processPeriod($period)
 {
-    global $Adapt_arr,$Period_arr,$period_baseurl,$perioddepth,$Adapt_urlbase ;
+    global $Adapt_arr,$Period_arr,$period_baseurl,$perioddepth,$Adapt_urlbase, $profiles;
+
     //var_dump($period);
     $domper = new DOMDocument ('1.0');
     $period = $domper->importNode ( $period , true);
@@ -780,6 +870,11 @@ function processPeriod($period)
     //print_r($Periodduration);
     $Adaptationset = $domper->getElementsByTagName( "AdaptationSet" ); 
     $periodbase = $domper->getElementsByTagName("BaseURL");
+    $periodProfiles = $period->getAttribute('profiles');
+    if($periodProfiles === "")
+        $periodProfiles = $profiles;
+        
+    $periodBitstreamSwitching = $period->getAttribute('bitstreamSwitching');
     
     for($i=0;$i<$periodbase->length;$i++)
     {
@@ -799,15 +894,15 @@ function processPeriod($period)
     {
         $set=$Adaptationset->item($i);
         $Adapt_urlbase=null;
-        processAdaptationset($set);
+        processAdaptationset($set,$periodProfiles,$periodBitstreamSwitching);
         $Period_arr[$i] = $Adapt_arr;
         $period_baseurl[$i] = $Adapt_urlbase;
     }
 }
 
-function processAdaptationset ($Adapt)
+function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitching)
 {
-    global $Adapt_arr,$Adapt_urlbase,$adaptsetdepth;
+    global $Adapt_arr,$Period_arr, $Adapt_urlbase,$adaptsetdepth;
     //var_dump($Adapt);
     $dom = new DOMDocument ('1.0');
     $Adapt = $dom->importNode ( $Adapt, true);
@@ -819,6 +914,17 @@ function processAdaptationset ($Adapt)
         $idadapt = $Adapt->getAttribute ('id');
         $scanType = $Adapt->getAttribute ('scanType');
         $mimeType = $Adapt->getAttribute ('mimeType');
+        $adapsetProfiles = $Adapt->getAttribute ('profiles');
+        if($adapsetProfiles === "")
+            $adapsetProfiles = $periodProfiles;
+            
+
+        $bitstreamSwitching = $Adapt->getAttribute ('bitstreamSwitching');
+        if($bitstreamSwitching === "")
+            $bitstreamSwitching = $periodBitstreamSwitching;
+            
+        $ContentProtection = $dom->getElementsByTagName( "ContentProtection" ); 
+
         $Contentcomponent = $dom->getElementsByTagName ("ContentComponent");
         $tr=$dom->childNodes->item(0)->nodeName;
 
@@ -917,7 +1023,13 @@ function processAdaptationset ($Adapt)
                     
                 $id[$i] = $idvar;
                 
-                //$repStartWithSAP[$i]
+                $repStartWithSAP[$i] = $temprep->getAttribute  ('startWithSAP');
+                if($repStartWithSAP[$i] === "")
+                    $repStartWithSAP[$i] = $startWithSAP;
+                    
+                $repProfiles[$i] = $temprep->getAttribute  ('profiles');
+                if($repProfiles[$i] === "")
+                    $repProfiles[$i] = $adapsetProfiles;
 
                 $codecsvar = $temprep->getAttribute  ('codecs');
                 if(empty($codecsvar))
@@ -952,6 +1064,12 @@ function processAdaptationset ($Adapt)
                 if(empty($bandwidthvar))
                     $bandwidthvar=0;
                 $bandwidth[$i]=$bandwidthvar;
+                
+                $ContentProtectionElementCountRep[$i] = $temprep->getElementsByTagName( "ContentProtection" )->length; 
+                if($ContentProtectionElementCountRep[$i] == 0)
+                {
+                    $ContentProtectionElementCountRep[$i] = $ContentProtection->length;
+                }
 
                 //echo $id ; 
             }
@@ -962,9 +1080,9 @@ function processAdaptationset ($Adapt)
     $Adapt_urlbase  = $rep_url;
     //print_r2($Adapt_urlbase);
     $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
-    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp);
+    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles, 'ContentProtectionElementCount'=>$ContentProtectionElementCountRep);
     
-    $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,
+    $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching,
     'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'Representation'=>$Rep_arr);
 
 }
@@ -1133,14 +1251,18 @@ $names[]=basename($unit);
 
 for ($i = 0;$i<sizeof($names);$i++){
 $fp1 = fopen($locate.'\\'.$repno.".mp4", 'a+');
-$size=$sizearr[$i];
+if(file_exists($path.$names[$i])){
 
+$size=$sizearr[$i];
 $file2 = file_get_contents($path.$names[$i]);
+
+
 fwrite($fp1,$file2);
 fclose($fp1);
 file_put_contents($locate.'\\'.$repno.".txt",$index." ".$size."\n",FILE_APPEND);
 $index++;
 
+}
 }
 
 }
@@ -1223,6 +1345,15 @@ function downloaddata($directory,$array_file)
     {
         $filePath = $array_file[$index];
         $file_size = remote_file_size2($filePath);
+		if ($file_size===false)
+		{
+			$missing = fopen($locate.'/missinglink.txt','a+b');
+
+		fwrite($missing,$filePath."\n");
+		
+		
+		}
+		else{
         $file_sizearr[$index] = $file_size;
         $tok = explode('/', $filePath);
         $filename = $tok[sizeof($tok)-1];
@@ -1304,7 +1435,7 @@ function downloaddata($directory,$array_file)
         $totalDataProcessed = $totalDataProcessed + $file_size;
     }
  
- 
+ }
  return $file_sizearr;
  
 }
@@ -1316,6 +1447,8 @@ function downloaddata($directory,$array_file)
 	if (isset($data['Content-Length']))
 		# Return file size
 		return (int) $data['Content-Length'];
+		else
+		return false;
 }
  function partialdownload($url,$begin,$end){
 global $locate;

@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
   <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.js"></script>
   <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
-  <link rel="stylesheet" href="/resources/demos/style.css" />
+  <!--link rel="stylesheet" href="/resources/demos/style.css" /-->
  
 
           
@@ -153,7 +153,7 @@ position:center;
   <input type="text" id='urlinput' name="urlinput" class="mytext" placeholder="Enter MPD URL"/>
   <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://localhost/content/TestCases/1b/thomson-networks/2/manifest.mpd"/-->
   <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd"/-->
-  <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.127.99/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd"/-->
+  <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.127.99/dash264/TestCases/6c/Microsoft/CENC_SD_Time/CENC_SD_time_MPD.mpd"/-->
 
 <button id="btn8" onclick="submit()">Submit</button>
 
@@ -163,7 +163,6 @@ position:center;
 <div id = "not">
         <br>    <br>   
 <p id = "note2"> <a target="_blank" href="http://www-itec.uni-klu.ac.at/dash/?page_id=605">Link</a> to MPD conformance tool  </p>
- <p id = "note2"> Please report issues <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">here</a>.</p>   
 
 
 </div>
@@ -313,8 +312,13 @@ function submit()
         if(totarrstring.indexOf("Error:") > -1)
         {
             window.alert("Error loading the MPD, please check the URL.");
+			
             return false;
         }
+		if(totarrstring==='dynamic'){
+		            window.alert("Dynamic MPD conformance not supported");
+					return false;
+}
 
         totarr=JSON.parse(totarrstring);
         dirid = totarr[totarr.length-1];
@@ -387,7 +391,7 @@ console.log(response);
         {
 		console.log("Inside locations");
 		
-		     for(var i =1; i<locations.length;i++)
+		     for(var i =1; i<locations.length-1;i++)
 			 
 			 {
 			 if(locations[i]=="noerror"){
@@ -404,6 +408,16 @@ console.log(response);
                   lastloc++;
 				  }
 			 
+			 
+			 }
+			 kidsloc.push(lastloc);
+			         if(locations[locations.length-1]!="noerror")
+					 {
+                                      urlarray.push(locations[locations.length-1]);
+									  
+			                 setTimeout(automate(1,lastloc,"Broken URL list"),1);
+							 tree.setItemImage2(lastloc,'404.jpg','404.jpg','404.jpg');
+                  lastloc++;
 			 }
 			 
             console.log("go");
@@ -477,10 +491,16 @@ function tondblclick(id)
 var urlto="";
 var position = kidsloc.indexOf(id);
 urlto=urlarray[position];
-//console.log(kidsloc);
+if(urlto)
 window.open(urlto, "_blank");
 
 }
 </script>
+
+<footer>
+ <center> <p>v0.8b
+         <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
+ </center>
+</footer>
 </body>
 </html>
