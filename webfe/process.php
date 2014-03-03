@@ -1,6 +1,7 @@
 <?php
 
 //$ini_set('display_logors', 'On');
+//include_once("analyticstracking.php")
 ini_set('memory_limit','-1');
 set_time_limit(0);
 session_start();
@@ -310,6 +311,8 @@ function process_mpd($mpdurl)
 
     if(isset($_POST['urlcode']))
     {
+	
+	
         $sessname = 'sess'.rand();
         session_name($sessname);
 
@@ -334,7 +337,7 @@ function process_mpd($mpdurl)
         $locate = dirname(__FILE__).'\\'.'temp'.'\\'.$foldername;
         $_SESSION['locate'] = $locate;
         mkdir($locate,0777);
-
+        $totarr= array();
         copy(dirname(__FILE__)."\\"."validatemp4-vs2010.exe",$locate.'\\'."validatemp4-vs2010.exe");
         
         //Create log file so that it is available if accessed
@@ -356,7 +359,55 @@ function process_mpd($mpdurl)
             exit;
         }
         //print_r( $dom_sxe);		
+/////////////////////Validate MPD//////////////////////////////////////////////////////////////
+             copy_folder(dirname(__FILE__)."\\mpdvalidator",$locate."\\mpdvalidator");
+			             chdir($locate."\\mpdvalidator");
+						//  system ("ant run -Dinput=".$mpdurl." 2>&1",$mpdvalidator);
+						$mpdvalidator = syscall("ant run -Dinput=".$mpdurl);
+						$mpdvalidator = str_replace('[java]',"",$mpdvalidator);
+						$valid_word = 'Start XLink resolving';
+						$report_start = strpos($mpdvalidator,$valid_word);
+						$mpdvalidator=substr ($mpdvalidator,$report_start);
+					//	print_r2($mpdvalidator);
+						$mpdreport = fopen($locate.'/mpdreport.txt','a+b');
+								fwrite($mpdreport,$mpdvalidator);
 
+						$temp_string = str_replace (array('$Template$'),array("mpdreport"),$string_info);
+            $mpd_rep_loc =  '/temp/'.$foldername.'/mpdreport.html';
+
+            file_put_contents($locate.'//mpdreport.html',$temp_string);
+						$exit=false;
+						
+						if(strpos($mpdvalidator,"XLink resolving successful")!==false)
+                            $totarr[]='true';
+							else{
+							$totarr[]=$mpd_rep_loc;
+							$exit = true;
+							}
+						if(strpos($mpdvalidator,"MPD validation successful")!==false)
+                          $totarr[]='true';
+							else{
+							$totarr[]=$mpd_rep_loc;
+							$exit = true;
+							}
+							if(strpos($mpdvalidator,"Schematron validation successful")!==false)
+                          $totarr[]='true';
+							else{
+							$totarr[]=$mpd_rep_loc;
+							$exit =true;
+							}
+							
+							if ($exit===true)
+							{
+        $stri=json_encode($totarr);
+							echo $stri;
+							            session_destroy();
+							exit;
+							}
+
+						
+			 
+		/////////////////////////////////////////////////////////////////////////////////////////////////
         $dom = new DOMDocument('1.0');
         $dom_sxe = $dom->importNode($dom_sxe, true);
         //				print_r($dom_sxe);		
@@ -687,7 +738,6 @@ $signlocation = strpos($media,'%');
         //print_r2("Alo I'm here");
         //print_r2($sum_bits);
         $_SESSION['period_url'] = $period_url;
-        $totarr=array();
         
         $_SESSION['Period_arr'] = $Period_arr;
 
@@ -1477,4 +1527,31 @@ $content = file_get_contents($fileName);
 return $content;
 //print_r2($byte_array);
 }
+
+
+function copy_folder($src,$dst) { 
+    $dir = opendir($src); 
+    @mkdir($dst); 
+    while(false !== ( $file = readdir($dir)) ) { 
+        if (( $file != '.' ) && ( $file != '..' )) { 
+            if ( is_dir($src . '/' . $file) ) { 
+                copy_folder($src . '/' . $file,$dst . '/' . $file); 
+            } 
+            else { 
+                copy($src . '/' . $file,$dst . '/' . $file); 
+            } 
+        } 
+    } 
+    closedir($dir); 
+} 
+
+function syscall($command){
+$result=0;
+    if ($proc = popen("($command)2>&1","r")){
+        while (!feof($proc)) $result .= fgets($proc, 1000);
+        pclose($proc);
+        return $result; 
+        }
+    }
+
 ?>

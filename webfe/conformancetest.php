@@ -141,13 +141,19 @@ input{
 #not{
 position:center;
 }
+.footer {
+     height: 200px; 
+    overflow: hidden; 
+}
 
 </style>
 <body>
 <div id="dash">
         <br>
-<img id="img2" border="0" src="dashtool.jpeg" alt="Pulpit rock" width="887" height="55" >
-    <br>    <br>
+<img id="img2" border="0" src="dashlogo.jpeg" alt="Pulpit rock" width="543" height="88" >
+    <img id="img2" border="0" src="Dash1.jpeg" alt="Pulpit rock" width="191" height="61" >
+
+	<br>    <br>
 </div>
 <div id="groupA">
 
@@ -163,7 +169,6 @@ position:center;
 
 <div id = "not">
         <br>    <br>   
-<p id = "note2"> <a target="_blank" href="http://www-itec.uni-klu.ac.at/dash/?page_id=605">Link</a> to MPD conformance tool  </p>
 
 
 </div>
@@ -564,8 +569,19 @@ window.open(urlto, "_blank");
 }
 </script>
 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-48482208-1', 'dashif.org');
+  ga('send', 'pageview');
+
+</script>
+
 <footer>
- <center> <p>v0.8b
+ <center> <p>v0.9b
          <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
  </center>
 </footer>
