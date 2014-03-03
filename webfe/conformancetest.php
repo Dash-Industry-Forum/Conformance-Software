@@ -184,7 +184,7 @@ position:center;
 			<td valign="top">
 
 
-				<div id="treeboxbox_tree" style="width:250px; height:218px;background-color:#0000;border :none;; overflow:auto;"></div>
+				<div id="treeboxbox_tree" style="width:500px; height:500px;background-color:#0000;border :none;; overflow:auto;"></div>
 			</td>
 			<td rowspan="2" style="padding-left:25" valign="top">
 		
@@ -326,6 +326,8 @@ function submit()
         progressTimer = setInterval(function(){progressupdate()},1000);
         console.log(dirid);
         console.log(totarrstring);
+var failed ='false';
+        tree.setOnDblClickHandler(tondblclick);
 
         var x=2;
         var childno=1;
@@ -335,15 +337,69 @@ function submit()
             id: 0,
             item: [{
                 id: 1,
-                text: "Period"
+                text: "Mpd"
             }]
             });
         tree.setOnDblClickHandler(tondblclick);
-        
+		if(totarr[0]==='true')
+		{
+		             setTimeout(automate(y,x,"XLink resolving",1));
+					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
+
+		
+		}
+		else {
+		setTimeout(automate(y,x,"XLink resolving",1));
+					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
+								 failed=totarr[0];
+		}
+		totarr.splice(0,1);
+		 x++;
+		if(totarr[0]==='true')
+		{
+		             setTimeout(automate(y,x,"MPD validation",1));
+					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
+
+                   
+		
+		}
+		else {
+		setTimeout(automate(y,x,"MPD validation",1));
+					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
+								 failed=totarr[0];
+		}
+				totarr.splice(0,1);
+				 x++;
+if(totarr[0]==='true')
+		{
+		             setTimeout(automate(y,x,"Schematron validation",1));
+					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
+
+		
+		}
+		else {
+		setTimeout(automate(y,x,"Schematron validation",1));
+					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
+								 failed=totarr[0];
+		}
+		totarr.splice(0,1);
+		 x++;
+	
+		if (failed!=='false')
+		{
+		setTimeout(automate(y,x,"mpd error log",1));
+		tree.setItemImage2(x,'log.jpg','log.jpg','log.jpg');
+		                kidsloc.push(x);
+		urlarray.push(failed);
+		console.log(kidsloc);
+		console.log(urlarray[0]);
+lastloc++;		
+return false;
+		}
         for(var i=0;i<totarr[0];i++)
         { 
-            var count=1;
 
+		
             setTimeout(automate(y,x,"Adaptationset "+(i+1)),1);
 			adaptid.push(x);
             tree.setItemImage2( x,'adapt.jpg','adapt.jpg','adapt.jpg');
@@ -396,15 +452,23 @@ console.log(response);
 			 
 			 {
 			 if(locations[i]=="noerror"){
+
 			 tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
-			 
+			 			                 setTimeout(automate(adaptid[i-1],lastloc,"Cross-representation validation success"),1);
+
+			 tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
+                  lastloc++;
+			// 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
+
 			 }
 			 else{
+
 			 tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
 			 							 kidsloc.push(lastloc);
                                       urlarray.push(locations[i]);
 									  
 			                 setTimeout(automate(adaptid[i-1],lastloc,"Cross-representation validation error"),1);
+						
 							 tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
                   lastloc++;
 				  }
@@ -492,6 +556,8 @@ function tondblclick(id)
 var urlto="";
 var position = kidsloc.indexOf(id);
 urlto=urlarray[position];
+console.log(position);
+console.log(urlto);
 if(urlto)
 window.open(urlto, "_blank");
 
