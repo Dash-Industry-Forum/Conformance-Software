@@ -1531,6 +1531,7 @@ return $content;
 
 function copy_folder($src,$dst) { 
     $dir = opendir($src); 
+    if(false === $dir) return;
     @mkdir($dst); 
     while(false !== ( $file = readdir($dir)) ) { 
         if (( $file != '.' ) && ( $file != '..' )) { 
