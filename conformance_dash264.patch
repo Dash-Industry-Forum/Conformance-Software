@@ -1,16 +1,3 @@
-Index: SegmentValidator/public/linux/Makefile
-===================================================================
---- SegmentValidator/public/linux/Makefile	(revision 98)
-+++ SegmentValidator/public/linux/Makefile	(working copy)
-@@ -11,7 +11,7 @@
- ### include debug information: 1=yes, 0=no
- DBG= 1
- 
--compatibility= -m32
-+#compatibility= -m32
- 
- DEPEND= dependencies
- 
 Index: SegmentValidator/public/src/ValidateMP4.cpp
 ===================================================================
 --- SegmentValidator/public/src/ValidateMP4.cpp	(revision 98)
