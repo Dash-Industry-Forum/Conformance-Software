@@ -54,7 +54,10 @@ unset($_SESSION['init_flag']);
 			include("zip.lib.php"); 
 			$count1=0;
 			$count2=0;
-			
+
+        // Work out which validator binary to use
+        $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "validatemp4-linux";
+
 			if(isset($_SESSION['locate']))
 			$locate = $_SESSION['locate'];
 			
@@ -264,9 +267,9 @@ function crossRepresentationProcess()
         else
             $bitstreamSwitching = "false";
         
-        if (!($opfile = fopen(".\\temp\\".$foldername."\\Adapt".$i."_infofile.txt", 'w')))
+        if (!($opfile = fopen(".".DIRECTORY_SEPARATOR."temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR."Adapt".$i."_infofile.txt", 'w')))
         {
-            echo "Error opening cross-representation checks file".".\\temp\\".$foldername."\\Adapt".$i."_infofile.txt";
+            echo "Error opening cross-representation checks file .".DIRECTORY_SEPARATOR."temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR."Adapt".$i."_infofile.txt";
             return;
         }
         
@@ -278,7 +281,7 @@ function crossRepresentationProcess()
             
             for ($j = 0;$j<sizeof($AdaptationSetAttr['Representation']['bandwidth']);$j++)
             {
-                $leafInfo[$j] = loadLeafInfoFile(".\\temp\\".$foldername."\\Adapt".$i."rep".$j."_infofile.txt");
+                $leafInfo[$j] = loadLeafInfoFile(".".DIRECTORY_SEPARATOR."temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR."Adapt".$i."rep".$j."_infofile.txt");
                 $leafInfo[$j]['id'] = $AdaptationSetAttr['Representation']['id'][$j];
             }
             
@@ -294,7 +297,7 @@ function crossRepresentationProcess()
         fprintf($opfile,"Checks completed.\n");
         fclose($opfile);
 	$temp_string = str_replace (array('$Template$'),array("Adapt".$i."_infofile"),$string_info);
-        file_put_contents($locate.'\\'."Adapt".$i."_infofile.html",$temp_string);
+        file_put_contents($locate.DIRECTORY_SEPARATOR."Adapt".$i."_infofile.html",$temp_string);
 			
     }
 }
@@ -302,7 +305,7 @@ function crossRepresentationProcess()
 function process_mpd($mpdurl)
 {
     global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info
-    ,$count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,$type,$minBufferTime,$profiles;
+    ,$count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,$type,$minBufferTime,$profiles,$validatemp4;
     
     $path_parts = pathinfo($mpdurl);
     $Baseurl=false;
@@ -334,11 +337,12 @@ function process_mpd($mpdurl)
         $foldername = 'id'.rand();
         $_SESSION['foldername']=$foldername;
         // rrmdir($locate);
-        $locate = dirname(__FILE__).'\\'.'temp'.'\\'.$foldername;
+        $locate = dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR.$foldername;
         $_SESSION['locate'] = $locate;
         mkdir($locate,0777);
         $totarr= array();
-        copy(dirname(__FILE__)."\\"."validatemp4-vs2010.exe",$locate.'\\'."validatemp4-vs2010.exe");
+
+        copy(dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4,$locate.DIRECTORY_SEPARATOR.$validatemp4);
         
         //Create log file so that it is available if accessed
         $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>');
@@ -360,8 +364,8 @@ function process_mpd($mpdurl)
         }
         //print_r( $dom_sxe);		
 /////////////////////Validate MPD//////////////////////////////////////////////////////////////
-             copy_folder(dirname(__FILE__)."\\mpdvalidator",$locate."\\mpdvalidator");
-			             chdir($locate."\\mpdvalidator");
+             copy_folder(dirname(__FILE__).DIRECTORY_SEPARATOR."mpdvalidator",$locate.DIRECTORY_SEPARATOR."mpdvalidator");
+			             chdir($locate.DIRECTORY_SEPARATOR."mpdvalidator");
 						//  system ("ant run -Dinput=".$mpdurl." 2>&1",$mpdvalidator);
 						$mpdvalidator = syscall("ant run -Dinput=".$mpdurl);
 						$mpdvalidator = str_replace('[java]',"",$mpdvalidator);
@@ -777,14 +781,14 @@ $signlocation = strpos($media,'%');
         if ($count1>=sizeof($period_url))
         {
             crossRepresentationProcess();
-			$missingexist = file_exists ($locate.'\missinglink.txt');
+			$missingexist = file_exists ($locate.DIRECTORY_SEPARATOR.'missinglink.txt');
 			if($missingexist){
 			$temp_string = str_replace (array('$Template$'),array("missinglink"),$string_info);
-        file_put_contents($locate.'\missinglink.html',$temp_string);
+        file_put_contents($locate.DIRECTORY_SEPARATOR.'missinglink.html',$temp_string);
 		}
 			$file_error[] = "done";
 			for($i=0;$i<sizeof($Period_arr);$i++){
-			            $searchadapt = file_get_contents($locate.'\\Adapt'. $i .'_infofile.txt');
+			            $searchadapt = file_get_contents($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt');
 						if(strpos($searchadapt,"Error")==false)
                 $file_error[] = "noerror";
             else
@@ -806,8 +810,8 @@ $signlocation = strpos($media,'%');
         else
         {
             $repno = "Adapt".$count1."rep".$count2;
-            $file_string =  $locate.'\\'.$repno.".zip";
-            $pathdir=$locate."\\".$repno."\\";
+            $file_string =  $locate.DIRECTORY_SEPARATOR.$repno.".zip";
+            $pathdir=$locate.DIRECTORY_SEPARATOR.$repno.DIRECTORY_SEPARATOR;
             
             if (!file_exists($pathdir))
             {
@@ -816,7 +820,7 @@ $signlocation = strpos($media,'%');
             
             $sizearray = downloaddata($pathdir,$period_url[$count1][$count2]);
             Assemble($pathdir,$period_url[$count1][$count2],$sizearray);
-            rename($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt");
+            rename($locate.DIRECTORY_SEPARATOR."mdatoffset.txt",$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt");
 
             //$repnolist[]=$repno;
             //print_r2(memory_get_peak_usage(true));
@@ -863,34 +867,34 @@ $signlocation = strpos($media,'%');
                 $processArguments=$processArguments."-dash264enc ";
             }
             
-            exec("validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments );
-            rename($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt");
+            exec($locate.DIRECTORY_SEPARATOR.$validatemp4." ".$locate.DIRECTORY_SEPARATOR.$repno.".mp4 "."-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt"." -offsetinfo ".$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt -logconsole".$processArguments );
+            rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt");
             $temp_string = str_replace (array('$Template$'),array($repno."_infofile"),$string_info);
             //print_r2($temp_string);
-            file_put_contents($locate.'\\'.$repno."_infofile.html",$temp_string);
+            file_put_contents($locate.DIRECTORY_SEPARATOR.$repno."_infofile.html",$temp_string);
             $file_location[] = "temp".'/'.$foldername.'/'.$repno."_infofile.html";
 
-            $destiny[]=$locate.'\\'.$repno."_infofile.txt";
-            rename($locate.'\\'."stderr.txt",$locate.'\\'.$repno."log.txt");
+            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
+            rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."log.txt");
             $temp_string = str_replace (array('$Template$'),array($repno."log"),$string_info);
 
-            file_put_contents($locate.'\\'.$repno."log.html",$temp_string);
+            file_put_contents($locate.DIRECTORY_SEPARATOR.$repno."log.html",$temp_string);
             $file_location[] = "temp".'/'.$foldername.'/'.$repno."log.html";
 
-            $destiny[]=$locate.'\\'.$repno."log.txt";
+            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."log.txt";
 
-            rename($locate.'\\'."stdout.txt",$locate.'\\'.$repno."myfile.txt");
+            rename($locate.DIRECTORY_SEPARATOR."stdout.txt",$locate.DIRECTORY_SEPARATOR.$repno."myfile.txt");
             $temp_string = str_replace (array('$Template$'),array($repno."myfile"),$string_info);
-            file_put_contents($locate.'\\'.$repno."myfile.html",$temp_string);
+            file_put_contents($locate.DIRECTORY_SEPARATOR.$repno."myfile.html",$temp_string);
             $file_location[] = "temp".'/'.$repno."myfile.html";
-            $destiny[]=$locate.'\\'.$repno."myfile.txt";
+            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."myfile.txt";
 
             $period_url[$count1][$count2]=null;
             //print_r2(memory_get_peak_usage(true));
             ob_flush();
             //ob_clean();
             $count2 = $count2+1;
-            $search = file_get_contents($locate.'\\'.$repno."log.txt");
+            $search = file_get_contents($locate.DIRECTORY_SEPARATOR.$repno."log.txt");
             
             if(strpos($search,"error")==false)
                 $file_location[] = "noerror";
@@ -1300,7 +1304,7 @@ $names[]=basename($unit);
 
 
 for ($i = 0;$i<sizeof($names);$i++){
-$fp1 = fopen($locate.'\\'.$repno.".mp4", 'a+');
+$fp1 = fopen($locate.DIRECTORY_SEPARATOR.$repno.".mp4", 'a+');
 if(file_exists($path.$names[$i])){
 
 $size=$sizearr[$i];
@@ -1309,7 +1313,7 @@ $file2 = file_get_contents($path.$names[$i]);
 
 fwrite($fp1,$file2);
 fclose($fp1);
-file_put_contents($locate.'\\'.$repno.".txt",$index." ".$size."\n",FILE_APPEND);
+file_put_contents($locate.DIRECTORY_SEPARATOR.$repno.".txt",$index." ".$size."\n",FILE_APPEND);
 $index++;
 
 }
