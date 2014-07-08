@@ -342,7 +342,7 @@ function process_mpd($mpdurl)
         mkdir($locate,0777);
         $totarr= array();
 
-        copy(dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4,$locate.DIRECTORY_SEPARATOR.$validatemp4);
+//        copy(dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4,$locate.DIRECTORY_SEPARATOR.$validatemp4);
         
         //Create log file so that it is available if accessed
         $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>');
@@ -867,7 +867,7 @@ $signlocation = strpos($media,'%');
                 $processArguments=$processArguments."-dash264enc ";
             }
             
-            exec($locate.DIRECTORY_SEPARATOR.$validatemp4." ".$locate.DIRECTORY_SEPARATOR.$repno.".mp4 "."-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt"." -offsetinfo ".$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt -logconsole".$processArguments );
+            exec(dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4." ".$locate.DIRECTORY_SEPARATOR.$repno.".mp4 "."-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt"." -offsetinfo ".$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt -logconsole".$processArguments );
             rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt");
             $temp_string = str_replace (array('$Template$'),array($repno."_infofile"),$string_info);
             //print_r2($temp_string);
