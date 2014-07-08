@@ -29,6 +29,7 @@ Check out DASH-IF conformance checker
 
     git clone https://github.com/jeremypoulter/Conformance-Software.git
     sudo mv Conformance-Software /var/www
+    sudo chown www-data:www-data /var/www/Conformance-Software/webfe/temp
 
 Check out DASH MPD validator and build
 
