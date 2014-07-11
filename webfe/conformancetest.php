@@ -146,6 +146,13 @@ position:center;
     overflow: hidden; 
 }
 
+#dynamictable{
+position:absolute;
+ top:280px;
+ right:40px;
+
+}
+
 </style>
 <body>
 <div id="dash">
@@ -164,7 +171,14 @@ position:center;
 
 <button id="btn8" onclick="submit()">Submit</button>
 
+<form action="">
+<input type="radio" name="validator" class = "validation" value="1" checked='checked'> Dash version 1 
+<input type="radio" name="validator" class = "validation" value="2" >Dash version 2 
+</form>
+
 </div>
+
+
 <div id="progressbar" style="width:100;background:#FFFFF;"></div>
 
 <div id = "not">
@@ -173,10 +187,10 @@ position:center;
 
 </div>
 <div id="to" >
-<img id="img" border="0" src="loading.gif" alt="Pulpit rock" width="150" height="150" style="visibility:hidden"/>
 <p align="center">
 <p id="par" style="visibility:hidden;">Loading....</p>
 
+<a id="list" href="url" target="_blank" style="visibility:hidden;" >Feature list</a>
 </div>
 
 
@@ -198,6 +212,9 @@ position:center;
 		</tr>
 		
 	</table>
+	
+
+
 <script type="text/javascript">
 var progressXMLRequest;
 var progressXML;
@@ -213,6 +230,10 @@ hinindex = 1;
 var repid =[];	
 var  totarr = [];
 var adaptid=[];
+
+
+
+
 
 function button()
 {
@@ -304,16 +325,22 @@ function progressupdate()
 function submit()
 {
     var url = document.getElementById('urlinput').value;
+	var checkedValue = $('.validator:checked').val();
+    var stringurl = [];
+	stringurl[0] = url;
+    stringurl[1] =  checkedValue;
+   	
     document.getElementById("btn8").disabled="true";
 
     //document.getElementById('img').style.visibility='visible';
     //document.getElementById('par').style.visibility='visible';
 
     $.post ("process.php",
-    {urlcode:url},
+    {urlcode:JSON.stringify(stringurl)},
     function(totarrstring)
     {
         console.log(totarrstring);
+		
         
         if(totarrstring.indexOf("Error:") > -1)
         {
@@ -326,8 +353,11 @@ function submit()
 					return false;
 }
 
+
         totarr=JSON.parse(totarrstring);
         dirid = totarr[totarr.length-1];
+		document.getElementById("list").href='/temp/'+dirid+'/featuretable.html';
+
         progressTimer = setInterval(function(){progressupdate()},1000);
         console.log(dirid);
         console.log(totarrstring);
@@ -424,7 +454,7 @@ return false;
 
         setTimeout(progress,1);
         document.getElementById('par').style.visibility='visible';
-
+document.getElementById('list').style.visibility='visible';
     });
 
 }
@@ -567,6 +597,7 @@ if(urlto)
 window.open(urlto, "_blank");
 
 }
+
 </script>
 
 <script>
@@ -577,6 +608,7 @@ window.open(urlto, "_blank");
 
   ga('create', 'UA-48482208-1', 'dashif.org');
   ga('send', 'pageview');
+///////////////////////////////////
 
 </script>
 

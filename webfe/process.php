@@ -1,92 +1,82 @@
 <?php
-
-//$ini_set('display_logors', 'On');
-//include_once("analyticstracking.php")
-ini_set('memory_limit','-1');
-set_time_limit(0);
-session_start();
+ini_set('memory_limit','-1');//remove memory limit
+error_reporting(E_ERROR | E_PARSE);
+include 'featurlist.php'; 
+set_time_limit(0);// php run without time limit
+session_start();// initiate session for connected client
 
 //placeholder="Enter mpd url" 
 //logor_reporting(E_ALL | E_STRICT);
+//$url = 'http://castlabs-dl.s3.amazonaws.com/public/DASH/test_ept/Manifest.mpd';
+if(isset($_POST['urlcode'])){// if client iniate first connection
 
-if(isset($_POST['urlcode'])){
-
-
-$url = $_POST['urlcode'];
-$_SESSION['url']=$url;
-unset($_SESSION['period_url']);
-unset($_SESSION['init_flag']);
+$url_array = json_decode($_POST['urlcode']);
+$url = $url_array[0];// get mpd url from HTTP request
+$_SESSION['url']=$url;// save mpd url to session variable
+unset($_SESSION['period_url']); // reset session variable 'period_url' in order to remove any old segment url from previous sessions
+unset($_SESSION['init_flag']);// reset for flag indicating first connection attempt
 }
-//$url = "http://dash.edgesuite.net/dash264/TestCases/1b/qualcomm/1/MultiRate.mpd" ;
-//$url = "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/2/manifest.mpd";
-//$url = "http://dash.edgesuite.net/dash264/TestCases/1b/envivio/manifest.mpd";
-//$url = "http://dash.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd";
-//$url = "http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd";
 
-//$url = "http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/2/MultiRate.mpd";
-
-//$url = "CENC_SD_time_MPD.mpd";
-			$adaptsetdepth=array();
-			$depth = array();
-	        $locate ;
-			$foldername;
-            $Adapt_urlbase = 0;
-	        $id = array(); 
-            $codecs = array();
-			$width = array ();
+			$adaptsetdepth=array();// array for Baseurl 
+			$depth = array();//array contains all relative URLs exist in all mpd levels 
+	        $locate ;  // location of session folder on server
+			$foldername; // floder name for the session
+            $Adapt_urlbase = 0; // Baseurl in adaptationset
+	        $id = array();  //mpd id
+            $codecs = array(); 
+			$width = array (); 
 			$height = array ();
-			$period_baseurl=array();
-			$scanType = array();
+			$period_baseurl=array();// all baseURLs included in given period
+			$scanType = array(); 
 			$frameRate = array();
 			$sar=array();
 			$bandwidth=array();
-            $Adaptationset=array();
-			$Adapt_arr = array();
-			$Period_arr= array();
-			$init_flag;
-            $repnolist = array();
-            $period_url = array();
-			$perioddepth=array();
+            $Adaptationset=array();//array of all attributes in single adapatationset
+			$Adapt_arr = array();//array of all adaptationsets within 1 period
+			$Period_arr= array(); // array of all periods 
+			$init_flag; // flag decide if this is the first connection attempt
+            $repnolist = array(); // list of number of representation
+            $period_url = array(); // array contains location of all segments within period
+			$perioddepth=array(); //array with all relative baseurls up to period level
 			$type = "";
             $minBufferTime = "";
             $profiles = "";
             $mediaPresentationDuration = "";
-			include("zip.lib.php"); 
-			$count1=0;
-			$count2=0;
+			$count1=0; // Count number of adaptationsets processed
+			$count2=0;;//count number of presentations proceessed
 			
-			if(isset($_SESSION['locate']))
+			if(isset($_SESSION['locate'])) //get location from session variable if it is not secont  attempt to access server by same session
 			$locate = $_SESSION['locate'];
-			
- if(isset($_SESSION['count1']))
+			$Timeoffset;
+ if(isset($_SESSION['count1']))//get Adaptationset counter in access
  $count1 =$_SESSION['count1'];
  
- if(isset($_SESSION['foldername']))
+ if(isset($_SESSION['foldername']))//get folder name from session
  $foldername=$_SESSION['foldername'];
  
-  if(isset($_SESSION['count2']))
+  if(isset($_SESSION['count2']))//get presentation counter
  $count2 =$_SESSION['count2'];
 
- if (isset($_SESSION['url']))
+ if (isset($_SESSION['url']))//get mpd url from session variable
  $url=$_SESSION['url'];
  
-if (isset($_SESSION['period_url']))
+if (isset($_SESSION['period_url']))//get period url from session variable
     $period_url=$_SESSION['period_url'];
 
-if(isset($_SESSION['init_flag']))
+if(isset($_SESSION['init_flag']))//check access flag status
     $init_flag = $_SESSION['init_flag'];
 
-if(isset($_SESSION['Period_arr']))
+if(isset($_SESSION['Period_arr'])) //get array of periods in case of already processed 
     $Period_arr = $_SESSION['Period_arr'];
 
-if(isset($_SESSION['type']))
+if(isset($_SESSION['type'])) 
     $type = $_SESSION['type'];
     
 if(isset($_SESSION['minBufferTime']))
     $minBufferTime = $_SESSION['minBufferTime'];
     
 
-$string_info = '<!doctype html>
+$string_info = '<!doctype html> 
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -133,9 +123,9 @@ $( "p" ).html( end);
 </script>
  
 </body>
-</html>';
+</html>';// String is added to an empty html file in order to access the report text file and show it in html format
 
-function loadLeafInfoFile($fileName)
+function loadLeafInfoFile($fileName,$PresTimeOffset)
 {
     $info=array();
     
@@ -164,9 +154,15 @@ function loadLeafInfoFile($fileName)
 
         $info['leafInfo'][$i] = array();
         
-        for($j = 0 ; $j < $info['numLeafs'][$i] ; $j++)
-            fscanf($leafInfoFile,"%d %f %f\n",$info['leafInfo'][$i][$j]['firstInSegment'],$info['leafInfo'][$i][$j]['earliestPresentationTime'],$info['leafInfo'][$i][$j]['lastPresentationTime']);   
-    }
+        for($j = 0 ; $j < $info['numLeafs'][$i] ; $j++){
+		$early = $info['leafInfo'][$i][$j]['earliestPresentationTime']-$PresTimeOffset;
+		$last = $info['leafInfo'][$i][$j]['lastPresentationTime']-$PresTimeOffset;
+	
+            fscanf($leafInfoFile,"%d %f %f\n",$info['leafInfo'][$i][$j]['firstInSegment'],$early,$last);   
+          
+		  }   
+
+   }
 
     fclose($leafInfoFile);
     
@@ -278,7 +274,7 @@ function crossRepresentationProcess()
             
             for ($j = 0;$j<sizeof($AdaptationSetAttr['Representation']['bandwidth']);$j++)
             {
-                $leafInfo[$j] = loadLeafInfoFile(".\\temp\\".$foldername."\\Adapt".$i."rep".$j."_infofile.txt");
+                $leafInfo[$j] = loadLeafInfoFile(".\\temp\\".$foldername."\\Adapt".$i."rep".$j."_infofile.txt",$AdaptationSetAttr['Representation']['presentationTimeOffset'][$j]);
                 $leafInfo[$j]['id'] = $AdaptationSetAttr['Representation']['id'][$j];
             }
             
@@ -304,48 +300,55 @@ function process_mpd($mpdurl)
     global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info
     ,$count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,$type,$minBufferTime,$profiles;
     
-    $path_parts = pathinfo($mpdurl);
-    $Baseurl=false;
+    $path_parts = pathinfo($mpdurl); 
+    $Baseurl=false; //define if Baseurl is used or no
     $setsegflag=false;
     $mpdfilename = $path_parts['filename'];		// determine name of actual MPD file
 
-    if(isset($_POST['urlcode']))
+    if(isset($_POST['urlcode'])) // in case of client send first connection attempt
     {
-	
-	
-        $sessname = 'sess'.rand();
-        session_name($sessname);
+		
+		
+        $sessname = 'sess'.rand(); // get a random session name
+        session_name($sessname);// set session name
 
         $directories = array_diff(scandir(dirname(__FILE__).'/'.'temp'), array('..', '.'));
 
-        foreach ($directories as $file)
+        foreach ($directories as $file) // Clean temp folder from old sessions in order to save diskspace
         {
-            if(file_exists(dirname(__FILE__).'/'.'temp'.'/'.$file))
+            if(file_exists(dirname(__FILE__).'/'.'temp'.'/'.$file)) // temp is folder contains all sessions folders
             {
-                $change = time()-filemtime(dirname(__FILE__).'/'.'temp'.'/'.$file);
+                $change = time()-filemtime(dirname(__FILE__).'/'.'temp'.'/'.$file); // duration of file implementation
 
                 if($change>300)
-                    rrmdir(dirname(__FILE__).'/'.'temp'.'/'.$file);
+                    rrmdir(dirname(__FILE__).'/'.'temp'.'/'.$file); // if last time folder was modified exceed 300 second it should be removed 
             }
         }
 
         //print_r2("I'm inside the mpd processing");
         //var_dump( $path_parts  );
-        $foldername = 'id'.rand();
+        $foldername = 'id'.rand(); // get random name for session folder
         $_SESSION['foldername']=$foldername;
         // rrmdir($locate);
-        $locate = dirname(__FILE__).'\\'.'temp'.'\\'.$foldername;
-        $_SESSION['locate'] = $locate;
-        mkdir($locate,0777);
-        $totarr= array();
-        copy(dirname(__FILE__)."\\"."validatemp4-vs2010.exe",$locate.'\\'."validatemp4-vs2010.exe");
-        
+        $locate = dirname(__FILE__).'\\'.'temp'.'\\'.$foldername; //session  folder location
+        $_SESSION['locate'] = $locate; // save session folder location 
+        mkdir($locate,0777); // create session folder
+        $totarr= array(); // array contains all data to be sent to client.
+        copy(dirname(__FILE__)."\\"."validatemp4-vs2010.exe",$locate.'\\'."validatemp4-vs2010.exe"); // copy conformance tool to session folder to allow multi-session operation
+        copy(dirname(__FILE__)."\\"."featuretable.html",$locate.'\\'."featuretable.html"); // copy features list html file to session folder
         //Create log file so that it is available if accessed
-        $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>');
-        $progressXML->asXml($locate.'/progress.xml');
+        $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>');// get progress bar update
+        $progressXML->asXml($locate.'/progress.xml'); //progress xml location
         
         //libxml_use_internal_logors(true);
-        $MPD = simplexml_load_file($GLOBALS["url"]);
+        $MPD = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
+              $url_array = json_decode($_POST['urlcode']);
+			  if($url_array[1]===1)
+			     chdir("mpdvalidator");
+				 if($url_array[1] ===2)
+                  	chdir("mpdvalidator");
+				 
+				 
 
         if (!$MPD)
         {
@@ -358,80 +361,65 @@ function process_mpd($mpdurl)
         {
             exit;
         }
-        //print_r( $dom_sxe);		
-/////////////////////Validate MPD//////////////////////////////////////////////////////////////
-             copy_folder(dirname(__FILE__)."\\mpdvalidator",$locate."\\mpdvalidator");
-			             chdir($locate."\\mpdvalidator");
-						//  system ("ant run -Dinput=".$mpdurl." 2>&1",$mpdvalidator);
-						$mpdvalidator = syscall("ant run -Dinput=".$mpdurl);
+       
+			           chdir("mpdvalidator");// change PHP default directory to directory contains mpd validator
+				
+				$mpdvalidator = syscall("ant run -Dinput=".$mpdurl); //run mpd validator
 						$mpdvalidator = str_replace('[java]',"",$mpdvalidator);
 						$valid_word = 'Start XLink resolving';
 						$report_start = strpos($mpdvalidator,$valid_word);
 						$mpdvalidator=substr ($mpdvalidator,$report_start);
-					//	print_r2($mpdvalidator);
 						$mpdreport = fopen($locate.'/mpdreport.txt','a+b');
-								fwrite($mpdreport,$mpdvalidator);
+								fwrite($mpdreport,$mpdvalidator);//get mpd validator result to text file
 
-						$temp_string = str_replace (array('$Template$'),array("mpdreport"),$string_info);
+						$temp_string = str_replace (array('$Template$'),array("mpdreport"),$string_info); // copy mpd report to html file 
             $mpd_rep_loc =  '/temp/'.$foldername.'/mpdreport.html';
 
             file_put_contents($locate.'//mpdreport.html',$temp_string);
 						$exit=false;
 						
-						if(strpos($mpdvalidator,"XLink resolving successful")!==false)
+						if(strpos($mpdvalidator,"XLink resolving successful")!==false)// check if Xlink resolving is successful
                             $totarr[]='true';
 							else{
-							$totarr[]=$mpd_rep_loc;
-							$exit = true;
+							$totarr[]=$mpd_rep_loc;// if failed send client the location of mpdvalidator report
+							$exit = true;// if failed terminate conformance check
 							}
-						if(strpos($mpdvalidator,"MPD validation successful")!==false)
+						if(strpos($mpdvalidator,"MPD validation successful")!==false)//check if Xlink resolving is successful 
                           $totarr[]='true';
 							else{
-							$totarr[]=$mpd_rep_loc;
-							$exit = true;
+							$totarr[]=$mpd_rep_loc;/// if failed send client the location of mpdvalidator report
+							$exit = true;// if failed terminate conformance check
 							}
-							if(strpos($mpdvalidator,"Schematron validation successful")!==false)
+							if(strpos($mpdvalidator,"Schematron validation successful")!==false) // check if Schematron validation is successful
                           $totarr[]='true';
 							else{
-							$totarr[]=$mpd_rep_loc;
-							$exit =true;
+							$totarr[]=$mpd_rep_loc;/// if failed send client the location of mpdvalidator report
+							$exit =true;// if failed terminate conformance check
 							}
 							
-							if ($exit===true)
+							if ($exit===true)// mpd validation failed.
 							{
         $stri=json_encode($totarr);
 							echo $stri;
-							            session_destroy();
+							            session_destroy(); // destroy session variables 
 							exit;
 							}
 
 						
 			 
-		/////////////////////////////////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////Processing mpd attributes in order to get value//////////////////////////////////////////////////////////
         $dom = new DOMDocument('1.0');
-        $dom_sxe = $dom->importNode($dom_sxe, true);
-        //				print_r($dom_sxe);		
+        $dom_sxe = $dom->importNode($dom_sxe, true); //create dom element to contain mpd 
 
         $dom_sxe = $dom->appendChild($dom_sxe);
 
-        $MPD = $dom->getElementsByTagName('MPD')->item(0);
+        $MPD = $dom->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
+		        $mediaPresentationDuration = $MPD ->getAttribute('mediaPresentationDuration'); // get mediapersentation duration from mpd level
 
-        $type = $MPD->getAttribute ( 'type');
-		if($type === 'dynamic')
-		{
-		            echo 'dynamic';
-					exit;
-
-		}
-        $minBufferTime = $MPD->getAttribute('minBufferTime');
-        $profiles = $MPD -> getAttribute('profiles');
-        $mediaPresentationDuration = $MPD ->getAttribute('mediaPresentationDuration');
-
-        /////////////////////////////////////////////////////////////////////////////////
-        $y=str_replace("PT","",$mediaPresentationDuration);
+		$y=str_replace("PT","",$mediaPresentationDuration); // process mediapersentation duration
         if(strpos($y,'H')!==false)
         {
-            $H = explode("H",$y);
+            $H = explode("H",$y); //get hours
             $y=str_replace("H","",$y);
         }
         else
@@ -440,114 +428,113 @@ function process_mpd($mpdurl)
         if(strpos($y,'M')!==false)
         {
             $y=str_replace($H[0],"",$y);
-            $M = explode("M",$y);
+            $M = explode("M",$y);// get minutes
             $y=str_replace("M","",$y);
             $y=str_replace($M[0],"",$y);
         }
         else
             $M[0]=0;
 
-        $S=explode("S",$y);
-        $presentationduration=($H[0]*60*60)+($M[0]*60)+$S[0];
+        $S=explode("S",$y);// get seconds
+        $presentationduration=($H[0]*60*60)+($M[0]*60)+$S[0];// calculate durations in seconds
+
+	
+featurelist($MPD,$presentationduration);
+        $type = $MPD->getAttribute ( 'type'); // get mpd type
+		if($type === 'dynamic')
+		{
+		            echo 'dynamic';
+					exit;// if type is dynamic "Dynamic conformance is not supported"
+
+		}
+		
+        $minBufferTime = $MPD->getAttribute('minBufferTime');//get min buffer time
+        $profiles = $MPD -> getAttribute('profiles');// get profiles
+
+        /////////////////////////////////////////////////////////////////////////////////
+        
         //////////////////////////////////////////////////////////////////////////////////
-        foreach ($dom->documentElement->childNodes as $node)
+        foreach ($dom->documentElement->childNodes as $node) // search for all nodes within mpd
         {
-            if($node->nodeName === 'Location')
-                $locationNode = $node;
-            if($node->nodeName === 'BaseURL')
-                $baseURLNode = $node;    
+              
             if($node->nodeName === 'Period')
                 $periodNode = $node;   
-            if($node->nodeName === 'AdaptationSet')
-                $AdapNode = $node;
+            
         }
         
-        $val = $dom->getElementsByTagName('BaseURL');
-        $segflag = $dom->getElementsByTagName('SegmentTemplate');
+        $val = $dom->getElementsByTagName('BaseURL'); // get BaseUrl node
+        $segflag = $dom->getElementsByTagName('SegmentTemplate');//check if segment template exist or no
 
         if($segflag->length>0)
-            $setsegflag=true;
+            $setsegflag=true; // Segment template is supported
 
-        if($val->length>0)
+        if($val->length>0) // if baseurl is used
         {
-            $Baseurl=true;
+            $Baseurl=true;// set Baseurl flag = true
             
             for($i=0;$i<sizeof($val);$i++)
             {
+			//check if Baseurl node exist in MPD level or lower level
                 $base = $val->item($i);
                 $par = $base->parentNode;
                 $name = $par->tagName;
-                if($name == 'MPD')
+                if($name == 'MPD') // if exist in mpd level
                 {
                     $dir = $base->nodeValue;
-					if ($dir==='./')
-		               $dir = dirname($GLOBALS["url"]);
+					if ($dir==='./')   // if baseurl is relative URl
+		               $dir = dirname($GLOBALS["url"]);// use location of Baseurl as location of mpd location
 
                 }
             }
         
-            if(!isset($dir))
-                $dir = dirname($GLOBALS["url"]);
+            if(!isset($dir))// if there is no Baseurl in mpd level 
+                $dir = dirname($GLOBALS["url"]);// set location of segments dir as mpd location
         }
         else
-            $dir = dirname($GLOBALS["url"]);
-
-        //print_r2($dir);
-        /*if(isset($baseURLNode) )
-        {
-        $domper = new DOMDocument ('1.0');
-
-        $baseURLNode = $domper->importNode ( $baseURLNode , true);
-        $baseURLNode = $domper->appendChild($baseURLNode);
-        $dir = $baseURLNode->nodeValue;
-        print_r2($dir);
-        }*/
-        //else
-        //$dir = dirname($GLOBALS["url"]);
-
-        processPeriod($periodNode);
-        $segm_url = array();
-        $adapt_url = array();
-        if($setsegflag)
+            $dir = dirname($GLOBALS["url"]); // if there is no Baseurl in mpd level,set location of segments dir as mpd location
+        processPeriod($periodNode); // start getting information from period level
+        $segm_url = array();// contains segments url within one 
+        $adapt_url = array(); // contains all segments urls within adapatations set
+        if($setsegflag) // Segment template is used
         {
 
-            for($k = 0; $k<sizeof($Period_arr); $k++)
+            for($k = 0; $k<sizeof($Period_arr); $k++) // loop on period array
             {
                 if(!empty($Period_arr[$k]['SegmentTemplate']))
                 {
                     //print_r2($Period_arr[$k]['SegmentTemplate']);
-                    if(!empty($Period_arr[$k]['SegmentTemplate']['duration']))
+                    if(!empty($Period_arr[$k]['SegmentTemplate']['duration']))// get duration of segment template 
                         $duration = $Period_arr[$k]['SegmentTemplate']['duration'];
                     else
-                        $duration = 0;
-                    if(!empty($Period_arr[$k]['SegmentTemplate']['timescale']))
+                        $duration = 0; // if duration doesn't exist set duration to 0
+                    if(!empty($Period_arr[$k]['SegmentTemplate']['timescale']))// cehck time scale for given segment template
                         $timescale = $Period_arr[$k]['SegmentTemplate']['timescale'];
                     else
-                        $timescale = 1;
+                        $timescale = 1; // if doesn't exist set default to 1
                         
                     if($duration!=0)
                     {
-                        $duration = $duration/$timescale;
-                        $segmentno = $presentationduration/$duration;
+                        $duration = $duration/$timescale; // get duration
+                        $segmentno = $presentationduration/$duration; //get segment number
                     }
 
-                    $startnumber = $Period_arr[$k]['SegmentTemplate']['startNumber'];
-                    $initialization = $Period_arr[$k]['SegmentTemplate']['initialization'];
-                    $media = $Period_arr[$k]['SegmentTemplate']['media'];
-                    $timehash=null;
-                    $timehash=array();
+                    $startnumber = $Period_arr[$k]['SegmentTemplate']['startNumber'];  // get first number in segment
+                    $initialization = $Period_arr[$k]['SegmentTemplate']['initialization']; // get initialization degment 
+                    $media = $Period_arr[$k]['SegmentTemplate']['media']; // get  media template
+                    $timehash=null; // used only in segment timeline 
+                    $timehash=array(); // contains all segmenttimelines for all segments
 
-                    if(!empty($Period_arr[$k]['SegmentTemplate']['SegmentTimeline']))
+                    if(!empty($Period_arr[$k]['SegmentTemplate']['SegmentTimeline'])) // in case of using Segment timeline
                     {
-                        $timeseg = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][0][0];
+                        $timeseg = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][0][0];// get time segment 
 
-                        for($lok=0;$lok<sizeof($Period_arr[$k]['SegmentTemplate']['SegmentTimeline']);$lok++)
+                        for($lok=0;$lok<sizeof($Period_arr[$k]['SegmentTemplate']['SegmentTimeline']);$lok++) // loop on segment time line 
                         {
-                            //print_r2($Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][$lok]);
+                            
 
-                            $d = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][$lok][1];
-                            $r = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][$lok][2];
-                            $te = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][$lok][0];
+                            $d = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][$lok][1]; // get d 
+                            $r = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][$lok][2];// get r 
+                            $te = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][$lok][0];// get t
 
                             if($r == 0)
                             {
@@ -564,84 +551,81 @@ function process_mpd($mpdurl)
 
                                 $ende=$ende;
                                 
-                                while($timeseg<$ende)
+                                while($timeseg<$ende) // calculate time segment untill the end of duration
                                 {
-                                    $timehash[]= $timeseg;
+                                    $timehash[]= $timeseg; 
                                     $timeseg=$timeseg+$d;
                                 }
                             }
                             
-                            if( $r>0)
+                            if( $r>0) 
                             {
-                                for($cn=0;$cn<=$r;$cn++)
+                                for($cn=0;$cn<=$r;$cn++) // repeat untill the amount of repeat is finished
                                 {
-                                    $timehash[]= $timeseg;
+                                    $timehash[]= $timeseg; 
                                     $timeseg=$timeseg+$d;
                                 }
                             }
                         }
                     }
                 }
-                
-                for ($j = 0;$j<sizeof($Period_arr[$k]['Representation']['bandwidth']);$j++)
+                for ($j = 0;$j<sizeof($Period_arr[$k]['Representation']['bandwidth']);$j++) // loop on adaptationset level
                 {
+				
                     $direct=$dir;
-                    if($Baseurl===true)
+                    if($Baseurl===true) // incase of using Base url
                     {
-                        if(!isset($perioddepth[0]))
-                        $perioddepth[0]="";
+                        if(!isset($perioddepth[0])) // period doesn't contain any baseurl infromation
+                        $perioddepth[0]=""; 
 
-                        if(!isset($adaptsetdepth[$k]))
-                        $adaptsetdepth[$k]="";
+                        if(!isset($adaptsetdepth[$k]))  // adaptation set doesn't contain any baseurl information
+                        $adaptsetdepth[$k]=""; 
 
-                        $direct = $dir.$perioddepth[0].'//'.$adaptsetdepth[$k];
-                        //print_r2($dir);
+                        $direct = $dir.$perioddepth[0].'//'.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
                     }
                     
-                    if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j]))
+                    if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j])) // in case of using segmenttemplate
                     {
-                        $duration = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['duration'];
+                        $duration = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['duration']; // get  segment duration attribute
                         
-                        if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['timescale']))
+                        if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['timescale'])) //get time scale
                             $timescale = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['timescale'];
                         else 
-                            $timescale = 1;
+                            $timescale = 1; // set to 1 if not avaliable 
                             
-                        //print_r2($timescale);
                         if($duration!=0)
                         {
-                            $duration = $duration/$timescale;
-                            $segmentno = $presentationduration/$duration;
+                            $duration = $duration/$timescale; // get duration scaled
+                            $segmentno = $presentationduration/$duration; // get number of segments
                             //print_r2($startnumber);
                         }
-                        $startnumber = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['startNumber'];
+                        $startnumber = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['startNumber']; // get start number
 
-                        $initialization = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['initialization'];
-                        $media = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['media'];
+                        $initialization = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['initialization']; // get initialization
+                        $media = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['media'];// get media template
 
-                        if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline']))
+                        if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'])) // check timeline 
                         {
-                            $timeseg = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][0][0];
+                            $timeseg = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][0][0]; // segment start time
 
-                            for($lok=0;$lok<sizeof($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline']);$lok++)
+                            for($lok=0;$lok<sizeof($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline']);$lok++)//loop on timeline
                             {
-                                $timehash=array();
-                                //print_r2($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok]);
+                                $timehash=array(); //contains time tag for each segment
 
-                                $d = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][1];
-                                $r = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][2];
-                                $te = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][0];
+                                $d = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][1];//get d
+                                $r = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][2];//get r
+                                $te = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][0];//get te
 
-                                if($r == 0)
+                                if($r == 0)// no duration repeat
                                 {
-                                    $timehash[]= $timeseg;
+                                    $timehash[]= $timeseg;//segment time stamp is same as segment time
                                     $timeseg = $timeseg+$d;
                                 }
                                 
-                                if($r<0)
+                                if($r<0) // segments untill the end of presentation duration
                                 {
                                     if(!isset($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok+1]))
-                                    $ende = $presentationduration*$timescale;
+                                    $ende = $presentationduration*$timescale; // multiply presentation duration by timescale
                                     else 
                                     $ende = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok+1];
                                     $ende=$ende;
@@ -649,37 +633,37 @@ function process_mpd($mpdurl)
                                     while($timeseg<$ende)
                                     {
                                         $timehash[]= $timeseg;
-                                        $timeseg=$timeseg+$d;
+                                        $timeseg=$timeseg+$d;//get time stamp for each segment by adding segment duration to previous time stamp
                                     }
                                 }
                                 else
                                 {
-                                    for($cn=0;$cn<=$r;$cn++)
+                                    for($cn=0;$cn<=$r;$cn++)//if r is positive number
                                     {
                                         $timehash[]= $timeseg;
-                                        $timeseg=$timeseg+$d;
+                                        $timeseg=$timeseg+$d; // add duration to time segment to get time stamp for each segment
                                     }
                                 }
-                                //print_r2($timehash);
+                               
                             }
                         }
                     }
 
-                    $bandwidth = $Period_arr[$k]['Representation']['bandwidth'][$j];
-                    $id = $Period_arr[$k]['Representation']['id'][$j];
+                    $bandwidth = $Period_arr[$k]['Representation']['bandwidth'][$j];// get bandwidth of given representation
+                    $id = $Period_arr[$k]['Representation']['id'][$j]; // get id of given representation
 
-                    $init = str_replace (array('$Bandwidth$','$RepresentationID$'),array($bandwidth,$id),$initialization);
-                    $initurl = $direct."/".$init;
-                    $segm_url[] = $initurl; 
-                   $timehashmask=0;
-                    if(!empty($timehash))
+                    $init = str_replace (array('$Bandwidth$','$RepresentationID$'),array($bandwidth,$id),$initialization); //get initialization segment template is replaced by bandwidth and id 
+                    $initurl = $direct."/".$init;//full initialization URL
+                    $segm_url[] = $initurl; //add segment to URL
+                   $timehashmask=0; // default value if timeline doesnt exist
+                    if(!empty($timehash)) // if time line exist
                     {
-                        $segmentno = sizeof($timehash);
-                        $startnumber = 1 ;
-			$timehashmask = $timehash;
+                        $segmentno = sizeof($timehash);// number of segments
+                        $startnumber = 1 ; // start number set to 1
+			$timehashmask = $timehash; 
                     }
 
-$signlocation = strpos($media,'%');
+$signlocation = strpos($media,'%');  // clean media attribute from non existing values
                      if($signlocation!==false)
 					 {
                           if ($signlocation-strpos($media,'Number')===6)
@@ -692,103 +676,107 @@ $signlocation = strpos($media,'%');
 					 
                     for  ($i =0;$i<$segmentno;$i++ ) 
                     {
-                        $segmenturl = str_replace (array('$Bandwidth$','$Number$','$RepresentationID$','$Time$'),array($bandwidth,$i+$startnumber,$id,$timehashmask[$i]),$media);
+                        $segmenturl = str_replace (array('$Bandwidth$','$Number$','$RepresentationID$','$Time$'),array($bandwidth,$i+$startnumber,$id,$timehashmask[$i]),$media);//replace all media template values by actuall values
                           $segmenturl = sprintf($segmenturl,$startnumber+$i);
-					   $segmenturl = str_replace('$','',$segmenturl);
-						$segmenturl = $direct."/".$segmenturl;
-                        $segm_url[]=$segmenturl;
+					   $segmenturl = str_replace('$','',$segmenturl);//clean segment url from any extra signs
+						$segmenturl = $direct."/".$segmenturl; // get full segment url
+                        $segm_url[]=removeabunchofslashes($segmenturl); //add URL to segments URL array
                     }
+                    $adapt_url[] = $segm_url; // contains all representations within certain adaptation set
                     
-                    //unset ($timehash);
-                    $adapt_url[] = $segm_url;
-                    //print_r2($segm_url);
-                    $segm_url= array();	
+                    $segm_url= array();	// delete segment url array and process the next representation
                 }
 
-                $period_url[] = $adapt_url;
-                $adapt_url=array();
+                $period_url[] = $adapt_url;// add all adaptationset urls to period array
+                $adapt_url=array(); // delete adaptationset array and process the next adaptation set
             }
             //print_r2($period_url);
         }
 
-        if($Baseurl)
+        if($Baseurl)// in case of using Base url node
         {
-            for($i=0;$i<sizeof($period_baseurl);$i++)
+            for($i=0;$i<sizeof($period_baseurl);$i++) // loop on base url
             {
-                if(!isset($perioddepth[0]))
+                if(!isset($perioddepth[0]))// if period doesn't contain baseurl
                     $perioddepth[0]="";
                     
-                for($j=0;$j<sizeof($period_baseurl[$i]);$j++)
+                for($j=0;$j<sizeof($period_baseurl[$i]);$j++) //loop on baseurl in adaptationset  
                 {
-                    if(!isset($adaptsetdepth[$i]))
+                    if(!isset($adaptsetdepth[$i])) // if adaptationset doesn't contain baseurl
                     $adaptsetdepth[$i]="";
 
-                    for($lo=0;$lo<sizeof($period_baseurl[$i][$j]);$lo++)
+                    for($lo=0;$lo<sizeof($period_baseurl[$i][$j]);$lo++) // loop on baseurl in period level
                     {
-                        $period_baseurl[$i][$j][$lo] = $dir.$perioddepth[0].'/'.$adaptsetdepth[$i].'/'.$period_baseurl[$i][$j][$lo];
+                        $period_baseurl[$i][$j][$lo] = removeabunchofslashes($dir.$perioddepth[0].'/'.$adaptsetdepth[$i].'/'.$period_baseurl[$i][$j][$lo]);//combine all baseurls
                     }
                 }
             }
             if($setsegflag===false)
-            $period_url = $period_baseurl;
+            $period_url = $period_baseurl;// if segment template is not used, use baseurl
         }
 
         $size=array();
 
         //print_r2("Alo I'm here");
         //print_r2($sum_bits);
-        $_SESSION['period_url'] = $period_url;
+		
+        $_SESSION['period_url'] = $period_url;// save all period urls in session variable
         
-        $_SESSION['Period_arr'] = $Period_arr;
-
-        $totarr[]=sizeof($period_url);
-        for ($i=0;$i<sizeof($period_url);$i++)
+        $_SESSION['Period_arr'] = $Period_arr; //save all period parameters in session variable
+        $totarr[]=sizeof($period_url); // get number of periods
+        for ($i=0;$i<sizeof($period_url);$i++) // loop on periods
         {
-            $totarr[]=sizeof($period_url[$i]);
+            $totarr[]=sizeof($period_url[$i]);//get number of adaptationsets
         }
         $peri=null;
-        $totarr[] = $foldername;
-        $stri=json_encode($totarr);
+        $totarr[] = $foldername;// add session name 
+        $stri=json_encode($totarr); // encode array to send to client
 
-        //print_r2("printingtime".$time);
-        if(isset($_SESSION['count1']))
+		
+        if(isset($_SESSION['count1']))  // reset adaptationset counter before download start
             unset($_SESSION['count1']);
 
-        if(isset($_SESSION['count2']))
+        if(isset($_SESSION['count2'])) //reset representation counter before  download start
             unset($_SESSION['count2']);
 
         $_SESSION['type'] = $type;
         $_SESSION['minBufferTime'] = $minBufferTime;
 
-        echo $stri;
+          
+        echo $stri; // send no. of periods,adaptationsets, representation, mpd file to client
     }
     ////////////////////////////////////////////////////////////////////////////////////
-    if(isset($_POST['download']))
+    if(isset($_POST['download'])) // get request from client to download segments
     {
-        $root= dirname(__FILE__);
+	    $root= dirname(__FILE__);
         $destiny=array();
 
-        if($count2>=sizeof($period_url[$count1]))
+        if($count2>=sizeof($period_url[$count1]))//check if all representations within a segment is downloaded
         {
-            $count2=0;
-            $count1=$count1+1;
+            $count2=0;  // reset representation counter when new adaptation set is proccesed 
+            $count1=$count1+1; // increase adapatationset counter
         }
         
-        if ($count1>=sizeof($period_url))
-        {
-            crossRepresentationProcess();
-			$missingexist = file_exists ($locate.'\missinglink.txt');
+        if ($count1>=sizeof($period_url)) //check if all adapatationsets is processed 
+        {    
+		crossRepresentationProcess();
+			$missingexist = file_exists ($locate.'\missinglink.txt'); //check if any broken urls is detected
 			if($missingexist){
 			$temp_string = str_replace (array('$Template$'),array("missinglink"),$string_info);
-        file_put_contents($locate.'\missinglink.html',$temp_string);
+        file_put_contents($locate.'\missinglink.html',$temp_string);//create html file contains report for all missing segments
 		}
-			$file_error[] = "done";
-			for($i=0;$i<sizeof($Period_arr);$i++){
+			$file_error[] = "done"; 
+			for($i=0;$i<sizeof($Period_arr);$i++){  // check all info files if they contain Error 
+			if(file_exists($locate.'\\Adapt'. $i .'_infofile.txt')) 
+			{
 			            $searchadapt = file_get_contents($locate.'\\Adapt'. $i .'_infofile.txt');
-						if(strpos($searchadapt,"Error")==false)
-                $file_error[] = "noerror";
+						if(strpos($searchadapt,"Error")==false) 
+                $file_error[] = "noerror"; // no error found in text file
             else
-                $file_error[] = "temp".'/'.$foldername.'/'.'Adapt'. $i .'_infofile.html';
+                $file_error[] = "temp".'/'.$foldername.'/'.'Adapt'. $i .'_infofile.html'; // add error file location to array
+				}
+				else
+				$file_error[]="noerror";
          }
             session_destroy();
 			if($missingexist){
@@ -797,36 +785,32 @@ $signlocation = strpos($media,'%');
 			   }
 			   else 
 			   $file_error[]="noerror";
-	   $send_string = json_encode($file_error);
+	   $send_string = json_encode($file_error); //encode array to string and send it 
 
 
-            echo $send_string;
+            echo $send_string; // send string with location of all error logs to client
             exit;
         }
         else
         {
-            $repno = "Adapt".$count1."rep".$count2;
-            $file_string =  $locate.'\\'.$repno.".zip";
+            $repno = "Adapt".$count1."rep".$count2; // presentation unique name
             $pathdir=$locate."\\".$repno."\\";
             
             if (!file_exists($pathdir))
             {
-                mkdir($pathdir, 0777, true);
+                mkdir($pathdir, 0777, true); // create folder for each presentation
             }
             
-            $sizearray = downloaddata($pathdir,$period_url[$count1][$count2]);
-            Assemble($pathdir,$period_url[$count1][$count2],$sizearray);
-            rename($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt");
+            $sizearray = downloaddata($pathdir,$period_url[$count1][$count2]); // download data 
+			if($sizearray !==0)
+			{
+			
+            Assemble($pathdir,$period_url[$count1][$count2],$sizearray); // Assemble all presentation in to one presentation
+            rename($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
 
-            //$repnolist[]=$repno;
-            //print_r2(memory_get_peak_usage(true));
-            ////////////////////////////////////////////////////
             $file_location = array();
             $exeloc=dirname(__FILE__);
             chdir($locate);
-            //$xmlDurationParser=new sspmod_janus_Xml_Duration_Parser($minBufferTime);
-            //$xmlDurationParser->parse();
-            //$timeSeconds=$xmlDurationParser->getSeconds();
             $timeSeconds=str_replace("PT","",$minBufferTime);
             $timeSeconds=str_replace("S","",$timeSeconds);
             $processArguments=" -minbuffertime ".$timeSeconds." -bandwidth ";
@@ -901,6 +885,19 @@ $signlocation = strpos($media,'%');
             $_SESSION['count1'] = $count1;
             $send_string = json_encode($file_location);
             echo $send_string;
+			}
+			else 
+		         {
+				             $count2 = $count2+1;
+							 $_SESSION['count2'] = $count2;
+            $_SESSION['count1'] = $count1;
+
+				 $file_location[] = 'notexist';
+				             $send_string = json_encode($file_location);
+
+				echo $send_string;
+				 
+				 }
 
         }
     }
@@ -908,7 +905,7 @@ $signlocation = strpos($media,'%');
 
 function processPeriod($period)
 {
-    global $Adapt_arr,$Period_arr,$period_baseurl,$perioddepth,$Adapt_urlbase, $profiles;
+    global $Adapt_arr,$Period_arr,$period_baseurl,$perioddepth,$Adapt_urlbase, $profiles,$Timeoffset;
 
     //var_dump($period);
     $domper = new DOMDocument ('1.0');
@@ -917,6 +914,20 @@ function processPeriod($period)
 
     //var_dump ($domper);
     $Periodduration = $period->getAttribute('duration');
+	$Period_segmentbase = $period->getElementsByTagName('SegmentBase');
+	$Timeoffset=0;
+	for($i=0;$i<$Period_segmentbase->length;$i++)
+    {
+        $base = $Period_segmentbase->item(0);
+        $par = $base->parentNode;
+        $name = $par->tagName;
+        if($name == 'Period')
+        {
+           $Timeoffset = processSegmentBase($base);
+		
+		}
+		
+    }
     //print_r($Periodduration);
     $Adaptationset = $domper->getElementsByTagName( "AdaptationSet" ); 
     $periodbase = $domper->getElementsByTagName("BaseURL");
@@ -935,7 +946,8 @@ function processPeriod($period)
         {
             $baseurl = $base->nodeValue;
             $perioddepth[$i]=$baseurl;
-        }
+            
+		}
     }
     
     global $id;
@@ -952,7 +964,7 @@ function processPeriod($period)
 
 function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitching)
 {
-    global $Adapt_arr,$Period_arr, $Adapt_urlbase,$adaptsetdepth;
+    global $Adapt_arr,$Period_arr, $Adapt_urlbase,$adaptsetdepth,$Timeoffset;
     //var_dump($Adapt);
     $dom = new DOMDocument ('1.0');
     $Adapt = $dom->importNode ( $Adapt, true);
@@ -986,7 +998,21 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
             //print_r($contentType);
             //print_r($contid);
         }
-        
+		
+		$Adapt_segmentbase = $Adapt->getElementsByTagName('SegmentBase');
+		$Adapt_Timeoffset=0;
+	for($i=0;$i<$Adapt_segmentbase->length;$i++)
+    {
+        $base = $Adapt_segmentbase->item(0);
+        $par = $base->parentNode;
+        $name = $par->tagName;
+        if($name === 'AdaptationSet')
+        {
+           $Adapt_Timeoffset = processSegmentBase($base);
+		}
+    }
+     if ($Adapt_Timeoffset===0)
+       $Adapt_Timeoffset=$Timeoffset;	 
         $baseurl = $Adapt->getElementsByTagName ("BaseURL");
         $adaptsetdepth=array();
         
@@ -1049,10 +1075,20 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
             for ($i = 0; $i < $Representation->length; $i++)
             {
                 $lastbase = array();
-                // echo $Representation->item($i)->nodeName . "\n";
                 $temprep=$Representation->item($i);
                 $repbaseurl = $temprep->getElementsByTagName('BaseURL');
-                
+				$Rep_segmentbase = $temprep->getElementsByTagName('SegmentBase');
+
+           if($Rep_segmentbase->length>0)
+		   {
+		  
+		   $base= $Rep_segmentbase->item(0);
+           $Rep_Timeoffset[] = processSegmentBase($base);
+		   
+		   }
+		   else
+		   $Rep_Timeoffset[] = $Adapt_Timeoffset;
+		         
                 for($j=0;$j<$repbaseurl->length;$j++)
                 {
                     $base = $repbaseurl->item($j);
@@ -1060,8 +1096,7 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
                 }
                 
                 $rep_url[]=$lastbase;
-                //var_dump ( $temprep);
-                //var_dump ( $Representation);
+          
                 $repsegment = $temprep->getElementsByTagName("SegmentTemplate");
                 $pass_seg = $repsegment->item(0);
                 if($repsegment->length>0)
@@ -1122,19 +1157,19 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
                 }
 
                 //echo $id ; 
+				}
             }
-        }
+       
     }
     //print_r2($rep_seg_temp);
     //print_r2($Adapt_seg_temp);
     $Adapt_urlbase  = $rep_url;
     //print_r2($Adapt_urlbase);
     $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
-    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles, 'ContentProtectionElementCount'=>$ContentProtectionElementCountRep);
-    
-    $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching,
+    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
+	'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset);
+        $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching,
     'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'Representation'=>$Rep_arr);
-
 }
 
 function processTemplate($segmentTemp)
@@ -1284,7 +1319,7 @@ function create_dirs($path)
   }
 }
 
-process_mpd($url);
+process_mpd($url);// start processing mpd and get segments url
 
 function Assemble ($path,$period,$sizearr)
 {
@@ -1404,6 +1439,7 @@ function downloaddata($directory,$array_file)
 		
 		}
 		else{
+
         $file_sizearr[$index] = $file_size;
         $tok = explode('/', $filePath);
         $filename = $tok[sizeof($tok)-1];
@@ -1475,7 +1511,7 @@ function downloaddata($directory,$array_file)
             $progressXML->dataProcessed = strval($totalDataProcessed + $sizepos);
             $progressXML->dataDownloaded = strval($totalDataDownloaded);
             // Saving the whole modified XML to a new filename
-            $progressXML->asXml($locate.'/progress.xml');
+            $progressXML->asXml(trim($locate.'/progress.xml'));
 
         }
 
@@ -1486,6 +1522,8 @@ function downloaddata($directory,$array_file)
     }
  
  }
+ if (!isset($file_sizearr))
+ $file_sizearr = 0;
  return $file_sizearr;
  
 }
@@ -1493,6 +1531,13 @@ function downloaddata($directory,$array_file)
  function remote_file_size2($url){
 	# Get all header information
 	$data = get_headers($url, true);
+	
+	if ($data[0]==='HTTP/1.1 404 Not Found')
+	{
+	return false;
+	
+	}
+	
 	# Look up validity
 	if (isset($data['Content-Length']))
 		# Return file size
@@ -1553,5 +1598,17 @@ $result=0;
         return $result; 
         }
     }
+	function removeabunchofslashes($url){
+  $explode = explode('://',$url);
+  while(strpos($explode[1],'//'))
+    $explode[1] = str_replace('//','/',$explode[1]);
+  return implode('://',$explode);
+}
+function processSegmentBase($basedom){
+$timeoffset = 0;
+if ($basedom->hasAttribute('presentationTimeOffset'))
+$timeoffset = $basedom->getAttribute('presentationTimeOffset');
 
+return $timeoffset;
+}	
 ?>
