@@ -343,10 +343,8 @@ function process_mpd($mpdurl)
         //libxml_use_internal_logors(true);
         $MPD = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
               $url_array = json_decode($_POST['urlcode']);
-			  if($url_array[1]===1)
-			     chdir("mpdvalidator");
-				 if($url_array[1] ===2)
-                  	chdir("mpdvalidator");
+		
+					
 				 
 				 
 
@@ -362,8 +360,7 @@ function process_mpd($mpdurl)
             exit;
         }
        
-			           chdir("mpdvalidator");// change PHP default directory to directory contains mpd validator
-				
+				chdir($url_array[1]);
 				$mpdvalidator = syscall("ant run -Dinput=".$mpdurl); //run mpd validator
 						$mpdvalidator = str_replace('[java]',"",$mpdvalidator);
 						$valid_word = 'Start XLink resolving';
@@ -396,7 +393,8 @@ function process_mpd($mpdurl)
 							$totarr[]=$mpd_rep_loc;/// if failed send client the location of mpdvalidator report
 							$exit =true;// if failed terminate conformance check
 							}
-							
+							if ($url_array[2] ===1)  // only mpd validation requested
+                               $exit =true;							
 							if ($exit===true)// mpd validation failed.
 							{
         $stri=json_encode($totarr);

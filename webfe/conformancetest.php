@@ -172,10 +172,12 @@ position:absolute;
 <button id="btn8" onclick="submit()">Submit</button>
 
 <form action="">
-<input type="radio" name="validator" class = "validation" value="1" checked='checked'> Dash version 1 
-<input type="radio" name="validator" class = "validation" value="2" >Dash version 2 
+<input type="radio" name = "valid" id="version1" class = "validation" value="mpdvalidator" checked='checked'> Dash version 1 
+<input type="radio" name = "valid" id="version2" class = "validation" value="mpdvalidator2" >Dash version 2 
 </form>
-
+<form action="">
+<input type="checkbox" id="mpdvalidation" class = "validation" value="0">MPD conformance only<br>
+</form>
 </div>
 
 
@@ -328,8 +330,17 @@ function submit()
 	var checkedValue = $('.validator:checked').val();
     var stringurl = [];
 	stringurl[0] = url;
-    stringurl[1] =  checkedValue;
-   	
+	if(document.getElementById("version1").checked)
+    stringurl[1] =  "mpdvalidator";
+	if(document.getElementById("version2").checked)
+    stringurl[1] =  "mpdvalidator2";
+	
+		if($("#mpdvalidation").is(':checked'))
+        stringurl[2] = 1;
+		else
+   	     stringurl[2] = 0 ;
+		 
+		 console.log(stringurl[2]);
     document.getElementById("btn8").disabled="true";
 
     //document.getElementById('img').style.visibility='visible';
