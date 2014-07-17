@@ -867,7 +867,13 @@ $signlocation = strpos($media,'%');
                 $processArguments=$processArguments."-dash264enc ";
             }
             
-            exec(dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4." ".$locate.DIRECTORY_SEPARATOR.$repno.".mp4 "."-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt"." -offsetinfo ".$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt -logconsole".$processArguments );
+            $command = dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4." ".
+                          $locate.DIRECTORY_SEPARATOR.$repno.".mp4 ".
+                          "-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt ".
+                          "-offsetinfo ".$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt ".
+                          "-logconsole".$processArguments;
+            file_put_contents($locate.DIRECTORY_SEPARATOR.$repno."_validatemp4.txt", $command);
+            exec($command);
             rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt");
             $temp_string = str_replace (array('$Template$'),array($repno."_infofile"),$string_info);
             //print_r2($temp_string);
