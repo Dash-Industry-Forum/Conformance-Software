@@ -27,8 +27,36 @@ Example for running:   ant run -Dinput=test.mpd
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
   </target>
+	
+  <target name="javadoc">
+	<!-- Create the doc directory structure used by javadoc -->
+	<mkdir dir="${doc}"/>
+  	<javadoc packagenames="*.*"
+	    sourcepath="${src}"
+        destdir="${doc}"
+        access="private"
+        verbose="true"
+        author="true"
+        version="true">
+  		<classpath>
+  			<pathelement location="${build}"/>
+  			<pathelement path="${java.class.path}"/>
+  			<fileset dir=".">
+  				<include name="**/*.jar" />
+  			</fileset>
+  		</classpath>
+  	</javadoc>
+  </target>
+	
 		
-	<target name="run" description="runs the test file">
+  <target name="compile-java" depends="init"
+        description="compile the source" >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${src}" destdir="${build}" classpath="xercesImpl.jar"/>	
+  </target>
+	
+	
+	<target name="run" depends="compile-java" description="runs the test file">
 		<java fork="true" classname="Validator" classpath="saxon9.jar:saxon9-dom.jar:xercesImpl.jar:${build}">
 			<arg value="${input}"/>
 		</java>
