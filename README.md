@@ -38,7 +38,5 @@ Check out DASH MPD validator and build
     cd SegmentValidator/public/linux
     make
     cp bin/ValidateMP4.exe /var/www/html/Conformance-Software/webfe/validatemp4-linux
-    cd ../../..
-    ant
-    cp -r bin saxon9-dom.jar saxon9.jar schemas schematron xercesImpl.jar /var/www/html/Conformance-Software/webfe/mpdvalidator
+
 
