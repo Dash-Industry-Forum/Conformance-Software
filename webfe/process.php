@@ -47,7 +47,9 @@ unset($_SESSION['init_flag']);// reset for flag indicating first connection atte
 
         // Work out which validator binary to use
         $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "validatemp4-linux";
-			if(isset($_SESSION['locate'])) //get location from session variable if it is not secont  attempt to access server by same session			$locate = $_SESSION['locate'];
+
+			if(isset($_SESSION['locate'])) //get location from session variable if it is not secont  attempt to access server by same session
+						$locate = $_SESSION['locate'];
 			$Timeoffset;
  if(isset($_SESSION['count1']))//get Adaptationset counter in access
  $count1 =$_SESSION['count1'];
@@ -313,16 +315,16 @@ function process_mpd($mpdurl)
         $sessname = 'sess'.rand(); // get a random session name
         session_name($sessname);// set session name
 
-        $directories = array_diff(scandir(dirname(__FILE__).'/'.'temp'), array('..', '.'));
+        $directories = array_diff(scandir(dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'), array('..', '.'));
 
         foreach ($directories as $file) // Clean temp folder from old sessions in order to save diskspace
         {
-            if(file_exists(dirname(__FILE__).'/'.'temp'.'/'.$file)) // temp is folder contains all sessions folders
+            if(file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR.$file)) // temp is folder contains all sessions folders
             {
-                $change = time()-filemtime(dirname(__FILE__).'/'.'temp'.'/'.$file); // duration of file implementation
+                $change = time()-filemtime(dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR.$file); // duration of file implementation
 
                 if($change>300)
-                    rrmdir(dirname(__FILE__).'/'.'temp'.'/'.$file); // if last time folder was modified exceed 300 second it should be removed 
+                    rrmdir(dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR.$file); // if last time folder was modified exceed 300 second it should be removed 
             }
         }
 
@@ -373,9 +375,9 @@ function process_mpd($mpdurl)
 								fwrite($mpdreport,$mpdvalidator);//get mpd validator result to text file
 
 						$temp_string = str_replace (array('$Template$'),array("mpdreport"),$string_info); // copy mpd report to html file 
-            $mpd_rep_loc =  '/temp/'.$foldername.'/mpdreport.html';
+            $mpd_rep_loc =  'temp/'.$foldername.'/mpdreport.html';
 
-            file_put_contents($locate.'//mpdreport.html',$temp_string);
+            file_put_contents($locate.'/mpdreport.html',$temp_string);
 						$exit=false;
 						
 						if(strpos($mpdvalidator,"XLink resolving successful")!==false)// check if Xlink resolving is successful
@@ -1554,7 +1556,7 @@ function downloaddata($directory,$array_file)
  function partialdownload($url,$begin,$end){
 global $locate;
 $range = $begin.'-'.$end;
-$fileName = $locate.'//'."getthefile.mp4";
+$fileName = $locate.DIRECTORY_SEPARATOR."getthefile.mp4";
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
