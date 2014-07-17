@@ -367,7 +367,7 @@ function submit()
 
         totarr=JSON.parse(totarrstring);
         dirid = totarr[totarr.length-1];
-		document.getElementById("list").href='/temp/'+dirid+'/featuretable.html';
+		document.getElementById("list").href='temp/'+dirid+'/featuretable.html';
 
         progressTimer = setInterval(function(){progressupdate()},1000);
         console.log(dirid);
