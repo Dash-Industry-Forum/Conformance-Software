@@ -418,25 +418,24 @@ function process_mpd($mpdurl)
         if(strpos($y,'H')!==false)
         {
             $H = explode("H",$y); //get hours
-            $y=str_replace("H","",$y);
+
+           $y = substr($y,strpos($y,'H')+1);
         }
         else
             $H[0]=0;
             
         if(strpos($y,'M')!==false)
         {
-            $y=str_replace($H[0],"",$y);
-            $M = explode("M",$y);// get minutes
-            $y=str_replace("M","",$y);
-            $y=str_replace($M[0],"",$y);
+            
+		   $M = explode("M",$y);// get minutes
+             $y = substr($y,strpos($y,'M')+1);
+
         }
         else
             $M[0]=0;
 
         $S=explode("S",$y);// get seconds
         $presentationduration=($H[0]*60*60)+($M[0]*60)+$S[0];// calculate durations in seconds
-
-	
 featurelist($MPD,$presentationduration);
         $type = $MPD->getAttribute ( 'type'); // get mpd type
 		if($type === 'dynamic')
@@ -712,7 +711,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
             if($setsegflag===false)
             $period_url = $period_baseurl;// if segment template is not used, use baseurl
         }
-
+        
         $size=array();
 
         //print_r2("Alo I'm here");
