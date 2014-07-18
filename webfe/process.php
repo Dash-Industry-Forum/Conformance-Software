@@ -366,7 +366,7 @@ function process_mpd($mpdurl)
         }
        
 				chdir($url_array[1]);
-				$mpdvalidator = syscall("ant run -Dinput=".$mpdurl); //run mpd validator
+				$mpdvalidator = syscall("ant run -Dinput=".$mpdurl." -Dtmpdir=".$locate); //run mpd validator
 						$mpdvalidator = str_replace('[java]',"",$mpdvalidator);
 						$valid_word = 'Start XLink resolving';
 						$report_start = strpos($mpdvalidator,$valid_word);
