@@ -439,8 +439,13 @@ function process_mpd($mpdurl)
 featurelist($MPD,$presentationduration);
         $type = $MPD->getAttribute ( 'type'); // get mpd type
 		if($type === 'dynamic')
-		{
-		            echo 'dynamic';
+		{ 
+		$totarr[]='dynamic';
+		            $stri=json_encode($totarr);// Incase of dynamic only mpd conformance.
+					echo $stri;
+					 
+							            session_destroy(); // destroy session variables 
+					
 					exit;// if type is dynamic "Dynamic conformance is not supported"
 
 		}

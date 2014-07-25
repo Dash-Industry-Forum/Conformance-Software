@@ -8,7 +8,7 @@
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
   <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
   <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.js"></script>
-  <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script> 
+  <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
   <!--link rel="stylesheet" href="/resources/demos/style.css" /-->
  
 
@@ -171,13 +171,12 @@ position:absolute;
 
 <button id="btn8" onclick="submit()">Submit</button>
 
-<form action="">
-<input type="radio" name = "valid" id="version1" class = "validation" value="mpdvalidator" checked='checked'> Dash version 1 
-<input type="radio" name = "valid" id="version2" class = "validation" value="mpdvalidator2" >Dash version 2 
-</form>
+
 <form action="">
 <input type="checkbox" id="mpdvalidation" class = "validation" value="0">MPD conformance only<br>
 </form>
+<a id="dynamic" href="url" target="_blank" style="visibility:hidden;" >Dynamic timing validation</a>
+
 </div>
 
 
@@ -330,9 +329,7 @@ function submit()
 	var checkedValue = $('.validator:checked').val();
     var stringurl = [];
 	stringurl[0] = url;
-	if(document.getElementById("version1").checked)
-    stringurl[1] =  "mpdvalidator";
-	if(document.getElementById("version2").checked)
+	
     stringurl[1] =  "mpdvalidator2";
 	
 		if($("#mpdvalidation").is(':checked'))
@@ -359,10 +356,8 @@ function submit()
 			
             return false;
         }
-		if(totarrstring==='dynamic'){
-		            window.alert("Dynamic MPD conformance not supported");
-					return false;
-}
+
+		
 
 
         totarr=JSON.parse(totarrstring);
@@ -442,6 +437,12 @@ if(totarr[0]==='true')
 lastloc++;		
 return false;
 		}
+		if(totarr[totarr.length-1]==='dynamic'){
+		document.getElementById('dynamic').style.visibility='visible';
+
+		document.getElementById("dynamic").href='http://ec2-54-194-95-240.eu-west-1.compute.amazonaws.com/dynamic/?mpdurl=' +url ;
+					return false;
+}
         for(var i=0;i<totarr[0];i++)
         { 
 
