@@ -11,7 +11,7 @@
   <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
   <!--link rel="stylesheet" href="/resources/demos/style.css" /-->
  
-
+    
           
             
 
@@ -170,7 +170,7 @@ position:absolute;
   <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.127.99/dash264/TestCases/6c/Microsoft/CENC_SD_Time/CENC_SD_time_MPD.mpd"/-->
 
 <button id="btn8" onclick="submit()">Submit</button>
-
+<!--<input type="file" id="selectfile" /> Uploading local mpd for testing -->
 
 <form action="">
 <input type="checkbox" id="mpdvalidation" class = "validation" value="0">MPD conformance only<br>
@@ -234,6 +234,7 @@ var adaptid=[];
 
 
 
+document.getElementById("selectfile").addEventListener("change", doit, false);
 
 
 function button()
@@ -328,8 +329,10 @@ function submit()
     var url = document.getElementById('urlinput').value;
 	var checkedValue = $('.validator:checked').val();
     var stringurl = [];
+	if (uploaded ==="true")
+	url =  parsed; 
 	stringurl[0] = url;
-	
+
     stringurl[1] =  "mpdvalidator2";
 	
 		if($("#mpdvalidation").is(':checked'))
@@ -338,6 +341,7 @@ function submit()
    	     stringurl[2] = 0 ;
 		 
 		 console.log(stringurl[2]);
+		 stringurl[3]=uploaded;
     document.getElementById("btn8").disabled="true";
 
     //document.getElementById('img').style.visibility='visible';
@@ -350,7 +354,7 @@ function submit()
         console.log(totarrstring);
 		
         
-        if(totarrstring.indexOf("Error:") > -1)
+        if (totarrstring.indexOf("Error:") > -1)
         {
             window.alert("Error loading the MPD, please check the URL.");
 			
@@ -361,12 +365,25 @@ function submit()
 
 
         totarr=JSON.parse(totarrstring);
-        dirid = totarr[totarr.length-1];
+       
+if(totarr[totarr.length-1]==='dynamic'){
+
+dirid = totarr[totarr.length-2];
 		document.getElementById("list").href='/temp/'+dirid+'/featuretable.html';
 
+		document.getElementById('dynamic').style.visibility='visible';
+
+		document.getElementById("dynamic").href='http://ec2-54-194-95-240.eu-west-1.compute.amazonaws.com/dynamic/?mpdurl=' +url ;
+		document.getElementById('list').style.visibility='visible';
+
+					return false;
+}
+ dirid = totarr[totarr.length-1];
+		document.getElementById("list").href='/temp/'+dirid+'/featuretable.html';
         progressTimer = setInterval(function(){progressupdate()},1000);
         console.log(dirid);
         console.log(totarrstring);
+		
 var failed ='false';
         tree.setOnDblClickHandler(tondblclick);
 
@@ -391,7 +408,7 @@ var failed ='false';
 		}
 		else {
 		setTimeout(automate(y,x,"XLink resolving",1));
-					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
+	   				             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
 								 failed=totarr[0];
 		}
 		totarr.splice(0,1);
@@ -404,12 +421,14 @@ var failed ='false';
                    
 		
 		}
-		else {
+		
+		else
+		{
 		setTimeout(automate(y,x,"MPD validation",1));
 					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
 								 failed=totarr[0];
 		}
-				totarr.splice(0,1);
+				totarr.splice(0,1);//valide
 				 x++;
 if(totarr[0]==='true')
 		{
@@ -437,12 +456,7 @@ if(totarr[0]==='true')
 lastloc++;		
 return false;
 		}
-		if(totarr[totarr.length-1]==='dynamic'){
-		document.getElementById('dynamic').style.visibility='visible';
-
-		document.getElementById("dynamic").href='http://ec2-54-194-95-240.eu-west-1.compute.amazonaws.com/dynamic/?mpdurl=' +url ;
-					return false;
-}
+		
         for(var i=0;i<totarr[0];i++)
         { 
 
@@ -609,7 +623,18 @@ if(urlto)
 window.open(urlto, "_blank");
 
 }
-
+var parsed;
+var uploaded = "false";
+function doit(e) {
+uploaded=true;
+  var files = e.target.files;
+  var reader = new FileReader();
+  reader.onload = function() {
+     parsed = new DOMParser().parseFromString(this.result, "text/xml");
+  };
+  reader.readAsText(files[0]);
+  console.log(xmlToString(parsed));
+} 
 </script>
 
 <script>
@@ -621,6 +646,19 @@ window.open(urlto, "_blank");
   ga('create', 'UA-48482208-1', 'dashif.org');
   ga('send', 'pageview');
 ///////////////////////////////////
+function xmlToString(xmlData) { 
+
+    var xmlString;
+    //IE
+    if (window.ActiveXObject){
+        xmlString = xmlData.xml;
+    }
+    // code for Mozilla, Firefox, Opera, etc.
+    else{
+        xmlString = (new XMLSerializer()).serializeToString(xmlData);
+    }
+    return xmlString;
+}   
 
 </script>
 
