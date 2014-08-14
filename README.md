@@ -38,5 +38,10 @@ Check out DASH MPD validator and build
     cd SegmentValidator/public/linux
     make
     cp bin/ValidateMP4.exe /var/www/html/Conformance-Software/webfe/validatemp4-linux
+    chmod +x /var/www/html/Conformance-Software/webfe/validatemp4-linux
+    cd /var/www/html/Conformance-Software/webfe/mpdvalidator
+    ant
+    cd ../mpdvalidator2
+    ant
 
 
