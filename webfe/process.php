@@ -769,7 +769,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 		}
 			$file_error[] = "done";
 			for($i=0;$i<sizeof($Period_arr);$i++){  // check all info files if they contain Error 
-			if(file_exists($locate.'\\Adapt'. $i .'_infofile.txt')) 
+			if(file_exists($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt')) 
 			{
 			            $searchadapt = file_get_contents($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt');
 						if(strpos($searchadapt,"Error")==false)
@@ -808,7 +808,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 			{
 
             Assemble($pathdir,$period_url[$count1][$count2],$sizearray); // Assemble all presentation in to one presentation
-            rename($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
+            rename($locate.DIRECTORY_SEPARATOR."mdatoffset.txt",$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
 
             $file_location = array();
             $exeloc=dirname(__FILE__);
