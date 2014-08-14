@@ -7,17 +7,17 @@ session_start();// initiate session for connected client
 
 //placeholder="Enter mpd url" 
 //logor_reporting(E_ALL | E_STRICT);
-//$url = 'http://castlabs-dl.s3.amazonaws.com/public/DASH/test_ept/Manifest.mpd';
+/////$url = 'http://castlabs-dl.s3.amazonaws.com/public/DASH/test_ept/Manifest.mpd';
 if(isset($_POST['urlcode'])){// if client iniate first connection
 
-$url_array = json_decode($_POST['urlcode']);
+$url_array = json_decode($_POST['urlcode']);   
 $url = $url_array[0];// get mpd url from HTTP request
 $_SESSION['url']=$url;// save mpd url to session variable
 unset($_SESSION['period_url']); // reset session variable 'period_url' in order to remove any old segment url from previous sessions
 unset($_SESSION['init_flag']);// reset for flag indicating first connection attempt
 }
 
-			$adaptsetdepth=array();// array for Baseurl 
+			$adaptsetdepth=array();// array for Baseurl b
 			$depth = array();//array contains all relative URLs exist in all mpd levels 
 	        $locate ;  // location of session folder on server
 			$foldername; // floder name for the session
@@ -365,12 +365,12 @@ function process_mpd($mpdurl)
             exit;
         }
        
-				chdir($url_array[1]);
+				chdir($url_array[1]);// Change default execution directory to the location of the mpd validator
 				$mpdvalidator = syscall("ant run -Dinput=".$mpdurl." -Dtmpdir=".$locate); //run mpd validator
-						$mpdvalidator = str_replace('[java]',"",$mpdvalidator);
-						$valid_word = 'Start XLink resolving';
-						$report_start = strpos($mpdvalidator,$valid_word);
-						$mpdvalidator=substr ($mpdvalidator,$report_start);
+						$mpdvalidator = str_replace('[java]',"",$mpdvalidator); //save the mpd validator output to variable
+						$valid_word = 'Start XLink resolving'; 
+						$report_start = strpos($mpdvalidator,$valid_word); // Checking the begining of the Xlink validation
+						$mpdvalidator=substr ($mpdvalidator,$report_start); // 
 						$mpdreport = fopen($locate.'/mpdreport.txt','a+b');
 								fwrite($mpdreport,$mpdvalidator);//get mpd validator result to text file
 
@@ -384,7 +384,7 @@ function process_mpd($mpdurl)
                             $totarr[]='true';
 							else{
 							$totarr[]=$mpd_rep_loc;// if failed send client the location of mpdvalidator report
-							$exit = true;// if failed terminate conformance check
+							$exit = true;// if failed terminate conformance check 
 							}
 						if(strpos($mpdvalidator,"MPD validation successful")!==false)//check if Xlink resolving is successful 
                           $totarr[]='true';
@@ -400,13 +400,14 @@ function process_mpd($mpdurl)
 							}
 							if ($url_array[2] ===1)  // only mpd validation requested
 							$exit =true;
-							if ($exit===true)// mpd validation failed.
+							/*if ($exit===true)// mpd validation failed.
 							{
         $stri=json_encode($totarr);
 							echo $stri;
 							            session_destroy(); // destroy session variables 
 							exit;
 							}
+							*/
 
 						
 			 
@@ -444,10 +445,26 @@ function process_mpd($mpdurl)
 featurelist($MPD,$presentationduration);
         $type = $MPD->getAttribute ( 'type'); // get mpd type
 		if($type === 'dynamic')
-		{
-		            echo 'dynamic';
-					exit;// if type is dynamic "Dynamic conformance is not supported"
+		{ 
+		$totarr[] = $foldername;
+		$totarr[]='dynamic'; // Incase of dynamic only mpd conformance.
+             $exit =true;		 
+		// $stri=json_encode($totarr);
+					//echo $stri;
+					 
+						//	            session_destroy(); // destroy session variables 
+					
+					//exit;// if type is dynamic "Dynamic conformance is not supported"
 
+		}
+		
+		if($exit ===true)
+		{
+		
+		 $stri=json_encode($totarr);
+		 echo $stri;
+		 session_destroy();
+		 exit;
 		}
 		
         $minBufferTime = $MPD->getAttribute('minBufferTime');//get min buffer time
