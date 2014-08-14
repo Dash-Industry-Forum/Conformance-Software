@@ -11,8 +11,8 @@
   <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
   <!--link rel="stylesheet" href="/resources/demos/style.css" /-->
  
-    
           
+            
             
 
          
@@ -378,8 +378,8 @@ dirid = totarr[totarr.length-2];
 
 					return false;
 }
- dirid = totarr[totarr.length-1];
-		document.getElementById("list").href='/temp/'+dirid+'/featuretable.html';
+        dirid = totarr[totarr.length-1];
+		document.getElementById("list").href='temp/'+dirid+'/featuretable.html';
         progressTimer = setInterval(function(){progressupdate()},1000);
         console.log(dirid);
         console.log(totarrstring);
@@ -408,7 +408,7 @@ var failed ='false';
 		}
 		else {
 		setTimeout(automate(y,x,"XLink resolving",1));
-	   				             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
+					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
 								 failed=totarr[0];
 		}
 		totarr.splice(0,1);
