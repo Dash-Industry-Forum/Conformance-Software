@@ -5,13 +5,13 @@
   <title> DASH ISO Segment Conformance Test</title>
 
   </head>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
-  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
-  <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.js"></script>
-  <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/themes/smoothness/jquery-ui.css" />
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.min.js"></script>
   <!--link rel="stylesheet" href="/resources/demos/style.css" /-->
  
-    
+
           
             
 
@@ -234,7 +234,6 @@ var adaptid=[];
 
 
 
-document.getElementById("selectfile").addEventListener("change", doit, false);
 
 
 function button()
@@ -367,7 +366,7 @@ function submit()
         totarr=JSON.parse(totarrstring);
        
 if(totarr[totarr.length-1]==='dynamic'){
-
+console.log("i'M DYNAMIC");
 dirid = totarr[totarr.length-2];
 		document.getElementById("list").href='/temp/'+dirid+'/featuretable.html';
 
@@ -401,13 +400,13 @@ var failed ='false';
         tree.setOnDblClickHandler(tondblclick);
 		if(totarr[0]==='true')
 		{
-		             setTimeout(automate(y,x,"XLink resolving",1));
+		             automate(y,x,"XLink resolving");
 					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
 
 		
 		}
 		else {
-		setTimeout(automate(y,x,"XLink resolving",1));
+		automate(y,x,"XLink resolving");
 	   				             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
 								 failed=totarr[0];
 		}
@@ -415,7 +414,7 @@ var failed ='false';
 		 x++;
 		if(totarr[0]==='true')
 		{
-		             setTimeout(automate(y,x,"MPD validation",1));
+		             automate(y,x,"MPD validation");
 					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
 
                    
@@ -424,21 +423,21 @@ var failed ='false';
 		
 		else
 		{
-		setTimeout(automate(y,x,"MPD validation",1));
+		automate(y,x,"MPD validation");
 					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
 								 failed=totarr[0];
 		}
-				totarr.splice(0,1);//valide
+				totarr.splice(0,1);
 				 x++;
 if(totarr[0]==='true')
 		{
-		             setTimeout(automate(y,x,"Schematron validation",1));
+		             automate(y,x,"Schematron validation");
 					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
 
 		
 		}
 		else {
-		setTimeout(automate(y,x,"Schematron validation",1));
+		automate(y,x,"Schematron validation");
 					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
 								 failed=totarr[0];
 		}
@@ -447,7 +446,7 @@ if(totarr[0]==='true')
 	
 		if (failed!=='false')
 		{
-		setTimeout(automate(y,x,"mpd error log",1));
+		automate(y,x,"mpd error log");
 		tree.setItemImage2(x,'log.jpg','log.jpg','log.jpg');
 		                kidsloc.push(x);
 		urlarray.push(failed);
@@ -461,13 +460,13 @@ return false;
         { 
 
 		
-            setTimeout(automate(y,x,"Adaptationset "+(i+1)),1);
+            automate(y,x,"Adaptationset "+(i+1));
 			adaptid.push(x);
             tree.setItemImage2( x,'adapt.jpg','adapt.jpg','adapt.jpg');
 
             for(var j=0;j<totarr[childno];j++)
             {
-                setTimeout(automate(x,x+j+1,"Representation "+(j+1)),1);
+                automate(x,x+j+1,"Representation "+(j+1));
                 repid.push(x+j+1);
             }
             
@@ -478,7 +477,7 @@ return false;
         
         lastloc = repid[repid.length-1]+1;
 
-        setTimeout(progress,1);
+        progress();
         document.getElementById('par').style.visibility='visible';
 document.getElementById('list').style.visibility='visible';
     });
@@ -515,7 +514,7 @@ console.log(response);
 			 if(locations[i]=="noerror"){
 
 			 tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
-			 			                 setTimeout(automate(adaptid[i-1],lastloc,"Cross-representation validation success"),1);
+		automate(adaptid[i-1],lastloc,"Cross-representation validation success");
 
 			 tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
                   lastloc++;
@@ -528,7 +527,7 @@ console.log(response);
 			 							 kidsloc.push(lastloc);
                                       urlarray.push(locations[i]);
 									  
-			                 setTimeout(automate(adaptid[i-1],lastloc,"Cross-representation validation error"),1);
+			                 automate(adaptid[i-1],lastloc,"Cross-representation validation error");
 						
 							 tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
                   lastloc++;
@@ -541,7 +540,7 @@ console.log(response);
 					 {
                                       urlarray.push(locations[locations.length-1]);
 									  
-			                 setTimeout(automate(1,lastloc,"Broken URL list"),1);
+			                 automate(1,lastloc,"Broken URL list");
 							 tree.setItemImage2(lastloc,'404.jpg','404.jpg','404.jpg');
                   lastloc++;
 			 }
@@ -568,7 +567,7 @@ console.log(response);
 
                 console.log("errors");
 
-                setTimeout(automate(repid[counting],lastloc,"log"),1);
+                automate(repid[counting],lastloc,"log");
                 tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
 
                 kidsloc.push(lastloc);
@@ -580,7 +579,7 @@ console.log(response);
             //lastloc++;
             counting++;
 
-            setTimeout(progress,1);
+            progress();
         }
     });
 }
@@ -625,16 +624,7 @@ window.open(urlto, "_blank");
 }
 var parsed;
 var uploaded = "false";
-function doit(e) {
-uploaded=true;
-  var files = e.target.files;
-  var reader = new FileReader();
-  reader.onload = function() {
-     parsed = new DOMParser().parseFromString(this.result, "text/xml");
-  };
-  reader.readAsText(files[0]);
-  console.log(xmlToString(parsed));
-} 
+ 
 </script>
 
 <script>
@@ -645,20 +635,7 @@ uploaded=true;
 
   ga('create', 'UA-48482208-1', 'dashif.org');
   ga('send', 'pageview');
-///////////////////////////////////
-function xmlToString(xmlData) { 
 
-    var xmlString;
-    //IE
-    if (window.ActiveXObject){
-        xmlString = xmlData.xml;
-    }
-    // code for Mozilla, Firefox, Opera, etc.
-    else{
-        xmlString = (new XMLSerializer()).serializeToString(xmlData);
-    }
-    return xmlString;
-}   
 
 </script>
 

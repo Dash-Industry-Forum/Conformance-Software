@@ -1,17 +1,4 @@
 <?php
-ini_set('memory_limit','-1');//remove memory limit
-error_reporting(E_ERROR | E_PARSE);
-include 'featurlist.php'; 
-//include 'globalvariables.php';
-include 'crossvalidation.php';
-include 'mpdvalidation.php';
-include 'mpdprocessing.php';
-include 'mpdparsing.php';
-include 'datadownload.php';
-include 'assemble.php';
-set_time_limit(0);// php run without time limit
-session_start();// initiate session for connected client
-
 $adaptsetdepth=array();// array for Baseurl 
 			$depth = array();//array contains all relative URLs exist in all mpd levels 
 	        $locate ;  // location of session folder on server
@@ -118,30 +105,5 @@ $( "p" ).html( end);
 </script>
  
 </body>
-</html>';
-if(isset($_POST['urlcode'])){// if client initiate first connection
-
-$url_array = json_decode($_POST['urlcode']); // parse recieved data
-$url = $url_array[0];// get mpd url from HTTP request
-$_SESSION['url']=$url;// save mpd url to session variable
-unset($_SESSION['period_url']); // reset session variable 'period_url' in order to remove any old segment url from previous sessions
-unset($_SESSION['init_flag']);// reset for flag indicating first connection attempt
-}
-
-
-
-function print_r2($val){ //Print output line by line (for testing)
-        echo '<pre>';
-        print_r($val);
-        echo  '</pre>';
-}
-
-
-
-
- 
-process_mpd($url);// start processing mpd and get segments url
-
-
-	
+</html>';// String is added to an empty html file in order to access the report text file and show it in html format
 ?>

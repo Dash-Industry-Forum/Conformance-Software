@@ -1,0 +1,48 @@
+<!doctype html> 
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>text demo</title>
+  <style>
+  p {
+    color: blue;
+    margin: 8px;
+  }
+  </style>
+  <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+</head>
+<body>
+ 
+<p>Processing...</p>
+ 
+<script>
+window.onload = tester;
+
+function tester(){
+var url = document.URL.split("/");
+var newPathname = url[0];
+var loc = window.location.pathname.split("/");
+for ( i = 1; i < url.length-3; i++ ) {
+  newPathname += "/";
+  newPathname += url[i];
+}
+var location = newPathname+"/give.php";
+$.post (location,
+{val:loc[loc.length-2]+"/Adapt1rep3log"},
+function(result){
+resultant=JSON.parse(result);
+var end = "";
+for(var i =0;i<resultant.length;i++)
+{
+
+resultant[i]=resultant[i]+"<br />";
+end = end+" "+resultant[i];
+$( "p" ).html( end);
+}
+});
+
+}
+</script>
+ 
+</body>
+</html>
