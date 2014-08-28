@@ -1,10 +1,10 @@
 <?php
 
-function mpdvalidator($result_array,$locate,$mpdurl,$foldername){
+function mpdvalidator($result_array,$locate,$foldername){
 
 $url_array= $result_array;
 chdir($url_array[1]);// Change default execution directory to the location of the mpd validator
-				$mpdvalidator = syscall("ant run -Dinput=".$mpdurl); //run mpd validator
+				$mpdvalidator = syscall("ant run -Dinput=".$url_array[0]); //run mpd validator
 						$mpdvalidator = str_replace('[java]',"",$mpdvalidator); //save the mpd validator output to variable
 						$valid_word = 'Start XLink resolving'; 
 						$report_start = strpos($mpdvalidator,$valid_word); // Checking the begining of the Xlink validation
@@ -13,7 +13,7 @@ chdir($url_array[1]);// Change default execution directory to the location of th
 								fwrite($mpdreport,$mpdvalidator);//get mpd validator result to text file
 
 						$temp_string = str_replace (array('$Template$'),array("mpdreport"),$string_info); // copy mpd report to html file 
-            $mpd_rep_loc =  '/temp/'.$foldername.'/mpdreport.html'; // location of mpd report
+            $mpd_rep_loc =  'temp/'.$foldername.'/mpdreport.html'; // location of mpd report
 
             file_put_contents($locate.'//mpdreport.html',$temp_string); // create HTML to contain mpd report
 						$exit=false;

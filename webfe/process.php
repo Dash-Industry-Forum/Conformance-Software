@@ -39,7 +39,14 @@ $adaptsetdepth=array();// array for Baseurl
             $mediaPresentationDuration = "";
 			$count1=0; // Count number of adaptationsets processed
 			$count2=0;;//count number of presentations proceessed
-			
+			if(isset($_POST['urlcode'])){// if client initiate first connection
+
+$url_array = json_decode($_POST['urlcode']); // parse recieved data
+$url = $url_array[0];// get mpd url from HTTP request
+$_SESSION['url']=$url;// save mpd url to session variable
+unset($_SESSION['period_url']); // reset session variable 'period_url' in order to remove any old segment url from previous sessions
+unset($_SESSION['init_flag']);// reset for flag indicating first connection attempt
+}
 			if(isset($_SESSION['locate'])) //get location from session variable if it is not secont  attempt to access server by same session
 			$locate = $_SESSION['locate'];
 			$Timeoffset;
@@ -119,14 +126,7 @@ $( "p" ).html( end);
  
 </body>
 </html>';
-if(isset($_POST['urlcode'])){// if client initiate first connection
 
-$url_array = json_decode($_POST['urlcode']); // parse recieved data
-$url = $url_array[0];// get mpd url from HTTP request
-$_SESSION['url']=$url;// save mpd url to session variable
-unset($_SESSION['period_url']); // reset session variable 'period_url' in order to remove any old segment url from previous sessions
-unset($_SESSION['init_flag']);// reset for flag indicating first connection attempt
-}
 
 
 
@@ -139,8 +139,7 @@ function print_r2($val){ //Print output line by line (for testing)
 
 
 
- 
-process_mpd($url);// start processing mpd and get segments url
+process_mpd();// start processing mpd and get segments url
 
 
 	

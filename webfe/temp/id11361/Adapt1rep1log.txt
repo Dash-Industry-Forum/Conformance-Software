@@ -1,1 +1,0 @@
-Validate DecoderSpecificInfo didn't use 24 bits

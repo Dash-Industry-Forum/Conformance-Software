@@ -1,19 +1,24 @@
 <?php
 
-function process_mpd($mpdurl)
+function process_mpd()
 {
     global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info
     ,$count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,$type,$minBufferTime,$profiles; //Global variables to be used within the main function
     
-    $path_parts = pathinfo($mpdurl); 
+  //  $path_parts = pathinfo($mpdurl); 
     $Baseurl=false; //define if Baseurl is used or no
     $setsegflag=false;
-    $mpdfilename = $path_parts['filename'];		// determine name of actual MPD file
+   // $mpdfilename = $path_parts['filename'];		// determine name of actual MPD file
+if (isset($_FILES['afile']['tmp_name']))
+{
 
+$_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
+
+}
     if(isset($_POST['urlcode'])) // in case of client send first connection attempt
     {
-		
-		
+	
+	
         $sessname = 'sess'.rand(); // get a random session name
         session_name($sessname);// set session name
 
@@ -39,7 +44,39 @@ function process_mpd($mpdurl)
         $_SESSION['locate'] = $locate; // save session folder location 
         mkdir($locate,0777); // create session folder
         $totarr= array(); // array contains all data to be sent to client.
-        copy(dirname(__FILE__)."\\"."validatemp4-vs2010.exe",$locate.'\\'."validatemp4-vs2010.exe"); // copy conformance tool to session folder to allow multi-session operation
+        copy(dirname(__FILE__)."\\"."validatemp4-vs2010.exe",$locate.'\\'."validatemp4-vs2010.exe");// copy conformance tool to session folder to allow multi-session operation
+		              $url_array = json_decode($_POST['urlcode']);
+
+		if(isset($_SESSION['fileContent'] ))		// If file is uploaded 
+		{
+		file_put_contents($locate.'/uploaded.mpd',$_SESSION['fileContent']); 
+		$url_array[0] = $locate.'/uploaded.mpd';
+		$GLOBALS["url"] = $locate.'/uploaded.mpd';
+		        $MPD_abs = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
+				        $dom_abs = dom_import_simplexml($MPD_abs);
+		$abs = new DOMDocument('1.0');
+        $dom_abs = $abs->importNode($dom_abs, true); //create dom element to contain mpd 
+
+        $dom_abs = $abs->appendChild($dom_abs);
+
+        $MPD_abs = $abs->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
+		$Baseurl_abs = $MPD_abs->getElementsByTagName('BaseURL');
+		
+		if($Baseurl_abs->length>0){
+		$Baseurl_abs = $Baseurl_abs->item(0);
+		$absolute = $Baseurl_abs->nodeValue;
+		if (($absolute==='./')||(strpos($absolute,'http') === false))
+		{
+		$url_array[2]=1;
+		
+		}
+		
+		
+		}
+		else
+		$url_array[2]=1;
+		
+		}
         copy(dirname(__FILE__)."\\"."featuretable.html",$locate.'\\'."featuretable.html"); // copy features list html file to session folder
         //Create log file so that it is available if accessed
         $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>');// get progress bar update
@@ -47,12 +84,7 @@ function process_mpd($mpdurl)
         
         //libxml_use_internal_logors(true);
         $MPD = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
-              $url_array = json_decode($_POST['urlcode']);
 		
-					
-				 
-				 
-
         if (!$MPD)
         {
             die("Error: Failed loading XML file");
@@ -65,9 +97,9 @@ function process_mpd($mpdurl)
             exit;
         }
        
-				$validate_result = mpdvalidator($url_array,$locate,$mpdurl,$foldername);
-				$exit=  $validate_result[0];
-				$totarr=$validate_result[1];
+				$validate_result = mpdvalidator($url_array,$locate,$foldername);
+		     $exit=  $validate_result[0];
+			 $totarr=$validate_result[1];
 
 						
 			 
@@ -79,32 +111,14 @@ function process_mpd($mpdurl)
 
         $MPD = $dom->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
 		        $mediaPresentationDuration = $MPD ->getAttribute('mediaPresentationDuration'); // get mediapersentation duration from mpd level
+				$AST = $MPD -> getAttribute('availabilityStartTime');
+				$bufferdepth  = $MPD->getAttribute('timeShiftBufferDepth');
+				$bufferdepth = timeparsing($bufferdepth);
+                $presentationduration = timeparsing($mediaPresentationDuration);
 
-		$y=str_replace("PT","",$mediaPresentationDuration); // process mediapersentation duration
-        if(strpos($y,'H')!==false)
-        {
-            $H = explode("H",$y); //get hours
-
-           $y = substr($y,strpos($y,'H')+1);
-        }
-        else
-            $H[0]=0;
-            
-        if(strpos($y,'M')!==false)
-        {
-            
-		   $M = explode("M",$y);// get minutes
-             $y = substr($y,strpos($y,'M')+1);
-
-        }
-        else
-            $M[0]=0;
-
-        $S=explode("S",$y);// get seconds
-        $presentationduration=($H[0]*60*60)+($M[0]*60)+$S[0];// calculate durations in seconds
 featurelist($MPD,$presentationduration);
         $type = $MPD->getAttribute ( 'type'); // get mpd type
-		if($type === 'dynamic')
+		if($type === 'dynamic' && $dom->getElementsByTagName('SegmentTemplate')->length==0)
 		{ 
 		$totarr[] = $foldername;
 		$totarr[]='dynamic'; // Incase of dynamic only mpd conformance.
@@ -114,7 +128,6 @@ featurelist($MPD,$presentationduration);
 		
 		if($exit ===true) //If session should be destroyed
 		{
-		
 		 $stri=json_encode($totarr); //Send results to client
 		 echo $stri;
 		 session_destroy();//Destroy session
@@ -155,6 +168,7 @@ featurelist($MPD,$presentationduration);
 		               $dir = dirname($GLOBALS["url"]);// use location of Baseurl as location of mpd location
 
                 }
+
             }
         
             if(!isset($dir))// if there is no Baseurl in mpd level 
@@ -162,7 +176,8 @@ featurelist($MPD,$presentationduration);
         }
         else
             $dir = dirname($GLOBALS["url"]); // if there is no Baseurl in mpd level,set location of segments dir as mpd location
-        processPeriod($periodNode); // start getting information from period level
+       $start =  processPeriod($periodNode); // start getting information from period level
+	   $start = timeparsing($start);//Get start time in seconds
         $segm_url = array();// contains segments url within one 
         $adapt_url = array(); // contains all segments urls within adapatations set
         if($setsegflag) // Segment template is used
@@ -177,7 +192,7 @@ featurelist($MPD,$presentationduration);
                         $duration = $Period_arr[$k]['SegmentTemplate']['duration'];
                     else
                         $duration = 0; // if duration doesn't exist set duration to 0
-                    if(!empty($Period_arr[$k]['SegmentTemplate']['timescale']))// cehck time scale for given segment template
+                    if(!empty($Period_arr[$k]['SegmentTemplate']['timescale']))// check time scale for given segment template
                         $timescale = $Period_arr[$k]['SegmentTemplate']['timescale'];
                     else
                         $timescale = 1; // if doesn't exist set default to 1
@@ -185,6 +200,7 @@ featurelist($MPD,$presentationduration);
                     if($duration!=0)
                     {
                         $duration = $duration/$timescale; // get duration
+						
                         $segmentno = $presentationduration/$duration; //get segment number
                     }
 
@@ -344,14 +360,32 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 						  
 					 }
 					 
-                    for  ($i =0;$i<$segmentno;$i++ ) 
+					 
+					 if($type==="dynamic")
+					 {
+					 if($dom->getElementsByTagName('SegmentTimeline')->length!==0)
+					 {
+					 $totarr[]='dynamic';
+					 		 $stri=json_encode($totarr); //Send results to client
+		 echo $stri;
+		 session_destroy();//Destroy session
+		 exit;
+					 }
+					 $segmentinfo = dynamicnumber($bufferdepth,$duration,$AST,$start,$Period_arr);
+                      $segmentno = $segmentinfo[1]; //Latest available segment number
+					  $i = $segmentinfo[0];// first segment in buffer
+					 }
+					 else 
+					 $i = 0;
+                    while($i<$segmentno)
                     {
                         $segmenturl = str_replace (array('$Bandwidth$','$Number$','$RepresentationID$','$Time$'),array($bandwidth,$i+$startnumber,$id,$timehashmask[$i]),$media);//replace all media template values by actuall values
                           $segmenturl = sprintf($segmenturl,$startnumber+$i);
 					   $segmenturl = str_replace('$','',$segmenturl);//clean segment url from any extra signs
 						$segmenturl = $direct."/".$segmenturl; // get full segment url
                         $segm_url[]=removeabunchofslashes($segmenturl); //add URL to segments URL array
-                    }
+                    $i++;
+					}
                     $adapt_url[] = $segm_url; // contains all representations within certain adaptation set
                     
                     $segm_url= array();	// delete segment url array and process the next representation
@@ -360,7 +394,6 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
                 $period_url[] = $adapt_url;// add all adaptationset urls to period array
                 $adapt_url=array(); // delete adaptationset array and process the next adaptation set
             }
-            //print_r2($period_url);
         }
 
         if($Baseurl)// in case of using Base url node
@@ -387,8 +420,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
         
         $size=array();
 
-        //print_r2("Alo I'm here");
-        //print_r2($sum_bits);
+        
 		
         $_SESSION['period_url'] = $period_url;// save all period urls in session variable
         
@@ -402,6 +434,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
         $totarr[] = $foldername;// add session name 
         $stri=json_encode($totarr); // encode array to send to client
 		
+		//print_r2($period_url);
         if(isset($_SESSION['count1']))  // reset adaptationset counter before download start
             unset($_SESSION['count1']);
 
@@ -410,7 +443,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 
         $_SESSION['type'] = $type;
         $_SESSION['minBufferTime'] = $minBufferTime;
-
+                 
           
         echo $stri; // send no. of periods,adaptationsets, representation, mpd file to client
     }

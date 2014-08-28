@@ -114,11 +114,11 @@ $Metricsdom =   $mpdfile->getElementsByTagName('Metrics');
 				for($progindex=0;$progindex<$ProgramInformation->length;$progindex++)
                 checkproginfo($ProgramInformation->item($progindex),$xml,$mpdlist);		
 								
-				$periodlist =  $mpdfile->getElementsByTagName('Period');
-				$periodlength = $periodlist->length;
+				$periodlistorigin =  $mpdfile->getElementsByTagName('Period');
+				$periodlength = $periodlistorigin->length;
 				for($i=0;$i<$periodlength;$i++)
                 {
-                  $perioditem=$periodlist->item($i);
+                  $perioditem=$periodlistorigin->item($i);
 				  $periodlist = $xml->createElement("Period");
 				 $mpdlist->appendChild($periodlist);
 				  if ($perioditem->hasAttribute('xlink:href'))
@@ -438,9 +438,9 @@ $compress = false;
 				   $ContentComponent = $Adaptationsetitem->getElementsByTagName("ContentComponent");
 				   for ($k=0;$k<$ContentComponent->length;$k++)
 				   {
-				   $ContentComponentitem  =  $ContentComponentlist->item($k);
-				   $ContentComponentset  =  $Adaptationsetlist->createElement("ContentComponent");
-				   $Adaptationlistitem->appendChild($ContentComponentset);
+				   $ContentComponentitem  =  $ContentComponent->item($k);
+				   $ContentComponentset  =  $xml->createElement("ContentComponent");
+				   $Adaptationsetlist->appendChild($ContentComponentset);
 				   if($ContentComponentitem->hasAttribute("id"))
 				$ContentComponentset->setAttribute("id",'true');
                

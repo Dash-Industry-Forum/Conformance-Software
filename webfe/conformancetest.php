@@ -49,6 +49,7 @@
 	</script>
 <style>
 
+
 .mytext {
     width: 600px;
 }
@@ -170,6 +171,12 @@ position:absolute;
   <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.127.99/dash264/TestCases/6c/Microsoft/CENC_SD_Time/CENC_SD_time_MPD.mpd"/-->
 
 <button id="btn8" onclick="submit()">Submit</button>
+<b>or</b>
+
+<input type="file" name="afile" id="afile" />
+
+
+
 <!--<input type="file" id="selectfile" /> Uploading local mpd for testing -->
 
 <form action="">
@@ -231,7 +238,28 @@ hinindex = 1;
 var repid =[];	
 var  totarr = [];
 var adaptid=[];
+ var file,fd,xhr;
+ var uploaded = false;
 
+/////////////////////////////////////////////////////////////
+document.querySelector('#afile').addEventListener('change', function(e) {
+
+  file = this.files[0];
+   fd = new FormData();
+  fd.append("afile", file);
+ 
+  xhr = new XMLHttpRequest();
+  xhr.open('POST', 'process.php', true);
+  
+  
+  xhr.onload = function() {
+  uploaded=true;
+  submit();
+
+  };
+ xhr.send(fd);
+}, false);
+///////////////////////////////////////////////////////////////
 
 
 
@@ -325,11 +353,13 @@ function progressupdate()
 
 function submit()
 {
+
     var url = document.getElementById('urlinput').value;
+	if (uploaded===true)
+	url="upload";
 	var checkedValue = $('.validator:checked').val();
     var stringurl = [];
-	if (uploaded ==="true")
-	url =  parsed; 
+	
 	stringurl[0] = url;
 
     stringurl[1] =  "mpdvalidator2";
@@ -339,13 +369,13 @@ function submit()
 		else
    	     stringurl[2] = 0 ;
 		 
-		 console.log(stringurl[2]);
-		 stringurl[3]=uploaded;
+	
     document.getElementById("btn8").disabled="true";
+	document.getElementById("afile").disabled="true";
 
     //document.getElementById('img').style.visibility='visible';
     //document.getElementById('par').style.visibility='visible';
-
+console.log(stringurl);
     $.post ("process.php",
     {urlcode:JSON.stringify(stringurl)},
     function(totarrstring)
@@ -355,20 +385,21 @@ function submit()
         
         if (totarrstring.indexOf("Error:") > -1)
         {
+	
             window.alert("Error loading the MPD, please check the URL.");
 			
             return false;
         }
-
-		
-
-
+console.log(totarr);
         totarr=JSON.parse(totarrstring);
-       
+	   var currentpath = window.location.pathname;
+	    currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
+
+	   
 if(totarr[totarr.length-1]==='dynamic'){
 console.log("i'M DYNAMIC");
 dirid = totarr[totarr.length-2];
-		document.getElementById("list").href='/temp/'+dirid+'/featuretable.html';
+		document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 
 		document.getElementById('dynamic').style.visibility='visible';
 
@@ -378,7 +409,7 @@ dirid = totarr[totarr.length-2];
 					return false;
 }
  dirid = totarr[totarr.length-1];
-		document.getElementById("list").href='/temp/'+dirid+'/featuretable.html';
+		document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
         progressTimer = setInterval(function(){progressupdate()},1000);
         console.log(dirid);
         console.log(totarrstring);
@@ -640,7 +671,7 @@ var uploaded = "false";
 </script>
 
 <footer>
- <center> <p>v0.9b
+ <center> <p>v0.95b
          <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
  </center>
 </footer>

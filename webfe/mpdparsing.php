@@ -12,6 +12,10 @@ function processPeriod($period)
     $period = $domper->appendChild($period); // appnd it to domper
 
     $Periodduration = $period->getAttribute('duration'); // Search for duration attribute
+	if($period->hasAttribute('start'))
+	$start = $period->getAttribute('start'); //start time for period
+	else
+	$start = "PT0H0M0.00S";
 	$Period_segmentbase = $period->getElementsByTagName('SegmentBase');// Serach if segmentbase exist
 	$Timeoffset=0; // set default timeoffset to 0 
 	for($i=0;$i<$Period_segmentbase->length;$i++)
@@ -61,6 +65,7 @@ function processPeriod($period)
         $Period_arr[$i] = $Adapt_arr; //add each Adaptation-set URLs to array
         $period_baseurl[$i] = $Adapt_urlbase; // in case of using BaseURL
     }
+	return $start;
 }
 
 //Process Adapationset
@@ -364,6 +369,66 @@ if ($basedom->hasAttribute('timescale'))
 $basearray[1] = $basedom->getAttribute('timescale');
 
 return $basrarray;
+}
+
+//timeparsing function convert the time format specified in mpd into absolute seconds example :PT1H2M4.00S>>  3724 second
+function timeparsing($mediaPresentationDuration)
+{
+
+
+		$y=str_replace("PT","",$mediaPresentationDuration); // process mediapersentation duration
+        if(strpos($y,'H')!==false)
+        {
+            $H = explode("H",$y); //get hours
+
+           $y = substr($y,strpos($y,'H')+1);
+        }
+        else
+            $H[0]=0;
+            
+        if(strpos($y,'M')!==false)
+        {
+            
+		   $M = explode("M",$y);// get minutes
+             $y = substr($y,strpos($y,'M')+1);
+
+        }
+        else
+            $M[0]=0;
+
+        $S=explode("S",$y);// get seconds
+        $presentationduration=($H[0]*60*60)+($M[0]*60)+$S[0];// calculate durations in seconds
+        
+		return $presentationduration;
+}
+function dynamicnumber($bufferduration, $segmentduration, $AST, $start,$periodarray)
+{
+$avgsum=[];
+$sumbandwidth=[];
+for($k=0;$k<sizeof($periodarray);$k++)
+{
+$sumbandwidth[] =array_sum($periodarray[$k]['Representation']['bandwidth']);
+$avgsum[]=(array_sum($periodarray[$k]['Representation']['bandwidth'])/sizeof($periodarray[$k]['Representation']['bandwidth']));
+}
+$sumbandwidth = array_sum($sumbandwidth);
+$avgsum=array_sum($avgsum)/sizeof($avgsum);
+$percent = $avgsum/$sumbandwidth;
+
+$buffercapacity = $bufferduration/$segmentduration; //actual buffer capacity
+
+date_default_timezone_set("UTC"); //Set default timezone to UTC
+$now =time(); // Get actual time
+$AST = strtotime ($AST);
+$LST = $now -($AST+$start-$segmentduration);
+
+$LSN=intval($LST/$segmentduration) ;
+$earlistsegment = $LSN - $buffercapacity*$percent;
+
+
+$result =[intval($earlistsegment),$LSN];
+return $result;
+
+
 }
 
 ?>
