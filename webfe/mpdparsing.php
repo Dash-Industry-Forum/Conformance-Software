@@ -3,7 +3,7 @@
 /**
 This group of functions are responsible for parsing the nodes and attributes within MPD in order to find URLs of all segments
 **/
-function processPeriod($period)
+function processPeriod($period,&$dir)
 {
     global $Adapt_arr,$Period_arr,$period_baseurl,$perioddepth,$Adapt_urlbase, $profiles,$Timeoffset,$id;
 
@@ -53,7 +53,11 @@ function processPeriod($period)
             $baseurl = $base->nodeValue;
             $perioddepth[$i]=$baseurl; // if yes then this is the first level of MPD url
             
-		}
+            if (isAbsoluteURL($baseurl))   // if baseurl is absolute URL, do not use the location of MPD as base URL:
+            {    
+                $dir = "";
+            } 
+        }
     }
     
     
@@ -71,7 +75,7 @@ function processPeriod($period)
 //Process Adapationset
 function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitching)
 {
-    global $Adapt_arr,$Period_arr, $Adapt_urlbase,$adaptsetdepth,$Timeoffset;
+    global $Adapt_arr,$Period_arr, $Adapt_urlbase,$adaptsetdepth,$Timeoffset,$perioddepth;
     //var_dump($Adapt);
     $dom = new DOMDocument ('1.0');
     $Adapt = $dom->importNode ( $Adapt, true);
@@ -80,7 +84,8 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
     {
 	//Get some attributes from Adaptationset
         $startWithSAP = $Adapt->getAttribute ( 'startWithSAP') ;
-        $segmentAlignment = $Adapt->getAttribute ('segmentAlignment');
+        $segmentAlignment = $Adapt->getAttribute ('segmentAlignment'); 
+        $subsegmentAlignment = $Adapt->getAttribute ('subsegmentAlignment');
         $idadapt = $Adapt->getAttribute ('id');
         $scanType = $Adapt->getAttribute ('scanType');
         $mimeType = $Adapt->getAttribute ('mimeType');
@@ -136,6 +141,13 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
             {
                 $Adaptbase = $base->nodeValue;
                 $adaptsetdepth[] = $Adaptbase; // Cumulative baseURL
+                
+                            
+                if (isAbsoluteURL($Adaptbase))   // if baseurl is absolute URL, do not use the location of MPD as base URL:
+                {    
+                    $dir = "";
+                    $perioddepth[0] = "";
+                } 
             }
         }
        
@@ -279,7 +291,7 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
     'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
 	'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale);
 	// Array of all adapationsets containing all attributes and nodes including Presentations 
-        $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'Representation'=>$Rep_arr);
+        $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'Representation'=>$Rep_arr);
 }
 /**
 
@@ -429,6 +441,12 @@ $result =[intval($earlistsegment),$LSN];
 return $result;
 
 
+}
+
+function isAbsoluteURL($URL)
+{
+    $parsedURL = parse_url($URL);
+    return $parsedURL['scheme'] && $parsedURL['host'];
 }
 
 ?>
