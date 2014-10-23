@@ -9,6 +9,8 @@ include 'mpdprocessing.php';
 include 'mpdparsing.php';
 include 'datadownload.php';
 include 'assemble.php';
+include 'schematronIssuesAnalyzer.php';
+
 set_time_limit(0);// php run without time limit
 session_start();// initiate session for connected client
 
