@@ -355,27 +355,33 @@ function submit()
 {
 
     var url = document.getElementById('urlinput').value;
-	if (uploaded===true)
+    
+    if (uploaded===true)
 	url="upload";
-	var checkedValue = $('.validator:checked').val();
+    
+    var checkedValue = $('.validator:checked').val();
     var stringurl = [];
 	
-	stringurl[0] = url;
+    stringurl[0] = url;
 
     stringurl[1] =  "mpdvalidator2";
 	
-		if($("#mpdvalidation").is(':checked'))
+    if($("#mpdvalidation").is(':checked'))
         stringurl[2] = 1;
-		else
-   	     stringurl[2] = 0 ;
-		 
-	
+    else
+   	stringurl[2] = 0 ;
+    initVariables();
+    setUpTreeView();
+    setStatusTextlabel("Processing...");
+
+
     document.getElementById("btn8").disabled="true";
-	document.getElementById("afile").disabled="true";
+    document.getElementById("afile").disabled="true";
+	document.getElementById('list').style.visibility='hidden';
 
     //document.getElementById('img').style.visibility='visible';
     //document.getElementById('par').style.visibility='visible';
-console.log(stringurl);
+    console.log(stringurl);
     $.post ("process.php",
     {urlcode:JSON.stringify(stringurl)},
     function(totarrstring)
@@ -388,34 +394,42 @@ console.log(stringurl);
 	
             window.alert("Error loading the MPD, please check the URL.");
 			
+            finishTest();            
             return false;
         }
-console.log(totarr);
+        
+        console.log(totarr);
         totarr=JSON.parse(totarrstring);
-	   var currentpath = window.location.pathname;
-	    currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
+        var currentpath = window.location.pathname;
+        currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
 
 	   
-if(totarr[totarr.length-1]==='dynamic'){
-console.log("i'M DYNAMIC");
-dirid = totarr[totarr.length-2];
-		document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
+        if(totarr[totarr.length-1]==='dynamic'){
+            console.log("i'M DYNAMIC");
 
-		document.getElementById('dynamic').style.visibility='visible';
+            dirid = totarr[totarr.length-2];
+            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 
-		document.getElementById("dynamic").href='http://ec2-54-194-95-240.eu-west-1.compute.amazonaws.com/dynamic/?mpdurl=' +url ;
-		document.getElementById('list').style.visibility='visible';
+            document.getElementById('dynamic').style.visibility='visible';
 
-					return false;
-}
- dirid = totarr[totarr.length-1];
-		document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
+            document.getElementById("dynamic").href='http://ec2-54-194-95-240.eu-west-1.compute.amazonaws.com/dynamic/?mpdurl=' +url ;
+            document.getElementById('list').style.visibility='visible';
+
+            finishTest();
+            return false;
+        }
+
+        dirid = totarr[totarr.length-1];
+	document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
+	document.getElementById('list').style.visibility='visible';
         progressTimer = setInterval(function(){progressupdate()},1000);
+		console.log("dirid=");
         console.log(dirid);
+		console.log("totarrstring=");
         console.log(totarrstring);
 		
-var failed ='false';
-        tree.setOnDblClickHandler(tondblclick);
+        var failed ='false';
+
 
         var x=2;
         var childno=1;
@@ -428,7 +442,7 @@ var failed ='false';
                 text: "Mpd"
             }]
             });
-        tree.setOnDblClickHandler(tondblclick);
+
 		if(totarr[0]==='true')
 		{
 		             automate(y,x,"XLink resolving");
@@ -460,7 +474,7 @@ var failed ='false';
 		}
 				totarr.splice(0,1);
 				 x++;
-if(totarr[0]==='true')
+                if(totarr[0]==='true')
 		{
 		             automate(y,x,"Schematron validation");
 					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
@@ -483,8 +497,10 @@ if(totarr[0]==='true')
 		urlarray.push(failed);
 		console.log(kidsloc);
 		console.log(urlarray[0]);
-lastloc++;		
-return false;
+                lastloc++;
+                
+                finishTest();
+                return false;
 		}
 		
         for(var i=0;i<totarr[0];i++)
@@ -510,7 +526,7 @@ return false;
 
         progress();
         document.getElementById('par').style.visibility='visible';
-document.getElementById('list').style.visibility='visible';
+        document.getElementById('list').style.visibility='visible';
     });
 
 }
@@ -528,58 +544,89 @@ function progress()
     representationid++;
     //document.getElementById("par").innerHTML=status;
     tree.setItemImage2( repid[counting],'progress3.gif','progress3.gif','progress3.gif');
+    
+    console.log("progress(): representationid=",representationid,",hinindex=",hinindex,",adaptationid=",adaptationid  );
+    
 
     $.post("process.php",{download:"downloading"},
     function(response)
     {
 
-console.log(response);
+        console.log(response);
 	var locations = JSON.parse(response);
         if (locations[0]=="done")
         {
-		console.log("Inside locations");
+            console.log("Inside locations");
 		
-		     for(var i =1; i<locations.length-1;i++)
-			 
-			 {
-			 if(locations[i]=="noerror"){
+            for(var i =1; i<locations.length-1;i++)
+            {
 
-			 tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
-		automate(adaptid[i-1],lastloc,"Cross-representation validation success");
 
-			 tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
-                  lastloc++;
-			// 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
+                    if(locations[i]=="noerror"){
 
-			 }
-			 else{
+                        tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
+                        automate(adaptid[i-1],lastloc,"Cross-representation validation success");
 
-			 tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
-			 							 kidsloc.push(lastloc);
-                                      urlarray.push(locations[i]);
-									  
-			                 automate(adaptid[i-1],lastloc,"Cross-representation validation error");
-						
-							 tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
-                  lastloc++;
-				  }
-			 
-			 
-			 }
-			 kidsloc.push(lastloc);
-			         if(locations[locations.length-1]!="noerror")
-					 {
-                                      urlarray.push(locations[locations.length-1]);
-									  
-			                 automate(1,lastloc,"Broken URL list");
-							 tree.setItemImage2(lastloc,'404.jpg','404.jpg','404.jpg');
-                  lastloc++;
-			 }
+                        tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
+                        lastloc++;
+                    // 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
+
+                    }
+                    else{
+
+                        tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
+                        kidsloc.push(lastloc);
+                        urlarray.push(locations[i]);
+
+                        automate(adaptid[i-1],lastloc,"Cross-representation validation error");
+
+                        tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
+                        lastloc++;
+                    }  
+
+
+
+
+
+
+
+            }
+            kidsloc.push(lastloc);
+            if(locations[locations.length-1]!="noerror")
+            {
+                urlarray.push(locations[locations.length-1]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                automate(1,lastloc,"Broken URL list");
+                tree.setItemImage2(lastloc,'404.jpg','404.jpg','404.jpg');
+                lastloc++;
+            }
+
 			 
             console.log("go");
             clearTimeout(progressTimer);
-            status = "Conformance test completed";
-            document.getElementById("par").innerHTML=status;
+            setStatusTextlabel("Conformance test completed");
+            
+            finishTest();
+
         }
         else
         {
@@ -637,10 +684,11 @@ var x=2;
 	 y++;
 	
 	}
-	var tree = new dhtmlXTreeObject('treeboxbox_tree', '100%', '100%', 0);
-tree.setSkin('dhx_skyblue');
-tree.setImagePath("img/");
-tree.enableDragAndDrop(true);
+
+
+
+
+
 
 function tondblclick(id)
 {
@@ -655,7 +703,60 @@ window.open(urlto, "_blank");
 }
 var parsed;
 var uploaded = "false";
- 
+
+function finishTest()
+{
+	document.getElementById("btn8").disabled=false;
+	document.getElementById("afile").disabled=false;
+	
+	clearInterval( progressTimer);
+        
+        setStatusTextlabel("Conformance test completed");
+
+}
+
+
+
+function initVariables()
+{
+	urlarray.length = 0;
+	kidsloc.length = 0;
+	current = 0;
+	dirid="";
+	lastloc = 0;
+	counting =0;
+	representationid =1;
+	adaptationid = 1;
+	hinindex = 1;
+	uploaded = false;
+}
+
+function setUpTreeView()
+{
+        if (typeof tree === "undefined") 
+        {
+            console.log("tree:doesnt exist");				
+        }
+        else
+        {
+            console.log("tree: exist");	
+            tree.deleteChildItems(0);
+            tree.destructor(); 
+        }
+
+        tree = new dhtmlXTreeObject('treeboxbox_tree', '100%', '100%', 0);
+        tree.setOnDblClickHandler(tondblclick);
+        tree.setSkin('dhx_skyblue');
+        tree.setImagePath("img/");
+        tree.enableDragAndDrop(true);
+}
+function setStatusTextlabel(textToSet)
+{
+	status = textToSet;
+	document.getElementById("par").innerHTML=status;
+	document.getElementById('par').style.visibility='visible';
+}
+
 </script>
 
 <script>
