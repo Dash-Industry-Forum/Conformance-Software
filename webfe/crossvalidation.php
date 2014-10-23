@@ -151,33 +151,30 @@ function crossRepresentationProcess()
             $leafInfo=array();
             
             for ($j = 0;$j<sizeof($AdaptationSetAttr['Representation']['bandwidth']);$j++) // looping on all presentations
-            { $timescale = 1;  //set timescale to default value
+            { 
+                        $timescale = 1;  //set timescale to default value
 			$timeoffset = 0; // set offset to default value
+                        
 			if( !empty($AdaptationSetAttr['SegmentTemplate']['timescale']))// check if timescale exist in mpd in adaptationset level
-	   $timescale = $AdaptationSetAttr['SegmentTemplate']['timescale']; 
-	   
-  
-  if(!empty($AdaptationSetAttr['SegmentTemplate']['presentationTimeOffset']))// check if presentation time offset exist in adapatationset level 
-	   $timeoffset = $AdaptationSetAttr['SegmentTemplate']['presentationTimeOffset'];
+                            $timescale = $AdaptationSetAttr['SegmentTemplate']['timescale']; 
+                        
+                        if(!empty($AdaptationSetAttr['SegmentTemplate']['presentationTimeOffset']))// check if presentation time offset exist in adapatationset level 
+                            $timeoffset = $AdaptationSetAttr['SegmentTemplate']['presentationTimeOffset'];
 			
-                                       if(!empty($AdaptationSetAttr['Representation']['SegmentTemplate'][$j]['timescale']))//check time scale in presentation level
-									   $timescale = $AdaptationSetAttr['Representation']['SegmentTemplate'][$j]['timescale'];
-									   
-									   
-									   if(!empty($AdaptationSetAttr['Representation']['SegmentTemplate'][$j]['presentationTimeOffset']))//check in segment template presentationtimeoffset in presentation level
-									   $timeoffset = $AdaptationSetAttr['Representation']['SegmentTemplate'][$j]['presentationTimeOffset'];
-									   
-									   
-									   if(!empty($AdaptationSetAttr['Representation']['presentationTimeOffset'][$j])) //check presentationtimeoffset in representationlevel
-									   $timeoffset = $AdaptationSetAttr['Representation']['presentationTimeOffset'][$j];
-									   
-									   
-									  
-									   $offsetmod = $timeoffset/$timescale; // calculate presentationtimeoffset relative to timescale (in seconds)
+                        if(!empty($AdaptationSetAttr['Representation']['SegmentTemplate'][$j]['timescale']))//check time scale in presentation level
+                            $timescale = $AdaptationSetAttr['Representation']['SegmentTemplate'][$j]['timescale'];
+									   									   
+			if(!empty($AdaptationSetAttr['Representation']['SegmentTemplate'][$j]['presentationTimeOffset']))//check in segment template presentationtimeoffset in presentation level
+                            $timeoffset = $AdaptationSetAttr['Representation']['SegmentTemplate'][$j]['presentationTimeOffset'];
+									   									   
+                        if(!empty($AdaptationSetAttr['Representation']['presentationTimeOffset'][$j])) //check presentationtimeoffset in representationlevel
+                            $timeoffset = $AdaptationSetAttr['Representation']['presentationTimeOffset'][$j];
+					  
+			$offsetmod = $timeoffset/$timescale; // calculate presentationtimeoffset relative to timescale (in seconds)
 									   
 			$leafInfo[$j] = loadLeafInfoFile(".\\temp\\".$foldername."\\Adapt".$i."rep".$j."_infofile.txt",$offsetmod); // load values within infofile
 
-			   $leafInfo[$j]['id'] = $AdaptationSetAttr['Representation']['id'][$j]; //get representation ID
+			$leafInfo[$j]['id'] = $AdaptationSetAttr['Representation']['id'][$j]; //get representation ID
             }
             
             for ($j = 0;$j<sizeof($AdaptationSetAttr['Representation']['bandwidth'])-1;$j++) // runs check on every adapationset and representation
