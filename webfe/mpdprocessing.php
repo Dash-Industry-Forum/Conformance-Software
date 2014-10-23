@@ -3,7 +3,7 @@
 function process_mpd()
 {
     global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info
-    ,$count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,$type,$minBufferTime,$profiles; //Global variables to be used within the main function
+    ,$count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,$type,$minBufferTime,$profiles,$MPD; //Global variables to be used within the main function
     
   //  $path_parts = pathinfo($mpdurl); 
     $Baseurl=false; //define if Baseurl is used or no
@@ -83,14 +83,14 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
         $progressXML->asXml($locate.'/progress.xml'); //progress xml location
         
         //libxml_use_internal_logors(true);
-        $MPD = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
+        $MPD_O = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
 		
-        if (!$MPD)
+        if (!$MPD_O)
         {
             die("Error: Failed loading XML file");
         }
         
-        $dom_sxe = dom_import_simplexml($MPD);
+        $dom_sxe = dom_import_simplexml($MPD_O);
 
         if (!$dom_sxe)
         {
@@ -100,15 +100,15 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
 				$validate_result = mpdvalidator($url_array,$locate,$foldername);
 		     $exit=  $validate_result[0];
 			 $totarr=$validate_result[1];
-
+                         $schematronIssuesReport = $validate_result[2];
 						
 			 
 		///////////////////////////////////////Processing mpd attributes in order to get value//////////////////////////////////////////////////////////
         $dom = new DOMDocument('1.0');
         $dom_sxe = $dom->importNode($dom_sxe, true); //create dom element to contain mpd 
 
-        $dom_sxe = $dom->appendChild($dom_sxe);
-
+        //$dom_sxe = $dom->appendChild($dom_sxe);
+        $dom->appendChild($dom_sxe);
         $MPD = $dom->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
 		        $mediaPresentationDuration = $MPD ->getAttribute('mediaPresentationDuration'); // get mediapersentation duration from mpd level
 				$AST = $MPD -> getAttribute('availabilityStartTime');
@@ -116,19 +116,26 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
 				$bufferdepth = timeparsing($bufferdepth);
                 $presentationduration = timeparsing($mediaPresentationDuration);
 
-featurelist($MPD,$presentationduration);
-        $type = $MPD->getAttribute ( 'type'); // get mpd type
+        createMpdFeatureList($dom,$schematronIssuesReport);
+        
+        $type = $MPD->getAttribute('type'); // get mpd type
 		if($type === 'dynamic' && $dom->getElementsByTagName('SegmentTemplate')->length==0)
 		{ 
-		$totarr[] = $foldername;
-		$totarr[]='dynamic'; // Incase of dynamic only mpd conformance.
-             $exit =true;		 //Session destroy flag is true
+                    $totarr[] = $foldername;
+                    $totarr[]='dynamic'; // Incase of dynamic only mpd conformance.
+                    $exit =true;		 //Session destroy flag is true
 		
 		}
 		
 		if($exit ===true) //If session should be destroyed
 		{
+                    if($type !== 'dynamic')
+                    {
+                        $totarr[] = $foldername;
+                    }
 		 $stri=json_encode($totarr); //Send results to client
+                 
+                 
 		 echo $stri;
 		 session_destroy();//Destroy session
 		 exit; //Exit
@@ -164,8 +171,8 @@ featurelist($MPD,$presentationduration);
                 if($name == 'MPD') // if exist in mpd level
                 {
                     $dir = $base->nodeValue;
-					if ($dir==='./')   // if baseurl is relative URl
-		               $dir = dirname($GLOBALS["url"]);// use location of Baseurl as location of mpd location
+                    if (!isAbsoluteURL($dir))   // if baseurl is relative URl
+                        $dir = dirname($GLOBALS["url"]);// use location of Baseurl as location of mpd location
 
                 }
 
@@ -176,7 +183,7 @@ featurelist($MPD,$presentationduration);
         }
         else
             $dir = dirname($GLOBALS["url"]); // if there is no Baseurl in mpd level,set location of segments dir as mpd location
-       $start =  processPeriod($periodNode); // start getting information from period level
+       $start =  processPeriod($periodNode,$dir); // start getting information from period level
 	   $start = timeparsing($start);//Get start time in seconds
         $segm_url = array();// contains segments url within one 
         $adapt_url = array(); // contains all segments urls within adapatations set
@@ -368,6 +375,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 					 $totarr[]='dynamic';
 					 		 $stri=json_encode($totarr); //Send results to client
 		 echo $stri;
+                                  
 		 session_destroy();//Destroy session
 		 exit;
 					 }
@@ -410,7 +418,8 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 
                     for($lo=0;$lo<sizeof($period_baseurl[$i][$j]);$lo++) // loop on baseurl in period level
                     {
-                        $period_baseurl[$i][$j][$lo] = removeabunchofslashes($dir.$perioddepth[0].'/'.$adaptsetdepth[$i].'/'.$period_baseurl[$i][$j][$lo]);//combine all baseurls
+                        if( !isAbsoluteURL($period_baseurl[$i][$j][$lo]))
+                            $period_baseurl[$i][$j][$lo] = removeabunchofslashes($dir.$perioddepth[0].'/'.$adaptsetdepth[$i].'/'.$period_baseurl[$i][$j][$lo]);//combine all baseurls                       
                     }
                 }
             }
@@ -443,8 +452,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 
         $_SESSION['type'] = $type;
         $_SESSION['minBufferTime'] = $minBufferTime;
-                 
-          
+                     
         echo $stri; // send no. of periods,adaptationsets, representation, mpd file to client
     }
     ////////////////////////////////////////////////////////////////////////////////////
@@ -547,6 +555,8 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
                 $processArguments=$processArguments."-dash264enc ";
             }
             
+            
+            $test = "validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments;
             exec("validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments ); //Excute conformance software
             rename($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
        
@@ -595,6 +605,8 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 
         }
     }
+    
+    
 }
 
 ?>
