@@ -47,9 +47,8 @@ if (tablelist)     // continue only if xmlHttp isn't void
 
     try          // try to connect to the server
     {	
-	  console.log("Hi");
 
-	  var featureDocURL='hello.xml';
+	  var featureDocURL='featuresList.xml';
 	    tablelist.open("GET",featureDocURL += (featureDocURL.match(/\?/) == null ? "?" : "&") +Math.random(),true);
 	  tablelist.send();
 	  tablelist.onreadystatechange=function()
@@ -64,7 +63,7 @@ if (tablelist)     // continue only if xmlHttp isn't void
                                 
 								 
                                  
-  getchild($(x).children("MPDlist")[0]);
+  getchild($(x).children("MPD")[0]);
   
   
   
@@ -92,8 +91,10 @@ function getchild(node)
 var listElement = document.createElement("ul");
 
 document.getElementById("dynamictable").appendChild(listElement);
-var mpdli = document.createElement('li');
-mpdli.innerHTML = "MPDlist";
+var mpdli = document.createElement('li1');
+mpdli.innerHTML = "<b>MPD</b>";
+mpdli.id = "myMPD";
+
 listElement.appendChild(mpdli);
 attributes(node,mpdli);
 for(var met=0;met<$(node).children("Metrics").length;met++)
@@ -101,7 +102,7 @@ for(var met=0;met<$(node).children("Metrics").length;met++)
 var metrics = $(node).children("Metrics")[met];
 var metul = document.createElement ("ul");
 var metli = document.createElement("li");
-metli.innerHTML = "Metrics";
+metli.innerHTML = "<b>Metrics</b>";
 metul.appendChild(metli);
 mpdli.appendChild(metul);
 attributes(metrics,metul);
@@ -113,7 +114,7 @@ for(var peri=0;peri<$(node).children("Period").length ; peri++){
 var period = $(node).children("Period")[peri];
 var perul = document.createElement ("ul");
 var peli = document.createElement("li");
-peli.innerHTML = "period";
+peli.innerHTML = "<b>Period</b>";
 perul.appendChild(peli);
 mpdli.appendChild(perul);
 attributes(period,perul);
@@ -127,7 +128,7 @@ for (var adapi = 0 ;adapi<adaptation.length;adapi++)
 var adaptat=adaptation[adapi];
 var adapul = document.createElement ("ul");
 var adapli = document.createElement("li");
-adapli.innerHTML = "Adaptationset";
+adapli.innerHTML = "<b>Adaptationset</b>";
 adapul.appendChild(adapli);
 perul.appendChild(adapul);
 attributes(adaptat,adapul);
@@ -145,7 +146,7 @@ var contobj = replist[contl];
 
 var contul = document.createElement("ul");
 var contli = document.createElement("li");
-contli.innerHTML = "Representation";
+contli.innerHTML = "<b>Representation</b>";
 contul.appendChild(contli);
 adapul.appendChild(contul);
 attributes(contobj,contul);
@@ -158,7 +159,7 @@ var repobj = replist[repi];
 
 var repul = document.createElement("ul");
 var repli = document.createElement("li");
-repli.innerHTML = "Representation";
+repli.innerHTML = "<b>Representation</b>";
 repul.appendChild(repli);
 adapul.appendChild(repul);
 attributes(repobj,repul);
@@ -173,7 +174,7 @@ var subobj = sublist[subl];
 
 var subul = document.createElement("ul");
 var subli = document.createElement("li");
-subli.innerHTML = "SubRepresentation";
+subli.innerHTML = "<b>SubRepresentation</b>";
 subul.appendChild(subli);
 repul.appendChild(subul);
 attributes(subobj,subul);
@@ -188,13 +189,40 @@ attributes(subobj,subul);
 
 function attributes(ele,li)
 {
-var ulatt = document.createElement("ul");
+	var ulatt = document.createElement("ul");
 
-li.appendChild(ulatt);
- $.each(ele.attributes, function(i, attrib){
-var attli = document.createElement("li");
-attli.innerHTML =attrib.name+" : "+attrib.value;
-ulatt.appendChild(attli);
+	li.appendChild(ulatt);
+	$.each(ele.attributes, function(i, attrib)
+	{
+				var attli = document.createElement("li");
+
+				var textWithFont = document.createElement("font");
+
+				if(attrib.name.indexOf("xmlns")!= -1 || attrib.name.indexOf("xsi")!= -1 )
+				{
+					return;
+				}
+
+				else if(attrib.name=="elementIssue")
+				{
+
+					textWithFont.color = "red";
+					textWithFont.innerHTML = "Issues of Missing Attributes: "+attrib.value+"\r\n";
+				}
+				
+				else if(attrib.value=="false") //No Schema Error
+				{
+					textWithFont.color = "green";
+					textWithFont.innerHTML = attrib.name+"\r\n";
+
+				}else //If other than "false", means that a schema error is found in that attribute
+				{
+					textWithFont.color = "red";
+					textWithFont.innerHTML = attrib.name+": "+attrib.value+"\r\n";
+				}
+
+				attli.appendChild(textWithFont);
+				ulatt.appendChild(attli);
 
 	  });
 // console.log(ele.nodeName);
@@ -227,7 +255,7 @@ var Baseurl = $(node).children("BaseURL")[i];
 
 var metul = document.createElement ("ul");
 var metli = document.createElement("li");
-metli.innerHTML = "BaseURL";
+metli.innerHTML = "<b>BaseURL</b>";
 metul.appendChild(metli);
 mpdli.appendChild(metul);
 attributes(Baseurl,metul);
@@ -243,7 +271,7 @@ var ProgramInformation = $(node).children("ProgramInformation")[i];
 
 var metul = document.createElement ("ul");
 var metli = document.createElement("li");
-metli.innerHTML = "ProgramInformation";
+metli.innerHTML = "<b>ProgramInformation</b>";
 metul.appendChild(metli);
 mpdli.appendChild(metul);
 attributes(ProgramInformation,metul);
@@ -258,7 +286,7 @@ var SegmentBase = $(node).children("SegmentBase")[i];
 
 var metul = document.createElement ("ul");
 var metli = document.createElement("li");
-metli.innerHTML = "SegmentBase";
+metli.innerHTML = "<b>SegmentBase</b>";
 metul.appendChild(metli);
 parentli.appendChild(metul);
 attributes(SegmentBase,metul);
@@ -273,7 +301,7 @@ var SegmentList = $(node).children("SegmentList")[i];
 
 var metul = document.createElement ("ul");
 var metli = document.createElement("li");
-metli.innerHTML = "SegmentList";
+metli.innerHTML = "<b>SegmentList</b>";
 metul.appendChild(metli);
 parentli.appendChild(metul);
 attributes(SegmentList,metul);
@@ -289,7 +317,7 @@ var SegmentTemplate = $(node).children("SegmentTemplate")[i];
 
 var metul = document.createElement ("ul");
 var metli = document.createElement("li");
-metli.innerHTML = "SegmentTemplate";
+metli.innerHTML = "<b>SegmentTemplate</b>";
 metul.appendChild(metli);
 parentli.appendChild(metul);
 attributes(SegmentTemplate,metul);
@@ -298,7 +326,7 @@ for( var j = 0;j<$(SegmentTemplate).children('SegmentTimeline').length;j++)
 var SegmentTimeline = $(SegmentTemplate).children('SegmentTimeline')[j];
 var tiul = document.createElement ("ul");
 var tili = document.createElement("li");
-tili.innerHTML = "SegmentTimeline";
+tili.innerHTML = "<b>SegmentTimeline</b>";
 tiul.appendChild(tili);
 metli.appendChild(tiul);
 attributes(SegmentTimeline,tiul);
@@ -307,7 +335,7 @@ for(var k = 0;k<$(SegmentTimeline).children('S').length;k++)
 var S = $(SegmentTimeline).children('S')[k];
 var Sul = document.createElement("ul");
 var Sli = document.createElement("li");
-Sli.innerHTML = "S";
+Sli.innerHTML = "<b>S</b>";
 Sul.appendChild(Sli);
 tili.appendChild(Sul);
 attributes(S,Sul);
@@ -324,7 +352,7 @@ var EventStream = $(node).children("EventStream")[i];
 
 var metul = document.createElement ("ul");
 var metli = document.createElement("li");
-metli.innerHTML = "EventStream";
+metli.innerHTML = "<b>EventStream</b>";
 metul.appendChild(metli);
 parentli.appendChild(metul);
 attributes(EventStream,metul);

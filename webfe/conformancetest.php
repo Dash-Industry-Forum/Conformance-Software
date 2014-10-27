@@ -11,7 +11,7 @@
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.min.js"></script>
   <!--link rel="stylesheet" href="/resources/demos/style.css" /-->
  
-          
+
             
             
 
@@ -48,6 +48,7 @@
 		
 	</script>
 <style>
+
 
 .mytext {
     width: 600px;
@@ -170,6 +171,12 @@ position:absolute;
   <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.127.99/dash264/TestCases/6c/Microsoft/CENC_SD_Time/CENC_SD_time_MPD.mpd"/-->
 
 <button id="btn8" onclick="submit()">Submit</button>
+<b>or</b>
+
+<input type="file" name="afile" id="afile" />
+
+
+
 <!--<input type="file" id="selectfile" /> Uploading local mpd for testing -->
 
 <form action="">
@@ -231,10 +238,30 @@ hinindex = 1;
 var repid =[];	
 var  totarr = [];
 var adaptid=[];
+ var file,fd,xhr;
+ var uploaded = false;
+
+/////////////////////////////////////////////////////////////
+document.querySelector('#afile').addEventListener('change', function(e) {
+
+  file = this.files[0];
+   fd = new FormData();
+  fd.append("afile", file);
+
+  xhr = new XMLHttpRequest();
+  xhr.open('POST', 'process.php', true);
 
 
+  xhr.onload = function() {
+  uploaded=true;
+  submit();
 
-//document.getElementById("selectfile").addEventListener("change", doit, false);
+  };
+ xhr.send(fd);
+}, false);
+///////////////////////////////////////////////////////////////
+
+
 
 
 function button()
@@ -326,11 +353,15 @@ function progressupdate()
 
 function submit()
 {
+
     var url = document.getElementById('urlinput').value;
+    
+    if (uploaded===true)
+	url="upload";
+    
 	var checkedValue = $('.validator:checked').val();
     var stringurl = [];
-	if (uploaded ==="true")
-	url =  parsed; 
+	
 	stringurl[0] = url;
 
     stringurl[1] =  "mpdvalidator2";
@@ -339,14 +370,18 @@ function submit()
         stringurl[2] = 1;
 		else
    	     stringurl[2] = 0 ;
+    initVariables();
+    setUpTreeView();
+    setStatusTextlabel("Processing...");
 		 
-		 console.log(stringurl[2]);
-		 stringurl[3]=uploaded;
+
     document.getElementById("btn8").disabled="true";
+    document.getElementById("afile").disabled="true";
+	document.getElementById('list').style.visibility='hidden';
 
     //document.getElementById('img').style.visibility='visible';
     //document.getElementById('par').style.visibility='visible';
-
+    console.log(stringurl);
     $.post ("process.php",
     {urlcode:JSON.stringify(stringurl)},
     function(totarrstring)
@@ -356,36 +391,45 @@ function submit()
         
         if (totarrstring.indexOf("Error:") > -1)
         {
+	
             window.alert("Error loading the MPD, please check the URL.");
 			
+            finishTest();            
             return false;
         }
 
+        console.log(totarr);
+        totarr=JSON.parse(totarrstring);
+        var currentpath = window.location.pathname;
+        currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
 		
 
-
-        totarr=JSON.parse(totarrstring);
-       
 if(totarr[totarr.length-1]==='dynamic'){
+            console.log("i'M DYNAMIC");
 
 dirid = totarr[totarr.length-2];
-		document.getElementById("list").href='/temp/'+dirid+'/featuretable.html';
+            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 
 		document.getElementById('dynamic').style.visibility='visible';
 
 		document.getElementById("dynamic").href='http://ec2-54-194-95-240.eu-west-1.compute.amazonaws.com/dynamic/?mpdurl=' +url ;
 		document.getElementById('list').style.visibility='visible';
 
+            finishTest();
 					return false;
 }
+
         dirid = totarr[totarr.length-1];
-		document.getElementById("list").href='temp/'+dirid+'/featuretable.html';
+	document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
+	document.getElementById('list').style.visibility='visible';
         progressTimer = setInterval(function(){progressupdate()},1000);
+		console.log("dirid=");
         console.log(dirid);
+		console.log("totarrstring=");
         console.log(totarrstring);
 		
 var failed ='false';
-        tree.setOnDblClickHandler(tondblclick);
+
 
         var x=2;
         var childno=1;
@@ -398,16 +442,16 @@ var failed ='false';
                 text: "Mpd"
             }]
             });
-        tree.setOnDblClickHandler(tondblclick);
+
 		if(totarr[0]==='true')
 		{
-		             setTimeout(automate(y,x,"XLink resolving",1));
+		             automate(y,x,"XLink resolving");
 					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
 
 		
 		}
 		else {
-		setTimeout(automate(y,x,"XLink resolving",1));
+		automate(y,x,"XLink resolving");
 					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
 								 failed=totarr[0];
 		}
@@ -415,7 +459,7 @@ var failed ='false';
 		 x++;
 		if(totarr[0]==='true')
 		{
-		             setTimeout(automate(y,x,"MPD validation",1));
+		             automate(y,x,"MPD validation");
 					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
 
                    
@@ -424,21 +468,21 @@ var failed ='false';
 		
 		else
 		{
-		setTimeout(automate(y,x,"MPD validation",1));
+		automate(y,x,"MPD validation");
 					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
 								 failed=totarr[0];
 		}
-				totarr.splice(0,1);//valide
+				totarr.splice(0,1);
 				 x++;
 if(totarr[0]==='true')
 		{
-		             setTimeout(automate(y,x,"Schematron validation",1));
+		             automate(y,x,"Schematron validation");
 					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
 
 		
 		}
 		else {
-		setTimeout(automate(y,x,"Schematron validation",1));
+		automate(y,x,"Schematron validation");
 					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
 								 failed=totarr[0];
 		}
@@ -447,13 +491,15 @@ if(totarr[0]==='true')
 	
 		if (failed!=='false')
 		{
-		setTimeout(automate(y,x,"mpd error log",1));
+		automate(y,x,"mpd error log");
 		tree.setItemImage2(x,'log.jpg','log.jpg','log.jpg');
 		                kidsloc.push(x);
 		urlarray.push(failed);
 		console.log(kidsloc);
 		console.log(urlarray[0]);
 lastloc++;		
+                
+                finishTest();
 return false;
 		}
 		
@@ -461,13 +507,13 @@ return false;
         { 
 
 		
-            setTimeout(automate(y,x,"Adaptationset "+(i+1)),1);
+            automate(y,x,"Adaptationset "+(i+1));
 			adaptid.push(x);
             tree.setItemImage2( x,'adapt.jpg','adapt.jpg','adapt.jpg');
 
             for(var j=0;j<totarr[childno];j++)
             {
-                setTimeout(automate(x,x+j+1,"Representation "+(j+1)),1);
+                automate(x,x+j+1,"Representation "+(j+1));
                 repid.push(x+j+1);
             }
             
@@ -478,7 +524,7 @@ return false;
         
         lastloc = repid[repid.length-1]+1;
 
-        setTimeout(progress,1);
+        progress();
         document.getElementById('par').style.visibility='visible';
 document.getElementById('list').style.visibility='visible';
     });
@@ -499,6 +545,9 @@ function progress()
     //document.getElementById("par").innerHTML=status;
     tree.setItemImage2( repid[counting],'progress3.gif','progress3.gif','progress3.gif');
 
+    console.log("progress(): representationid=",representationid,",hinindex=",hinindex,",adaptationid=",adaptationid  );
+    
+
     $.post("process.php",{download:"downloading"},
     function(response)
     {
@@ -510,12 +559,13 @@ console.log(response);
 		console.log("Inside locations");
 		
 		     for(var i =1; i<locations.length-1;i++)
+            {
 			 
-			 {
+
 			 if(locations[i]=="noerror"){
 
 			 tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
-			 			                 setTimeout(automate(adaptid[i-1],lastloc,"Cross-representation validation success"),1);
+                        automate(adaptid[i-1],lastloc,"Cross-representation validation success");
 
 			 tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
                   lastloc++;
@@ -528,28 +578,55 @@ console.log(response);
 			 							 kidsloc.push(lastloc);
                                       urlarray.push(locations[i]);
 									  
-			                 setTimeout(automate(adaptid[i-1],lastloc,"Cross-representation validation error"),1);
+                        automate(adaptid[i-1],lastloc,"Cross-representation validation error");
 						
 							 tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
                   lastloc++;
 				  }
 			 
 			 
+
+
+
+
+
 			 }
 			 kidsloc.push(lastloc);
 			         if(locations[locations.length-1]!="noerror")
 					 {
                                       urlarray.push(locations[locations.length-1]);
 									  
-			                 setTimeout(automate(1,lastloc,"Broken URL list"),1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                automate(1,lastloc,"Broken URL list");
 							 tree.setItemImage2(lastloc,'404.jpg','404.jpg','404.jpg');
                   lastloc++;
 			 }
 			 
+			 
             console.log("go");
             clearTimeout(progressTimer);
-            status = "Conformance test completed";
-            document.getElementById("par").innerHTML=status;
+            setStatusTextlabel("Conformance test completed");
+            
+            finishTest();
+
         }
         else
         {
@@ -568,7 +645,7 @@ console.log(response);
 
                 console.log("errors");
 
-                setTimeout(automate(repid[counting],lastloc,"log"),1);
+                automate(repid[counting],lastloc,"log");
                 tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
 
                 kidsloc.push(lastloc);
@@ -580,7 +657,7 @@ console.log(response);
             //lastloc++;
             counting++;
 
-            setTimeout(progress,1);
+            progress();
         }
     });
 }
@@ -607,10 +684,11 @@ var x=2;
 	 y++;
 	
 	}
-	var tree = new dhtmlXTreeObject('treeboxbox_tree', '100%', '100%', 0);
-tree.setSkin('dhx_skyblue');
-tree.setImagePath("img/");
-tree.enableDragAndDrop(true);
+
+
+
+
+
 
 function tondblclick(id)
 {
@@ -625,16 +703,60 @@ window.open(urlto, "_blank");
 }
 var parsed;
 var uploaded = "false";
-function doit(e) {
-uploaded=true;
-  var files = e.target.files;
-  var reader = new FileReader();
-  reader.onload = function() {
-     parsed = new DOMParser().parseFromString(this.result, "text/xml");
-  };
-  reader.readAsText(files[0]);
-  console.log(xmlToString(parsed));
+
+function finishTest()
+{
+	document.getElementById("btn8").disabled=false;
+	document.getElementById("afile").disabled=false;
+	
+	clearInterval( progressTimer);
+        
+        setStatusTextlabel("Conformance test completed");
+
 } 
+
+
+
+function initVariables()
+{
+	urlarray.length = 0;
+	kidsloc.length = 0;
+	current = 0;
+	dirid="";
+	lastloc = 0;
+	counting =0;
+	representationid =1;
+	adaptationid = 1;
+	hinindex = 1;
+	uploaded = false;
+}
+
+function setUpTreeView()
+{
+        if (typeof tree === "undefined") 
+        {
+            console.log("tree:doesnt exist");				
+        }
+        else
+        {
+            console.log("tree: exist");	
+            tree.deleteChildItems(0);
+            tree.destructor(); 
+        }
+
+        tree = new dhtmlXTreeObject('treeboxbox_tree', '100%', '100%', 0);
+        tree.setOnDblClickHandler(tondblclick);
+        tree.setSkin('dhx_skyblue');
+        tree.setImagePath("img/");
+        tree.enableDragAndDrop(true);
+}
+function setStatusTextlabel(textToSet)
+{
+	status = textToSet;
+	document.getElementById("par").innerHTML=status;
+	document.getElementById('par').style.visibility='visible';
+}
+
 </script>
 
 <script>
@@ -645,25 +767,12 @@ uploaded=true;
 
   ga('create', 'UA-48482208-1', 'dashif.org');
   ga('send', 'pageview');
-///////////////////////////////////
-function xmlToString(xmlData) { 
 
-    var xmlString;
-    //IE
-    if (window.ActiveXObject){
-        xmlString = xmlData.xml;
-    }
-    // code for Mozilla, Firefox, Opera, etc.
-    else{
-        xmlString = (new XMLSerializer()).serializeToString(xmlData);
-    }
-    return xmlString;
-}   
 
 </script>
 
 <footer>
- <center> <p>v0.9b
+ <center> <p>v0.95b
          <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
  </center>
 </footer>

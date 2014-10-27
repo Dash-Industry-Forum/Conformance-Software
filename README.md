@@ -7,8 +7,10 @@ Tested for:
 
 1) Chrome for Window, Linux, and OS X.
 2) IE.
+3)Firefox
+4)Safari for Windows
 
-Not working for: Firefox, Safari.
+
 
 Features
 
