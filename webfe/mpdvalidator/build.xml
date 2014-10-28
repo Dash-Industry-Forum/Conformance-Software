@@ -20,6 +20,7 @@ Example for running:   ant run -Dinput=test.mpd
   <property name="build" location="bin"/>
   <property name="doc" location="doc"/>
 	<property name="input" location="/path/to/input"/>
+	<property name="tmpdir" location="${java.io.tmpdir}"/>
 
   <target name="init">
     <!-- Create the time stamp -->
@@ -59,6 +60,7 @@ Example for running:   ant run -Dinput=test.mpd
 	<target name="run" depends="compile-java" description="runs the test file">
 		<java fork="true" classname="Validator" classpath="saxon9.jar:saxon9-dom.jar:xercesImpl.jar:${build}">
 			<arg value="${input}"/>
+			<sysproperty key="java.io.tmpdir" value="${tmpdir}"/>
 		</java>
 	</target>
 	

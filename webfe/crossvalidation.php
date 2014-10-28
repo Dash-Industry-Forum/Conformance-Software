@@ -6,7 +6,7 @@ function loadLeafInfoFile($fileName,$PresTimeOffset)
     $leafInfoFile = fopen($fileName,"rt"); // open infofile for specific presentation
     if($leafInfoFile == FALSE) // if file doesn't exist
     {
-        echo "Error: Leaf info file".$fileName."not found, alignment wont be checked!";//throw error
+        echo "Error: Leaf info file $fileName not found, alignment wont be checked!";//throw error
         return;
     }
     
@@ -118,11 +118,10 @@ function crossRepresentationProcess()
     
     for($i = 0; $i<sizeof($Period_arr); $i++)
     {
-	$timeoffset = 0;
-	$timescale = 1;
+    	$timeoffset = 0;
+    	$timescale = 1;
         $AdaptationSetAttr = $Period_arr[$i];
-       
-	   
+
         if(!empty($AdaptationSetAttr['segmentAlignment'])) //check is segment alignment supported within mpd
             $segmentAlignment = $AdaptationSetAttr['segmentAlignment'];
         else
@@ -138,9 +137,11 @@ function crossRepresentationProcess()
         else
             $bitstreamSwitching = "false";
         
-        if (!($opfile = fopen(".\\temp\\".$foldername."\\Adapt".$i."_infofile.txt", 'w')))// Create a file to contain cross presentation results
+        $infoFileName = ".".DIRECTORY_SEPARATOR."temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR."Adapt".$i."_infofile.txt";
+        
+        if (!($opfile = fopen($infoFileName, 'w')))// Create a file to contain cross presentation results
         {
-            echo "Error opening cross-representation checks file".".\\temp\\".$foldername."\\Adapt".$i."_infofile.txt";
+            echo "Error opening cross-representation checks file $infoFileName";
             return;
         }
         
@@ -172,7 +173,7 @@ function crossRepresentationProcess()
 					  
 			$offsetmod = $timeoffset/$timescale; // calculate presentationtimeoffset relative to timescale (in seconds)
 									   
-			$leafInfo[$j] = loadLeafInfoFile(".\\temp\\".$foldername."\\Adapt".$i."rep".$j."_infofile.txt",$offsetmod); // load values within infofile
+			$leafInfo[$j] = loadLeafInfoFile(".".DIRECTORY_SEPARATOR."temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR."Adapt".$i."rep".$j."_infofile.txt",$offsetmod); // load values within infofile
 
 			$leafInfo[$j]['id'] = $AdaptationSetAttr['Representation']['id'][$j]; //get representation ID
             }
@@ -189,7 +190,7 @@ function crossRepresentationProcess()
         fprintf($opfile,"Checks completed.\n");
         fclose($opfile);
 	$temp_string = str_replace (array('$Template$'),array("Adapt".$i."_infofile"),$string_info); // place infofile data within HTML string
-        file_put_contents($locate.'\\'."Adapt".$i."_infofile.html",$temp_string); // convert HTML string to HTML file
+        file_put_contents($locate.DIRECTORY_SEPARATOR."Adapt".$i."_infofile.html",$temp_string); // convert HTML string to HTML file
 			
     }
 }
