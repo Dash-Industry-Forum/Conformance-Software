@@ -523,7 +523,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
             chdir($locate);
             $timeSeconds=str_replace("PT","",$minBufferTime);
             $timeSeconds=str_replace("S","",$timeSeconds);
-            $processArguments=" -minbuffertime ".$timeSeconds." -bandwidth ";
+            $processArguments=" -minbuffertime ".$timeSeconds." -bandwidth -sbw ";
             $processArguments=$processArguments.$Period_arr[$count1]['Representation']['bandwidth'][$count2]." ";
             
             if($type=== "dynamic")
