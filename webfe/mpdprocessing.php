@@ -555,7 +555,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
                 $processArguments=$processArguments."-dash264enc ";
             }
             
-            
+            global $validatemp4;
             $test = dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4." ".
                 $locate.DIRECTORY_SEPARATOR.$repno.".mp4 ".
                 "-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt ".
