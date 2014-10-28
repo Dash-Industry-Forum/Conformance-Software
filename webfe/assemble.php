@@ -13,7 +13,7 @@ $names[]=basename($unit); // create an array containing the names of all segment
 
 
 for ($i = 0;$i<sizeof($names);$i++){
-$fp1 = fopen($locate.'\\'.$repno.".mp4", 'a+');  // Create container file to assemble all segments within it
+$fp1 = fopen($locate.DIRECTORY_SEPARATOR.$repno.".mp4", 'a+');  // Create container file to assemble all segments within it
 if(file_exists($path.$names[$i])){  // if file exist 
 
 $size=$sizearr[$i]; // Get the real size of the file (passed as inupt for function)
@@ -22,7 +22,7 @@ $file2 = file_get_contents($path.$names[$i]); // Get the file contents
 
 fwrite($fp1,$file2); // bend it in the container file
 fclose($fp1);
-file_put_contents($locate.'\\'.$repno.".txt",$index." ".$size."\n",FILE_APPEND); // add size to a text file to be passed to conformance software
+file_put_contents($locate.DIRECTORY_SEPARATOR.$repno.".txt",$index." ".$size."\n",FILE_APPEND); // add size to a text file to be passed to conformance software
 $index++; // iterate over all segments within the segments folder
 
 }
