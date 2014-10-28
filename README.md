@@ -34,10 +34,9 @@ Check out DASH-IF conformance checker
 
 Check out DASH MPD validator and build
 
-    svn co https://subversion.assembla.com/svn/DASH_Conformance/branches/conformance_dash264
-    cd conformance_dash264
-    patch -p0 < /var/www/html/Conformance-Software/conformance_dash264.patch
-    cd SegmentValidator/public/linux
+    git clone https://github.com/jeremypoulter/Conformance-and-reference-source.git
+    cd Conformance-and-reference-source/conformance/ISOSegmentValidator/public/linux
+    mkdir obj
     make
     cp bin/ValidateMP4.exe /var/www/html/Conformance-Software/webfe/validatemp4-linux
     chmod +x /var/www/html/Conformance-Software/webfe/validatemp4-linux
