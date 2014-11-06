@@ -52,6 +52,7 @@ $mpdvalidator = $bin_dir.DIRECTORY_SEPARATOR.'mpdvalidator2';
 
 // Command line option defaults
 $mpd_validation_only = false;
+$verbose = false;
 
 function print_r2($val){ //Print output line by line (for testing)
     print_r($val);
@@ -63,10 +64,12 @@ function usage()
     fprintf(STDERR, "{$argv[0]} [OPTIONS]\n");
     fprintf(STDERR, "\n");
     fprintf(STDERR, " -h\tDisplay help\n");
+    fprintf(STDERR, " -v\tVerbose\n");
+    fprintf(STDERR, " -m\tMPD parsing only\n");
 }
 
 $argv = $_SERVER['argv'];
-$options = "h";
+$options = "hvm";
 $opts = getopt($options);
 foreach( $opts as $o => $a )
 {
@@ -82,6 +85,14 @@ foreach( $opts as $o => $a )
     // Process the option
     switch($o)
     {
+        case 'v';
+            $verbose = true;
+            break;
+
+        case 'm';
+            $mpd_validation_only = true;
+            break;
+
         case 'h';
             usage();
             exit(1);
@@ -106,7 +117,6 @@ for($i = 1; $i < count($argv); $i++)
         continue;
     }
 
-    print_r($ret);
     if('dynamic' === $ret[count($ret) - 1])
     {
         $dirid = $ret[count($ret) - 2];
@@ -119,7 +129,7 @@ for($i = 1; $i < count($argv); $i++)
 
     $xlink_resolved = array_shift($ret);
     if('true' === $xlink_resolved) {
-        fprintf(STDOUT, "%s: XLink resolving ok\n", $url);
+        $verbose && fprintf(STDOUT, "%s: XLink resolving ok\n", $url);
     } else {
         fprintf(STDERR, "%s: Error: XLink resolving failed, see %s\n", $url, $xlink_resolved);
         $failed = true;
@@ -127,7 +137,7 @@ for($i = 1; $i < count($argv); $i++)
 
     $mpd_valid = array_shift($ret);
     if('true' === $mpd_valid) {
-        fprintf(STDOUT, "%s: MPD validation ok\n", $url);
+        $verbose && fprintf(STDOUT, "%s: MPD validation ok\n", $url);
     } else {
         fprintf(STDERR, "%s: Error: MPD validation failed, see %s\n", $url, $mpd_valid);
         $failed = true;
@@ -135,7 +145,7 @@ for($i = 1; $i < count($argv); $i++)
 
     $schematron_valid = array_shift($ret);
     if('true' === $schematron_valid) {
-        fprintf(STDOUT, "%s: Schematron validation ok\n", $url);
+        $verbose && fprintf(STDOUT, "%s: Schematron validation ok\n", $url);
     } else {
         fprintf(STDERR, "%s: Error: Schematron validation failed, see %s\n", $url, $schematron_valid);
         $failed = true;
@@ -154,13 +164,76 @@ for($i = 1; $i < count($argv); $i++)
     for($adaptation_set = 0; $adaptation_set < $ret[0]; $adaptation_set++)
     {
         $childno = $adaptation_set + 1;
-        fprintf(STDOUT, "%s: Adaptation set %d/%d\n", $url, $adaptation_set + 1, $ret[0]);
+        $verbose && fprintf(STDOUT, "%s: Adaptation set %d/%d\n", $url, $adaptation_set + 1, $ret[0]);
         for($representation = 0; $representation < $ret[$childno]; $representation++)
         {
-            fprintf(STDOUT, "%s: Representation %d/%d\n", $url, $representation + 1, $ret[$childno]);
+            $verbose && fprintf(STDOUT, "%s: Representation %d/%d downloading\n", $url, $representation + 1, $ret[$childno]);
 
             $rep_ret = download($adaptation_set, $representation);
-            print_r($rep_ret);
+            $retcode = $rep_ret[count($rep_ret) - 1];
+            chdir(dirname(__FILE__));
+            switch ($retcode) 
+            {
+                case 'noerror':
+                    $verbose && fprintf(STDOUT, "%s: Representation %d/%d ok\n", $url, $representation + 1, $ret[$childno]);
+                    break;
+
+                case 'error':
+                    foreach (file($rep_ret[1]) as $line) 
+                    {
+                        $line = trim($line);
+                        if($line !== '### error:')
+                        {
+                            $line = preg_replace("/^\#+ */", '', $line);
+                            fprintf(STDERR, "%s: Error: %s\n", $url, $line);
+                        }
+                    }
+                    break;
+
+                case 'notexist':
+                    foreach (file($rep_ret[0]) as $line) {
+                        $line = trim($line);
+                        fprintf(STDERR, "%s: Error: not found\n", $line);
+                    }
+                    break;
+
+                case 'validatorerror':
+                    fprintf(STDERR, "%s: Error: executing %s\n", $url, $rep_ret[0]);
+                    foreach (file($rep_ret[1]) as $line) 
+                    {
+                        $line = trim($line);
+                        fprintf(STDERR, "validatemp4: %s\n", $line);
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+    // Check the cross representations
+    $cross_ret = cross_representation_check();
+    $cross_count = 0;
+    for($adaptation_set = 0; $adaptation_set < $ret[0]; $adaptation_set++)
+    {
+        $childno = $adaptation_set + 1;
+        for($representation = 0; $representation < $ret[$childno]; $representation++)
+        {
+            if('noerror' == $cross_ret[$cross_count]) 
+            {
+                $verbose && fprintf(STDOUT, "%s: Adaptation set %d, Representation %d Cross-representation validation success\n", $url, $adaptation_set + 1, $representation + 1);
+            }
+            else
+            {
+                fprintf(STDERR, "%s: Error: Adaptation set %d, Representation %d Cross-representation validation failed\n", $url, $adaptation_set + 1, $representation + 1);
+                foreach (file($cross_ret[$cross_count]) as $line) {
+                    $line = trim($line);
+                    fprintf(STDERR, "%s: Error: %s\n", $url, $line);
+                }
+            }
+
+            $cross_count++;
         }
     }
 }
