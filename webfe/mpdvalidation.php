@@ -43,10 +43,6 @@ function mpdvalidator($mpdvalidator_path, $url, $locate, $foldername)
         $totarr[]=$mpd_rep_loc;/// if failed send client the location of mpdvalidator report
         $exit =true;// if failed terminate conformance check
     }
-    if ($url_array[2] ===1)  // only mpd validation requested       
-    {
-        $exit =true;
-    }
     
     $function_result[0]=$exit;
     $function_result[1]=$totarr;
