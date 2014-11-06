@@ -5,3 +5,4 @@ webfe/nbproject/project.properties
 webfe/nbproject/project.xml
 webfe/temp
 *.class
+cli/temp
