@@ -414,7 +414,7 @@ function download($adaptation_set, $representation)
     }
         
     $sizearray = downloaddata($pathdir,$period_url[$adaptation_set][$representation]); // download data 
-    if($sizearray !==0)
+    if(!file_exists($locate.DIRECTORY_SEPARATOR."missinglink.txt") && $sizearray !== 0)
     {
         Assemble($pathdir,$period_url[$adaptation_set][$representation],$sizearray); // Assemble all presentation in to one presentation
         rename($locate.DIRECTORY_SEPARATOR."mdatoffset.txt",$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
@@ -464,23 +464,19 @@ function download($adaptation_set, $representation)
         if(0 == $exit_code)
         {
             rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
-
             $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
-
             $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
-            rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."log.txt");//Rename conformance software output file to representation number file
 
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."log.txt";// add it to file location which is sent to client to get URL of log file on server
+            rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."_log.txt");//Rename conformance software output file to representation number file
+            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_log.txt";// add it to file location which is sent to client to get URL of log file on server
+            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_log.txt";
 
-            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."log.txt";
-
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno.DIRECTORY_SEPARATOR."myfile.txt";
-            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."myfile.txt";
+            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_myfile.txt";
+            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_myfile.txt";
 
             $period_url[$adaptation_set][$representation] = null;
 
-            $search = file_get_contents($locate.DIRECTORY_SEPARATOR.$repno."log.txt");//Search for errors within log file
-
+            $search = file_get_contents($locate.DIRECTORY_SEPARATOR.$repno."_log.txt");//Search for errors within log file
             if(strpos($search,"error")==false) //if no error , notify client with no error
                 $file_location[] = "noerror";
             else
@@ -489,11 +485,19 @@ function download($adaptation_set, $representation)
         else
         {
             $file_location[] = $test;
+
+            rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."_log.txt");//Rename conformance software output file to representation number file
+            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_log.txt";// add it to file location which is sent to client to get URL of log file on server
+            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_log.txt";
+
             $file_location[] = 'validatorerror';
         }
     }
     else
     {
+        rename($locate.DIRECTORY_SEPARATOR."missinglink.txt",$locate.DIRECTORY_SEPARATOR.$repno."_missinglink.txt");//Rename conformance software output file to representation number file
+        $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_missinglink.txt";// add it to file location which is sent to client to get URL of log file on server
+        $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_missinglink.txt";
         $file_location[] = 'notexist';
     }
 
@@ -501,38 +505,28 @@ function download($adaptation_set, $representation)
 }
 
 function cross_representation_check()
-{    
+{
+    // Global variables to be used within the main function
+    global  $Period_arr,$locate;
+
     crossRepresentationProcess();
-    $missingexist = file_exists ($locate.'\missinglink.txt'); //check if any broken urls is detected
-    if($missingexist){
-        $temp_string = str_replace (array('$Template$'),array("missinglink"),$string_info);
-        file_put_contents($locate.DIRECTORY_SEPARATOR.'missinglink.html',$temp_string);//create html file contains report for all missing segments
-    }
-    $file_error[] = "done"; 
-    for($i=0;$i<sizeof($Period_arr);$i++){  // check all info files if they contain Error 
-    if(file_exists($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt')) 
+
+    // check all info files if they contain Error
+    for($i = 0; $i < sizeof($Period_arr); $i++)
     {
-                $searchadapt = file_get_contents($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt');
-                if(strpos($searchadapt,"Error")==false) 
-        $file_error[] = "noerror"; // no error found in text file
-    else
-        $file_error[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.html'; // add error file location to array
+        if(file_exists($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt')) 
+        {
+            $searchadapt = file_get_contents($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt');
+            if(strpos($searchadapt,"Error")==false) 
+                $file_error[] = "noerror"; // no error found in text file
+            else
+                $file_error[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt'; // add error file location to array
+        } else {
+            $file_error[] = "noerror";
         }
-        else
-        $file_error[]="noerror";
- }
-    session_destroy();
-    if($missingexist){
-       $file_error[]="temp".DIRECTORY_SEPARATOR.$foldername.'/missinglink.html';
+    }
 
-       }
-       else 
-       $file_error[]="noerror";
-   $send_string = json_encode($file_error); //encode array to string and send it 
-
-
-    echo $send_string; // send string with location of all error logs to client
-    exit;
+    return($file_error);
 }
 
 
