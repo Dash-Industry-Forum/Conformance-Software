@@ -97,7 +97,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
             exit;
         }
        
-				$validate_result = mpdvalidator($url_array,$locate,$foldername);
+				$validate_result = mpdvalidator($url_array[1],$url_array[0],$locate,$foldername);
 		     $exit=  $validate_result[0];
 			 $totarr=$validate_result[1];
                          $schematronIssuesReport = $validate_result[2];
