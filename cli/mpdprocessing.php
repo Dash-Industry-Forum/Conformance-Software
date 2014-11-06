@@ -1,9 +1,9 @@
 <?php
 
-function process_mpd($url)
+function process_mpd($url, $validation_only)
 {
     global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info,
-            $count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,
+            $perioddepth,$adaptsetdepth,$period_baseurl,$foldername,
             $type,$minBufferTime,$profiles,$MPD; //Global variables to be used within the main function
 
     //  $path_parts = pathinfo($mpdurl); 
@@ -65,19 +65,17 @@ function process_mpd($url)
     $MPD_O = simplexml_load_file($url); // load mpd from url 
     if (!$MPD_O)
     {
-        die("Error: Failed loading XML file");
+        return(false);
     }
-    
-    $dom_sxe = dom_import_simplexml($MPD_O);
 
-    if (!$dom_sxe)
-    {
-        exit;
+    $dom_sxe = dom_import_simplexml($MPD_O);
+    if (!$dom_sxe) {
+        return(false);
     }
 
     global $mpdvalidator;
     $validate_result = mpdvalidator($mpdvalidator, $url, $locate, $foldername);
-    $exit=  $validate_result[0];
+    $exit=  $validate_result[0] || $validation_only;
     $totarr=$validate_result[1];
     $schematronIssuesReport = $validate_result[2];
 
@@ -241,7 +239,7 @@ function process_mpd($url)
                     if(!isset($adaptsetdepth[$k]))  // adaptation set doesn't contain any baseurl information
                         $adaptsetdepth[$k]=""; 
 
-                    $direct = $dir.$perioddepth[0].DIRECTORY_SEPARATOR.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
+                    $direct = $dir.$perioddepth[0].'/'.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
                 }
 
                 if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j])) // in case of using segmenttemplate
@@ -379,12 +377,12 @@ function process_mpd($url)
                 for($lo=0;$lo<sizeof($period_baseurl[$i][$j]);$lo++) // loop on baseurl in period level
                 {
                     if( !isAbsoluteURL($period_baseurl[$i][$j][$lo]))
-                        $period_baseurl[$i][$j][$lo] = removeabunchofslashes($dir.$perioddepth[0].DIRECTORY_SEPARATOR.$adaptsetdepth[$i].DIRECTORY_SEPARATOR.$period_baseurl[$i][$j][$lo]);//combine all baseurls                       
+                        $period_baseurl[$i][$j][$lo] = removeabunchofslashes($dir.$perioddepth[0].'/'.$adaptsetdepth[$i].'/'.$period_baseurl[$i][$j][$lo]);//combine all baseurls                       
                 }
             }
         }
         if($setsegflag===false)
-        $period_url = $period_baseurl;// if segment template is not used, use baseurl
+            $period_url = $period_baseurl;// if segment template is not used, use baseurl
     }
 
     $size=array();
@@ -399,164 +397,143 @@ function process_mpd($url)
     return $totarr;
 }
 
-function download()
+function download($adaptation_set, $representation)
 {
-    ////////////////////////////////////////////////////////////////////////////////////
-    if(isset($_POST['download'])) // get request from client to download segments
-    {
-        $root= dirname(__FILE__);
-        $destiny=array();
+    global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info,
+            $perioddepth,$adaptsetdepth,$period_baseurl,$foldername,
+            $type,$minBufferTime,$profiles,$MPD; //Global variables to be used within the main function
 
-        if($count2>=sizeof($period_url[$count1]))//check if all representations within a segment is downloaded
-        {
-            $count2=0;  // reset representation counter when new adaptation set is proccesed 
-            $count1=$count1+1; // increase adapatationset counter
-        }
+    $root = dirname(__FILE__);
+    $destiny =array();
+
+    $repno = "Adapt".$adaptation_set."rep".$representation; // presentation unique name
+    $pathdir=$locate.DIRECTORY_SEPARATOR.$repno.DIRECTORY_SEPARATOR;
+
+    if (!file_exists($pathdir)) {
+        mkdir($pathdir, 0777, true); // create folder for each presentation
+    }
         
-        if ($count1>=sizeof($period_url)) //check if all adapatationsets is processed 
-        {    
-        crossRepresentationProcess();
-            $missingexist = file_exists ($locate.'\missinglink.txt'); //check if any broken urls is detected
-            if($missingexist){
-            $temp_string = str_replace (array('$Template$'),array("missinglink"),$string_info);
-        file_put_contents($locate.DIRECTORY_SEPARATOR.'missinglink.html',$temp_string);//create html file contains report for all missing segments
-        }
-            $file_error[] = "done"; 
-            for($i=0;$i<sizeof($Period_arr);$i++){  // check all info files if they contain Error 
-            if(file_exists($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt')) 
-            {
-                        $searchadapt = file_get_contents($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt');
-                        if(strpos($searchadapt,"Error")==false) 
-                $file_error[] = "noerror"; // no error found in text file
-            else
-                $file_error[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.html'; // add error file location to array
-                }
-                else
-                $file_error[]="noerror";
-         }
-            session_destroy();
-            if($missingexist){
-               $file_error[]="temp".DIRECTORY_SEPARATOR.$foldername.'/missinglink.html';
+    $sizearray = downloaddata($pathdir,$period_url[$adaptation_set][$representation]); // download data 
+    if($sizearray !==0)
+    {
+        Assemble($pathdir,$period_url[$adaptation_set][$representation],$sizearray); // Assemble all presentation in to one presentation
+        rename($locate.DIRECTORY_SEPARATOR."mdatoffset.txt",$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
 
-               }
-               else 
-               $file_error[]="noerror";
-       $send_string = json_encode($file_error); //encode array to string and send it 
+        $file_location = array();
+        $exeloc=dirname(__FILE__);
+        chdir($locate);
+        $timeSeconds=str_replace("PT","",$minBufferTime);
+        $timeSeconds=str_replace("S","",$timeSeconds);
+        $processArguments=" -minbuffertime ".$timeSeconds." -sbw -bandwidth ";
+        $processArguments=$processArguments.$Period_arr[    $adaptation_set]['Representation']['bandwidth'][$representation]." ";
 
+        if($type=== "dynamic")
+            $processArguments=$processArguments."-dynamic ";
 
-            echo $send_string; // send string with location of all error logs to client
-            exit;
-        }
-        else
+        if($Period_arr[    $adaptation_set]['Representation']['startWithSAP'][$representation] != "")
+            $processArguments=$processArguments."-startwithsap ".$Period_arr[$adaptation_set]['Representation']['startWithSAP'][$representation]." ";
+
+        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-on-demand:2011") !== false)
+            $processArguments=$processArguments."-isoondemand ";
+
+        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-live:2011") !== false)
+            $processArguments=$processArguments."-isolive ";
+
+        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-main:2011") !== false)
+            $processArguments=$processArguments."-isomain ";
+
+        $dash264=false;
+        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"http://dashif.org/guidelines/dash264") !== false)
         {
-            $repno = "Adapt".$count1."rep".$count2; // presentation unique name
-            $pathdir=$locate.DIRECTORY_SEPARATOR.$repno.DIRECTORY_SEPARATOR;
-            
-            if (!file_exists($pathdir))
-            {
-                mkdir($pathdir, 0777, true); // create folder for each presentation
-            }
-            
-            $sizearray = downloaddata($pathdir,$period_url[$count1][$count2]); // download data 
-            if($sizearray !==0)
-            {
-            
-            Assemble($pathdir,$period_url[$count1][$count2],$sizearray); // Assemble all presentation in to one presentation
-            rename($locate.DIRECTORY_SEPARATOR."mdatoffset.txt",$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
+             $processArguments=$processArguments."-dash264base ";
+             $dash264=true;
+        }
 
-            $file_location = array();
-            $exeloc=dirname(__FILE__);
-            chdir($locate);
-            $timeSeconds=str_replace("PT","",$minBufferTime);
-            $timeSeconds=str_replace("S","",$timeSeconds);
-            $processArguments=" -minbuffertime ".$timeSeconds." -sbw -bandwidth ";
-            $processArguments=$processArguments.$Period_arr[$count1]['Representation']['bandwidth'][$count2]." ";
-            
-            if($type=== "dynamic")
-                $processArguments=$processArguments."-dynamic ";
-            
-            if($Period_arr[$count1]['Representation']['startWithSAP'][$count2] != "")
-                $processArguments=$processArguments."-startwithsap ".$Period_arr[$count1]['Representation']['startWithSAP'][$count2]." ";
-                
-            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-on-demand:2011") !== false)
-                $processArguments=$processArguments."-isoondemand ";
-                
-            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-live:2011") !== false)
-                $processArguments=$processArguments."-isolive ";
-                
-            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-main:2011") !== false)
-                $processArguments=$processArguments."-isomain ";
+        if($Period_arr[$adaptation_set]['Representation']['ContentProtectionElementCount'][$representation] > 0 && $dash264 == true)
+        {
+            $processArguments=$processArguments."-dash264enc ";
+        }
 
-            $dash264=false;
-            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"http://dashif.org/guidelines/dash264") !== false)
-            {
-                   $processArguments=$processArguments."-dash264base ";
-                   $dash264=true;
-            }
-                
-          
-                
-            if($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true)
-            {
-                $processArguments=$processArguments."-dash264enc ";
-            }
-            
-            global $validatemp4;
-            $test = dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4." ".
+        global $validatemp4;
+        $test = '"'.$validatemp4.'" '.
                 $locate.DIRECTORY_SEPARATOR.$repno.".mp4 ".
                 "-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt ".
                 "-offsetinfo ".$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt ".
                 "-logconsole".$processArguments;
-            exec($test); //Excute conformance software
+        exec($test, $out, $exit_code); //Excute conformance software
+        if(0 == $exit_code)
+        {
             rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
-       
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_infofile.html";
+
+            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
 
             $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
             rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."log.txt");//Rename conformance software output file to representation number file
-            $temp_string = str_replace (array('$Template$'),array($repno."log"),$string_info);// this string shows a text file on HTML
 
-            file_put_contents($locate.DIRECTORY_SEPARATOR.$repno."log.html",$temp_string); // Create html file containing log file result
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."log.html";// add it to file location which is sent to client to get URL of log file on server
+            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."log.txt";// add it to file location which is sent to client to get URL of log file on server
 
             $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."log.txt";
 
-   
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$repno."myfile.html";
+            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno.DIRECTORY_SEPARATOR."myfile.txt";
             $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."myfile.txt";
 
-            $period_url[$count1][$count2]=null;
-            ob_flush();
-            $count2 = $count2+1;
+            $period_url[$adaptation_set][$representation] = null;
+
             $search = file_get_contents($locate.DIRECTORY_SEPARATOR.$repno."log.txt");//Search for errors within log file
-            
+
             if(strpos($search,"error")==false) //if no error , notify client with no error
                 $file_location[] = "noerror";
             else
                 $file_location[] = "error";//else notify client with error
-
-            $_SESSION['count2'] = $count2;//Save the counters to session variables in order to use it the next time the client request download of next presentation
-            $_SESSION['count1'] = $count1;
-            $send_string = json_encode($file_location);
-            echo $send_string;
-            }
-            else 
-                 {
-                             $count2 = $count2+1;
-                             $_SESSION['count2'] = $count2;
-            $_SESSION['count1'] = $count1;
-
-                 $file_location[] = 'notexist';
-                             $send_string = json_encode($file_location);
-
-                echo $send_string;
-                 
-                 }
-
+        }
+        else
+        {
+            $file_location[] = $test;
+            $file_location[] = 'validatorerror';
         }
     }
-    
-    
+    else
+    {
+        $file_location[] = 'notexist';
+    }
+
+    return $file_location;
 }
+
+function cross_representation_check()
+{    
+    crossRepresentationProcess();
+    $missingexist = file_exists ($locate.'\missinglink.txt'); //check if any broken urls is detected
+    if($missingexist){
+        $temp_string = str_replace (array('$Template$'),array("missinglink"),$string_info);
+        file_put_contents($locate.DIRECTORY_SEPARATOR.'missinglink.html',$temp_string);//create html file contains report for all missing segments
+    }
+    $file_error[] = "done"; 
+    for($i=0;$i<sizeof($Period_arr);$i++){  // check all info files if they contain Error 
+    if(file_exists($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt')) 
+    {
+                $searchadapt = file_get_contents($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt');
+                if(strpos($searchadapt,"Error")==false) 
+        $file_error[] = "noerror"; // no error found in text file
+    else
+        $file_error[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.html'; // add error file location to array
+        }
+        else
+        $file_error[]="noerror";
+ }
+    session_destroy();
+    if($missingexist){
+       $file_error[]="temp".DIRECTORY_SEPARATOR.$foldername.'/missinglink.html';
+
+       }
+       else 
+       $file_error[]="noerror";
+   $send_string = json_encode($file_error); //encode array to string and send it 
+
+
+    echo $send_string; // send string with location of all error logs to client
+    exit;
+}
+
 
 ?>

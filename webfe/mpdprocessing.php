@@ -98,7 +98,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
         }
        
 				$validate_result = mpdvalidator($url_array[1],$url_array[0],$locate,$foldername);
-		     $exit=  $validate_result[0];
+		     $exit=  $validate_result[0] || $url_array[2];
 			 $totarr=$validate_result[1];
                          $schematronIssuesReport = $validate_result[2];
 						
@@ -274,7 +274,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                         if(!isset($adaptsetdepth[$k]))  // adaptation set doesn't contain any baseurl information
                         $adaptsetdepth[$k]=""; 
 
-                        $direct = $dir.$perioddepth[0].DIRECTORY_SEPARATOR.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
+                        $direct = $dir.$perioddepth[0].'/'.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
                     }
                     
                     if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j])) // in case of using segmenttemplate
@@ -419,7 +419,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
                     for($lo=0;$lo<sizeof($period_baseurl[$i][$j]);$lo++) // loop on baseurl in period level
                     {
                         if( !isAbsoluteURL($period_baseurl[$i][$j][$lo]))
-                            $period_baseurl[$i][$j][$lo] = removeabunchofslashes($dir.$perioddepth[0].DIRECTORY_SEPARATOR.$adaptsetdepth[$i].DIRECTORY_SEPARATOR.$period_baseurl[$i][$j][$lo]);//combine all baseurls                       
+                            $period_baseurl[$i][$j][$lo] = removeabunchofslashes($dir.$perioddepth[0].'/'.$adaptsetdepth[$i].'/'.$period_baseurl[$i][$j][$lo]);//combine all baseurls                       
                     }
                 }
             }

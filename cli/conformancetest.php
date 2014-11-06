@@ -46,9 +46,12 @@ $count1=0; // Count number of adaptationsets processed
 $count2=0;//count number of presentations proceessed
 
 // Work out which validator binary to use
-$bin_dir = dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'webfe';
+$bin_dir = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'webfe');
 $validatemp4 = $bin_dir.DIRECTORY_SEPARATOR.((strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "validatemp4-linux");
 $mpdvalidator = $bin_dir.DIRECTORY_SEPARATOR.'mpdvalidator2';
+
+// Command line option defaults
+$mpd_validation_only = false;
 
 function print_r2($val){ //Print output line by line (for testing)
     print_r($val);
@@ -87,14 +90,81 @@ foreach( $opts as $o => $a )
 
 $argv = array_merge( $argv );
 
+$exit_code = 0;
+
 for($i = 1; $i < count($argv); $i++)
 {
-    $ret = process_mpd($argv[$i]);
-    if(false === $ret) {
-        exit(1);
+    $failed = false;
+    $url = $argv[$i];
+    
+    // Check the MPD
+    $ret = process_mpd($url, $mpd_validation_only);
+    if(false === $ret) 
+    {
+        fprintf(STDERR, "%s: Error: Failed loading the MPD file, please check the URL\n", $url);
+        $exit_code = 1;
+        continue;
+    }
+
+    print_r($ret);
+    if('dynamic' === $ret[count($ret) - 1])
+    {
+        $dirid = $ret[count($ret) - 2];
+
+        fprintf(STDERR, "%s: Warning: Dynamic MPD, not validating\n", $url);
+        continue;
     }
     
-    print_r($ret);
+    $dirid = $ret[count($ret) - 1];
+
+    $xlink_resolved = array_shift($ret);
+    if('true' === $xlink_resolved) {
+        fprintf(STDOUT, "%s: XLink resolving ok\n", $url);
+    } else {
+        fprintf(STDERR, "%s: Error: XLink resolving failed, see %s\n", $url, $xlink_resolved);
+        $failed = true;
+    }
+
+    $mpd_valid = array_shift($ret);
+    if('true' === $mpd_valid) {
+        fprintf(STDOUT, "%s: MPD validation ok\n", $url);
+    } else {
+        fprintf(STDERR, "%s: Error: MPD validation failed, see %s\n", $url, $mpd_valid);
+        $failed = true;
+    }
+
+    $schematron_valid = array_shift($ret);
+    if('true' === $schematron_valid) {
+        fprintf(STDOUT, "%s: Schematron validation ok\n", $url);
+    } else {
+        fprintf(STDERR, "%s: Error: Schematron validation failed, see %s\n", $url, $schematron_valid);
+        $failed = true;
+    }
+
+    if($failed) {
+        $exit_code = 1;
+        continue;
+    }
+    
+    if($mpd_validation_only) {
+        continue;
+    }
+
+    // Check all the representations
+    for($adaptation_set = 0; $adaptation_set < $ret[0]; $adaptation_set++)
+    {
+        $childno = $adaptation_set + 1;
+        fprintf(STDOUT, "%s: Adaptation set %d/%d\n", $url, $adaptation_set + 1, $ret[0]);
+        for($representation = 0; $representation < $ret[$childno]; $representation++)
+        {
+            fprintf(STDOUT, "%s: Representation %d/%d\n", $url, $representation + 1, $ret[$childno]);
+
+            $rep_ret = download($adaptation_set, $representation);
+            print_r($rep_ret);
+        }
+    }
 }
+
+exit($exit_code);
 
 ?>
