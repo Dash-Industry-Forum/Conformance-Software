@@ -97,7 +97,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
             exit;
         }
        
-				$validate_result = mpdvalidator($url_array,$locate,$foldername);
+				$validate_result = mpdvalidator($url_array[1],$url_array[0],$locate,$foldername);
 		     $exit=  $validate_result[0];
 			 $totarr=$validate_result[1];
                          $schematronIssuesReport = $validate_result[2];
@@ -514,7 +514,6 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
             $sizearray = downloaddata($pathdir,$period_url[$count1][$count2]); // download data 
 			if($sizearray !==0)
 			{
-			
             Assemble($pathdir,$period_url[$count1][$count2],$sizearray); // Assemble all presentation in to one presentation
             rename($locate.DIRECTORY_SEPARATOR."mdatoffset.txt",$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
 
@@ -523,7 +522,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
             chdir($locate);
             $timeSeconds=str_replace("PT","",$minBufferTime);
             $timeSeconds=str_replace("S","",$timeSeconds);
-            $processArguments=" -minbuffertime ".$timeSeconds." -bandwidth -sbw ";
+            $processArguments=" -minbuffertime ".$timeSeconds." -sbw -bandwidth ";
             $processArguments=$processArguments.$Period_arr[$count1]['Representation']['bandwidth'][$count2]." ";
             
             if($type=== "dynamic")
@@ -562,8 +561,9 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
                 "-offsetinfo ".$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt ".
                 "-logconsole".$processArguments;
             exec($test); //Excute conformance software
-            rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
-       
+            rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt"); //Rename info file to contain representation number (to avoid over writing 
+            rename($locate.DIRECTORY_SEPARATOR."sidxinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_sidxinfo.txt"); //Rename sidx file to contain representation number (to avoid over writing 
+
             $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_infofile.html";
 
             $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
