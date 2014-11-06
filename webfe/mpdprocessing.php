@@ -483,14 +483,14 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 						if(strpos($searchadapt,"Error")==false) 
                 $file_error[] = "noerror"; // no error found in text file
             else
-                $file_error[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.html'; // add error file location to array
+                $file_error[] = "temp/".$foldername.'/Adapt'. $i .'_infofile.html'; // add error file location to array
 				}
 				else
 				$file_error[]="noerror";
          }
             session_destroy();
 			if($missingexist){
-               $file_error[]="temp".DIRECTORY_SEPARATOR.$foldername.'/missinglink.html';
+               $file_error[]="temp/".$foldername.'/missinglink.html';
 
 			   }
 			   else 
@@ -564,19 +564,19 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
             rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt"); //Rename info file to contain representation number (to avoid over writing 
             rename($locate.DIRECTORY_SEPARATOR."sidxinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_sidxinfo.txt"); //Rename sidx file to contain representation number (to avoid over writing 
 
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_infofile.html";
+            $file_location[] = "temp/".$foldername.'/'.$repno."_infofile.html";
 
             $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
             rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."log.txt");//Rename conformance software output file to representation number file
             $temp_string = str_replace (array('$Template$'),array($repno."log"),$string_info);// this string shows a text file on HTML
 
             file_put_contents($locate.DIRECTORY_SEPARATOR.$repno."log.html",$temp_string); // Create html file containing log file result
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."log.html";// add it to file location which is sent to client to get URL of log file on server
+            $file_location[] = "temp/".$foldername.'/'.$repno."log.html";// add it to file location which is sent to client to get URL of log file on server
 
             $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."log.txt";
 
    
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$repno."myfile.html";
+            $file_location[] = "temp/".$foldername.'/'.$repno."myfile.html";
             $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."myfile.txt";
 
             $period_url[$count1][$count2]=null;
