@@ -7,8 +7,8 @@ Tested for:
 
 1) Chrome for Window, Linux, and OS X.
 2) IE.
-3)Firefox
-4)Safari for Windows
+3) Firefox
+4) Safari for Windows
 
 
 
@@ -40,6 +40,9 @@ Check out DASH MPD validator and build
     make
     cp bin/ValidateMP4.exe /var/www/html/Conformance-Software/webfe/validatemp4-linux
     chmod +x /var/www/html/Conformance-Software/webfe/validatemp4-linux
+
+Make sure the mpdvalidator(s) is built to not cause delays when running
+
     cd /var/www/html/Conformance-Software/webfe/mpdvalidator
     ant
     cd ../mpdvalidator2
