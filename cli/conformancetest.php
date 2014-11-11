@@ -63,25 +63,30 @@ function usage()
     global $argv;
     fprintf(STDERR, "{$argv[0]} [OPTIONS]\n");
     fprintf(STDERR, "\n");
-    fprintf(STDERR, " -h\tDisplay help\n");
-    fprintf(STDERR, " -v\tVerbose\n");
-    fprintf(STDERR, " -m\tMPD parsing only\n");
+    fprintf(STDERR, " -h|--help                 Display help\n");
+    fprintf(STDERR, " -v                        Verbose\n");
+    fprintf(STDERR, " -m                        MPD parsing only\n");
+    fprintf(STDERR, " --validate-mp4 <path>     Path to the validatemp4 binary\n");
+    fprintf(STDERR, " --mpd-validator <path>    Path to the validatemp4 binary\n");
 }
 
 $argv = $_SERVER['argv'];
 $options = "hvm";
-$opts = getopt($options);
+$longOptions = array("validate-mp4:", "mpd-validator:", "help");
+$opts = getopt($options, $longOptions);
 foreach( $opts as $o => $a )
 {
     // Strip out of $argv
-    while( $k = array_search( "-" . $o, $argv ) )
+    foreach (preg_grep("/^--?".$o."$/i", $argv) as $k => $v) 
     {
         if( $k )
             unset( $argv[$k] );
         if( preg_match( "/^.*".$o.":.*$/i", $options ) )
             unset( $argv[$k+1] );
+        if( count(preg_grep( "/^".$o.":+$/i", $longOptions)) > 0 )
+            unset( $argv[$k+1] );
     }
-    
+
     // Process the option
     switch($o)
     {
@@ -93,7 +98,16 @@ foreach( $opts as $o => $a )
             $mpd_validation_only = true;
             break;
 
+        case 'validate-mp4';
+            $validatemp4 = $a;
+            break;
+
+        case 'mpd-validator';
+            $mpdvalidator = $a;
+            break;
+
         case 'h';
+        case 'help';
             usage();
             exit(1);
     }
@@ -179,13 +193,19 @@ for($i = 1; $i < count($argv); $i++)
                     break;
 
                 case 'error':
+                    $boxPath = "";
                     foreach (file($rep_ret[1]) as $line) 
                     {
                         $line = trim($line);
-                        if($line !== '### error:')
+                        if(preg_match("/^### error: *(.*)$/", $line, $match))
                         {
+                            $boxPath = $match[1];
+                        }
+                        else
+                        {
+                            // IMPROVE: report error against the correct file/segment
                             $line = preg_replace("/^\#+ */", '', $line);
-                            fprintf(STDERR, "%s: Error: %s\n", $url, $line);
+                            fprintf(STDERR, "%s: Error: %s%s\n", $url, ('' == $boxPath) ? '' : "$boxPath: ", $line);
                         }
                     }
                     break;
