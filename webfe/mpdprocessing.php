@@ -2,7 +2,7 @@
 
 function process_mpd()
 {
-    global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info
+    global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info,$validatemp4
     ,$count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,$type,$minBufferTime,$profiles,$MPD; //Global variables to be used within the main function
     
   //  $path_parts = pathinfo($mpdurl); 
@@ -522,15 +522,27 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
             chdir($locate);
             $timeSeconds=str_replace("PT","",$minBufferTime);
             $timeSeconds=str_replace("S","",$timeSeconds);
-            $processArguments=" -minbuffertime ".$timeSeconds." -sbw -bandwidth ";
+
+            // Check the features that are supported by the ISO validator
+            exec(dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4." -help 2>&1", $out, $exit_code);
+            $validateMp4Features = join("\n", $out);
+
+            $processArguments=" -minbuffertime ".$timeSeconds." -bandwidth ";
             $processArguments=$processArguments.$Period_arr[$count1]['Representation']['bandwidth'][$count2]." ";
             
+            if(false !== strpos($validateMp4Features, '-sbw')) {
+                $processArguments=$processArguments."-sbw ";
+            }
+
             if($type=== "dynamic")
                 $processArguments=$processArguments."-dynamic ";
             
             if($Period_arr[$count1]['Representation']['startWithSAP'][$count2] != "")
                 $processArguments=$processArguments."-startwithsap ".$Period_arr[$count1]['Representation']['startWithSAP'][$count2]." ";
                 
+            if(false !== strpos($validateMp4Features, '-indexrange') && $Period_arr[$count1]['Representation']['indexRange'][$count2] != "")
+                $processArguments=$processArguments."-indexrange ".$Period_arr[$count1]['Representation']['indexRange'][$count2]." ";
+
             if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-on-demand:2011") !== false)
                 $processArguments=$processArguments."-isoondemand ";
                 
@@ -554,7 +566,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
                 $processArguments=$processArguments."-dash264enc ";
             }
             
-            global $validatemp4;
+
             $test = dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4." ".
                 $locate.DIRECTORY_SEPARATOR.$repno.".mp4 ".
                 "-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt ".
