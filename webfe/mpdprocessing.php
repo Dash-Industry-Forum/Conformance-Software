@@ -300,21 +300,14 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                         if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'])) // check timeline 
                         {
                             $timeseg = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][0][0]; // segment start time
+                            $timehash=array(); //contains time tag for each segment
 
                             for($lok=0;$lok<sizeof($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline']);$lok++)//loop on timeline
                             {
-                                $timehash=array(); //contains time tag for each segment
-
                                 $d = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][1];//get d
                                 $r = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][2];//get r
                                 $te = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][0];//get te
 
-                                if($r == 0)// no duration repeat
-                                {
-                                    $timehash[]= $timeseg;//segment time stamp is same as segment time
-                                    $timeseg = $timeseg+$d;
-                                }
-                                
                                 if($r<0) // segments untill the end of presentation duration
                                 {
                                     if(!isset($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok+1]))
@@ -322,7 +315,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                                     else 
                                     $ende = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok+1];
                                     $ende=$ende;
-                                    
+
                                     while($timeseg<$ende)
                                     {
                                         $timehash[]= $timeseg;
@@ -331,7 +324,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                                 }
                                 else
                                 {
-                                    for($cn=0;$cn<=$r;$cn++)//if r is positive number
+                                    for($cn=0;$cn<=$r;$cn++)//if r is positive number (handles no duration repeat as well)
                                     {
                                         $timehash[]= $timeseg;
                                         $timeseg=$timeseg+$d; // add duration to time segment to get time stamp for each segment
