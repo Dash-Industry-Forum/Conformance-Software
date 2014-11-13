@@ -134,7 +134,6 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
             $Adapt_Timeoffset=$Timeoffset;
 
         $baseurl = $Adapt->getElementsByTagName ("BaseURL");// check and process baseurl node if it exist in adapationset level
-        $adaptsetdepth=array();
 
         for($i=0;$i<$baseurl->length;$i++)
         {
@@ -142,7 +141,7 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
             $par = $base->parentNode;
             $name = $par->tagName;
              if($name == 'AdaptationSet')//Confirm Baseurl is direct child of adapationset
-            {
+             {
                 $Adaptbase = $base->nodeValue;
                 $adaptsetdepth[] = $Adaptbase; // Cumulative baseURL
 
