@@ -77,6 +77,7 @@ function process_mpd($url, $validation_only)
     $validate_result = mpdvalidator($mpdvalidator, $url, $locate, $foldername);
     $exit=  $validate_result[0] || $validation_only;
     $totarr=$validate_result[1];
+    $totarr[]=$validate_result[2];
     $schematronIssuesReport = $validate_result[2];
 
     ///////////////////////////////////////Processing mpd attributes in order to get value//////////////////////////////////////////////////////////
