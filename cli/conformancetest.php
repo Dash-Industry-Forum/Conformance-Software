@@ -158,11 +158,11 @@ for($i = 1; $i < count($argv); $i++)
     }
 
     $schematron_valid = array_shift($ret);
+    $errorList = array_shift($ret);
     if('true' === $schematron_valid) {
         $verbose && fprintf(STDOUT, "%s: Schematron validation ok\n", $url);
     } else {
         fprintf(STDERR, "%s: Error: Schematron validation failed, see %s\n", $url, $schematron_valid);
-        $errorList = array_shift($ret);
         foreach($errorList as $error)
         {
             fprintf(STDERR, "%s: Error: %s: %s\n", $url, $error->location, $error->text);
