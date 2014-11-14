@@ -12,7 +12,7 @@
   <!--link rel="stylesheet" href="/resources/demos/style.css" /-->
  
 
-          
+            
             
 
          
@@ -247,11 +247,11 @@ document.querySelector('#afile').addEventListener('change', function(e) {
   file = this.files[0];
    fd = new FormData();
   fd.append("afile", file);
- 
+
   xhr = new XMLHttpRequest();
   xhr.open('POST', 'process.php', true);
-  
-  
+
+
   xhr.onload = function() {
   uploaded=true;
   submit();
@@ -359,21 +359,21 @@ function submit()
     if (uploaded===true)
 	url="upload";
     
-    var checkedValue = $('.validator:checked').val();
+	var checkedValue = $('.validator:checked').val();
     var stringurl = [];
 	
-    stringurl[0] = url;
+	stringurl[0] = url;
 
     stringurl[1] =  "mpdvalidator2";
 	
-    if($("#mpdvalidation").is(':checked'))
+		if($("#mpdvalidation").is(':checked'))
         stringurl[2] = 1;
-    else
-   	stringurl[2] = 0 ;
+		else
+   	     stringurl[2] = 0 ;
     initVariables();
     setUpTreeView();
     setStatusTextlabel("Processing...");
-
+		 
 
     document.getElementById("btn8").disabled="true";
     document.getElementById("afile").disabled="true";
@@ -397,27 +397,27 @@ function submit()
             finishTest();            
             return false;
         }
-        
+
         console.log(totarr);
         totarr=JSON.parse(totarrstring);
         var currentpath = window.location.pathname;
         currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
+		
 
-	   
-        if(totarr[totarr.length-1]==='dynamic'){
+if(totarr[totarr.length-1]==='dynamic'){
             console.log("i'M DYNAMIC");
 
-            dirid = totarr[totarr.length-2];
+dirid = totarr[totarr.length-2];
             document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 
-            document.getElementById('dynamic').style.visibility='visible';
+		document.getElementById('dynamic').style.visibility='visible';
 
-            document.getElementById("dynamic").href='http://ec2-54-194-95-240.eu-west-1.compute.amazonaws.com/dynamic/?mpdurl=' +url ;
-            document.getElementById('list').style.visibility='visible';
+		document.getElementById("dynamic").href='http://ec2-54-194-95-240.eu-west-1.compute.amazonaws.com/dynamic/?mpdurl=' +url ;
+		document.getElementById('list').style.visibility='visible';
 
             finishTest();
-            return false;
-        }
+					return false;
+}
 
         dirid = totarr[totarr.length-1];
 	document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
@@ -428,7 +428,7 @@ function submit()
 		console.log("totarrstring=");
         console.log(totarrstring);
 		
-        var failed ='false';
+var failed ='false';
 
 
         var x=2;
@@ -452,7 +452,7 @@ function submit()
 		}
 		else {
 		automate(y,x,"XLink resolving");
-	   				             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
+					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
 								 failed=totarr[0];
 		}
 		totarr.splice(0,1);
@@ -474,7 +474,7 @@ function submit()
 		}
 				totarr.splice(0,1);
 				 x++;
-                if(totarr[0]==='true')
+if(totarr[0]==='true')
 		{
 		             automate(y,x,"Schematron validation");
 					             tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
@@ -497,10 +497,10 @@ function submit()
 		urlarray.push(failed);
 		console.log(kidsloc);
 		console.log(urlarray[0]);
-                lastloc++;
+lastloc++;		
                 
                 finishTest();
-                return false;
+return false;
 		}
 		
         for(var i=0;i<totarr[0];i++)
@@ -526,7 +526,7 @@ function submit()
 
         progress();
         document.getElementById('par').style.visibility='visible';
-        document.getElementById('list').style.visibility='visible';
+document.getElementById('list').style.visibility='visible';
     });
 
 }
@@ -544,7 +544,7 @@ function progress()
     representationid++;
     //document.getElementById("par").innerHTML=status;
     tree.setItemImage2( repid[counting],'progress3.gif','progress3.gif','progress3.gif');
-    
+
     console.log("progress(): representationid=",representationid,",hinindex=",hinindex,",adaptationid=",adaptationid  );
     
 
@@ -552,50 +552,50 @@ function progress()
     function(response)
     {
 
-        console.log(response);
+console.log(response);
 	var locations = JSON.parse(response);
         if (locations[0]=="done")
         {
-            console.log("Inside locations");
+		console.log("Inside locations");
 		
-            for(var i =1; i<locations.length-1;i++)
+		     for(var i =1; i<locations.length-1;i++)
             {
+			 
 
+			 if(locations[i]=="noerror"){
 
-                    if(locations[i]=="noerror"){
-
-                        tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
+			 tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
                         automate(adaptid[i-1],lastloc,"Cross-representation validation success");
 
-                        tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
-                        lastloc++;
-                    // 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
+			 tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
+                  lastloc++;
+			// 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
 
-                    }
-                    else{
+			 }
+			 else{
 
-                        tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
-                        kidsloc.push(lastloc);
-                        urlarray.push(locations[i]);
-
+			 tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
+			 							 kidsloc.push(lastloc);
+                                      urlarray.push(locations[i]);
+									  
                         automate(adaptid[i-1],lastloc,"Cross-representation validation error");
-
-                        tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
-                        lastloc++;
-                    }  
-
-
-
-
+						
+							 tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
+                  lastloc++;
+				  }
+			 
+			 
 
 
 
-            }
-            kidsloc.push(lastloc);
-            if(locations[locations.length-1]!="noerror")
-            {
-                urlarray.push(locations[locations.length-1]);
 
+
+			 }
+			 kidsloc.push(lastloc);
+			         if(locations[locations.length-1]!="noerror")
+					 {
+                                      urlarray.push(locations[locations.length-1]);
+									  
 
 
 
@@ -616,10 +616,10 @@ function progress()
 
 
                 automate(1,lastloc,"Broken URL list");
-                tree.setItemImage2(lastloc,'404.jpg','404.jpg','404.jpg');
-                lastloc++;
-            }
-
+							 tree.setItemImage2(lastloc,'404.jpg','404.jpg','404.jpg');
+                  lastloc++;
+			 }
+			 
 			 
             console.log("go");
             clearTimeout(progressTimer);
@@ -713,7 +713,7 @@ function finishTest()
         
         setStatusTextlabel("Conformance test completed");
 
-}
+} 
 
 
 

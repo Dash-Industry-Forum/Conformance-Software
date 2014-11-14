@@ -37,7 +37,7 @@ function analyzeSchematronIssues($SchematronIssuesReport)
     $numErrors = sizeof($sxe);
     for($i=0;$i<$numErrors;$i++)
     {
-        $errorElement = $dom_sxe->getElementsByTagName('svrl:failed-assert')->item($i); // access the parent "MPD" in mpd file   
+        $errorElement = $dom_sxe->getElementsByTagName('failed-assert')->item($i); // access the parent "MPD" in mpd file
         $schematronIssue[$i]->text = getSchemaErrorText($errorElement);
         $schematronIssue[$i]->location = getSchemaErrorLocation($errorElement); // get mediapersentation duration from mpd level
         $schematronIssue[$i]->attributes = getSchemaErrorAttributes($errorElement); // get mediapersentation duration from mpd level
@@ -116,7 +116,7 @@ function getSchemaErrorText($errorElement)
     foreach ($errorElement->childNodes as $node) 
     {
         $nodeName= $node->nodeName;
-        if($nodeName === "svrl:text")
+        if($nodeName === "text")
         {
             $errorText = $node->nodeValue;
         }

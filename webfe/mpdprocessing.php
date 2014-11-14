@@ -2,7 +2,7 @@
 
 function process_mpd()
 {
-    global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info
+    global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info,$validatemp4
     ,$count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,$type,$minBufferTime,$profiles,$MPD; //Global variables to be used within the main function
     
   //  $path_parts = pathinfo($mpdurl); 
@@ -22,16 +22,16 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
         $sessname = 'sess'.rand(); // get a random session name
         session_name($sessname);// set session name
 
-        $directories = array_diff(scandir(dirname(__FILE__).'/'.'temp'), array('..', '.'));
+        $directories = array_diff(scandir(dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'), array('..', '.'));
 
         foreach ($directories as $file) // Clean temp folder from old sessions in order to save diskspace
         {
-            if(file_exists(dirname(__FILE__).'/'.'temp'.'/'.$file)) // temp is folder contains all sessions folders
+            if(file_exists(dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR.$file)) // temp is folder contains all sessions folders
             {
-                $change = time()-filemtime(dirname(__FILE__).'/'.'temp'.'/'.$file); // duration of file implementation
+                $change = time()-filemtime(dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR.$file); // duration of file implementation
 
                 if($change>300)
-                    rrmdir(dirname(__FILE__).'/'.'temp'.'/'.$file); // if last time folder was modified exceed 300 second it should be removed 
+                    rrmdir(dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR.$file); // if last time folder was modified exceed 300 second it should be removed 
             }
         }
 
@@ -40,11 +40,11 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
         $foldername = 'id'.rand(); // get random name for session folder
         $_SESSION['foldername']=$foldername;
         // rrmdir($locate);
-        $locate = dirname(__FILE__).'\\'.'temp'.'\\'.$foldername; //session  folder location
+        $locate = dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR.$foldername; //session  folder location
         $_SESSION['locate'] = $locate; // save session folder location 
         mkdir($locate,0777); // create session folder
         $totarr= array(); // array contains all data to be sent to client.
-        copy(dirname(__FILE__)."\\"."validatemp4-vs2010.exe",$locate.'\\'."validatemp4-vs2010.exe");// copy conformance tool to session folder to allow multi-session operation
+//        copy(dirname(__FILE__)."\\"."validatemp4-vs2010.exe",$locate.'//'."validatemp4-vs2010.exe");// copy conformance tool to session folder to allow multi-session operation
 		              $url_array = json_decode($_POST['urlcode']);
 
 		if(isset($_SESSION['fileContent'] ))		// If file is uploaded 
@@ -77,10 +77,10 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
 		$url_array[2]=1;
 		
 		}
-        copy(dirname(__FILE__)."\\"."featuretable.html",$locate.'\\'."featuretable.html"); // copy features list html file to session folder
+        copy(dirname(__FILE__).DIRECTORY_SEPARATOR."featuretable.html",$locate.DIRECTORY_SEPARATOR."featuretable.html"); // copy features list html file to session folder
         //Create log file so that it is available if accessed
         $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>');// get progress bar update
-        $progressXML->asXml($locate.'/progress.xml'); //progress xml location
+        $progressXML->asXml($locate.DIRECTORY_SEPARATOR.'progress.xml'); //progress xml location
         
         //libxml_use_internal_logors(true);
         $MPD_O = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
@@ -97,8 +97,8 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
             exit;
         }
        
-				$validate_result = mpdvalidator($url_array,$locate,$foldername);
-		     $exit=  $validate_result[0];
+				$validate_result = mpdvalidator($url_array[1],$url_array[0],$locate,$foldername);
+		     $exit=  $validate_result[0] || $url_array[2];
 			 $totarr=$validate_result[1];
                          $schematronIssuesReport = $validate_result[2];
 						
@@ -274,7 +274,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                         if(!isset($adaptsetdepth[$k]))  // adaptation set doesn't contain any baseurl information
                         $adaptsetdepth[$k]=""; 
 
-                        $direct = $dir.$perioddepth[0].'//'.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
+                        $direct = $dir.'/'.$perioddepth[0].'/'.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
                     }
                     
                     if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j])) // in case of using segmenttemplate
@@ -300,21 +300,14 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                         if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'])) // check timeline 
                         {
                             $timeseg = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][0][0]; // segment start time
+                            $timehash=array(); //contains time tag for each segment
 
                             for($lok=0;$lok<sizeof($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline']);$lok++)//loop on timeline
                             {
-                                $timehash=array(); //contains time tag for each segment
-
                                 $d = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][1];//get d
                                 $r = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][2];//get r
                                 $te = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok][0];//get te
 
-                                if($r == 0)// no duration repeat
-                                {
-                                    $timehash[]= $timeseg;//segment time stamp is same as segment time
-                                    $timeseg = $timeseg+$d;
-                                }
-                                
                                 if($r<0) // segments untill the end of presentation duration
                                 {
                                     if(!isset($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok+1]))
@@ -322,7 +315,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                                     else 
                                     $ende = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'][$lok+1];
                                     $ende=$ende;
-                                    
+
                                     while($timeseg<$ende)
                                     {
                                         $timehash[]= $timeseg;
@@ -331,7 +324,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                                 }
                                 else
                                 {
-                                    for($cn=0;$cn<=$r;$cn++)//if r is positive number
+                                    for($cn=0;$cn<=$r;$cn++)//if r is positive number (handles no duration repeat as well)
                                     {
                                         $timehash[]= $timeseg;
                                         $timeseg=$timeseg+$d; // add duration to time segment to get time stamp for each segment
@@ -473,24 +466,24 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 			$missingexist = file_exists ($locate.'\missinglink.txt'); //check if any broken urls is detected
 			if($missingexist){
 			$temp_string = str_replace (array('$Template$'),array("missinglink"),$string_info);
-        file_put_contents($locate.'\missinglink.html',$temp_string);//create html file contains report for all missing segments
+        file_put_contents($locate.DIRECTORY_SEPARATOR.'missinglink.html',$temp_string);//create html file contains report for all missing segments
 		}
 			$file_error[] = "done"; 
 			for($i=0;$i<sizeof($Period_arr);$i++){  // check all info files if they contain Error 
-			if(file_exists($locate.'\\Adapt'. $i .'_infofile.txt')) 
+			if(file_exists($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt')) 
 			{
-			            $searchadapt = file_get_contents($locate.'\\Adapt'. $i .'_infofile.txt');
+			            $searchadapt = file_get_contents($locate.DIRECTORY_SEPARATOR.'Adapt'. $i .'_infofile.txt');
 						if(strpos($searchadapt,"Error")==false) 
                 $file_error[] = "noerror"; // no error found in text file
             else
-                $file_error[] = "temp".'/'.$foldername.'/'.'Adapt'. $i .'_infofile.html'; // add error file location to array
+                $file_error[] = "temp/".$foldername.'/Adapt'. $i .'_infofile.html'; // add error file location to array
 				}
 				else
 				$file_error[]="noerror";
          }
             session_destroy();
 			if($missingexist){
-               $file_error[]="temp".'/'.$foldername.'/missinglink.html';
+               $file_error[]="temp/".$foldername.'/missinglink.html';
 
 			   }
 			   else 
@@ -504,7 +497,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
         else
         {
             $repno = "Adapt".$count1."rep".$count2; // presentation unique name
-            $pathdir=$locate."\\".$repno."\\";
+            $pathdir=$locate.DIRECTORY_SEPARATOR.$repno.DIRECTORY_SEPARATOR;
             
             if (!file_exists($pathdir))
             {
@@ -514,24 +507,35 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
             $sizearray = downloaddata($pathdir,$period_url[$count1][$count2]); // download data 
 			if($sizearray !==0)
 			{
-			
             Assemble($pathdir,$period_url[$count1][$count2],$sizearray); // Assemble all presentation in to one presentation
-            rename($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
+            rename($locate.DIRECTORY_SEPARATOR."mdatoffset.txt",$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
 
             $file_location = array();
             $exeloc=dirname(__FILE__);
             chdir($locate);
             $timeSeconds=str_replace("PT","",$minBufferTime);
             $timeSeconds=str_replace("S","",$timeSeconds);
+
+            // Check the features that are supported by the ISO validator
+            exec(dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4." -help 2>&1", $out, $exit_code);
+            $validateMp4Features = join("\n", $out);
+
             $processArguments=" -minbuffertime ".$timeSeconds." -bandwidth ";
             $processArguments=$processArguments.$Period_arr[$count1]['Representation']['bandwidth'][$count2]." ";
             
+            if(false !== strpos($validateMp4Features, '-sbw')) {
+                $processArguments=$processArguments."-sbw ";
+            }
+
             if($type=== "dynamic")
                 $processArguments=$processArguments."-dynamic ";
             
             if($Period_arr[$count1]['Representation']['startWithSAP'][$count2] != "")
                 $processArguments=$processArguments."-startwithsap ".$Period_arr[$count1]['Representation']['startWithSAP'][$count2]." ";
                 
+            if(false !== strpos($validateMp4Features, '-indexrange') && $Period_arr[$count1]['Representation']['indexRange'][$count2] != "")
+                $processArguments=$processArguments."-indexrange ".$Period_arr[$count1]['Representation']['indexRange'][$count2]." ";
+
             if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-on-demand:2011") !== false)
                 $processArguments=$processArguments."-isoondemand ";
                 
@@ -555,30 +559,35 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
                 $processArguments=$processArguments."-dash264enc ";
             }
             
-            
-            $test = "validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments;
-            exec("validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments ); //Excute conformance software
-            rename($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
-       
-            $file_location[] = "temp".'/'.$foldername.'/'.$repno."_infofile.html";
 
-            $destiny[]=$locate.'\\'.$repno."_infofile.txt";
-            rename($locate.'\\'."stderr.txt",$locate.'\\'.$repno."log.txt");//Rename conformance software output file to representation number file
+            $test = dirname(__FILE__).DIRECTORY_SEPARATOR.$validatemp4." ".
+                $locate.DIRECTORY_SEPARATOR.$repno.".mp4 ".
+                "-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt ".
+                "-offsetinfo ".$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt ".
+                "-logconsole".$processArguments;
+            exec($test); //Excute conformance software
+            rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt"); //Rename info file to contain representation number (to avoid over writing 
+            rename($locate.DIRECTORY_SEPARATOR."sidxinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_sidxinfo.txt"); //Rename sidx file to contain representation number (to avoid over writing 
+
+            $file_location[] = "temp/".$foldername.'/'.$repno."_infofile.html";
+
+            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
+            rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."log.txt");//Rename conformance software output file to representation number file
             $temp_string = str_replace (array('$Template$'),array($repno."log"),$string_info);// this string shows a text file on HTML
 
-            file_put_contents($locate.'\\'.$repno."log.html",$temp_string); // Create html file containing log file result
-            $file_location[] = "temp".'/'.$foldername.'/'.$repno."log.html";// add it to file location which is sent to client to get URL of log file on server
+            file_put_contents($locate.DIRECTORY_SEPARATOR.$repno."log.html",$temp_string); // Create html file containing log file result
+            $file_location[] = "temp/".$foldername.'/'.$repno."log.html";// add it to file location which is sent to client to get URL of log file on server
 
-            $destiny[]=$locate.'\\'.$repno."log.txt";
+            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."log.txt";
 
    
-            $file_location[] = "temp".'/'.$repno."myfile.html";
-            $destiny[]=$locate.'\\'.$repno."myfile.txt";
+            $file_location[] = "temp/".$foldername.'/'.$repno."myfile.html";
+            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."myfile.txt";
 
             $period_url[$count1][$count2]=null;
             ob_flush();
             $count2 = $count2+1;
-            $search = file_get_contents($locate.'\\'.$repno."log.txt");//Search for errors within log file
+            $search = file_get_contents($locate.DIRECTORY_SEPARATOR.$repno."log.txt");//Search for errors within log file
             
             if(strpos($search,"error")==false) //if no error , notify client with no error
                 $file_location[] = "noerror";
