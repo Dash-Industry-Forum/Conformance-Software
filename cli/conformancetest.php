@@ -242,24 +242,17 @@ for($i = 1; $i < count($argv); $i++)
     $cross_count = 0;
     for($adaptation_set = 0; $adaptation_set < $ret[0]; $adaptation_set++)
     {
-        $childno = $adaptation_set + 1;
-        for($representation = 0; $representation < $ret[$childno]; $representation++)
-        {
-            if('noerror' == $cross_ret[$cross_count]) 
-            {
-                $verbose && fprintf(STDOUT, "%s: Adaptation set %d, Representation %d Cross-representation validation success\n", $url, $adaptation_set + 1, $representation + 1);
+        if('noerror' == $cross_ret[$cross_count]) {
+            $verbose && fprintf(STDOUT, "%s: Adaptation set %d Cross-representation validation success\n", $url, $adaptation_set + 1);
+        } else {
+            fprintf(STDERR, "%s: Error: Adaptation set %d Cross-representation validation failed\n", $url, $adaptation_set + 1);
+            foreach (file($cross_ret[$cross_count]) as $line) {
+                $line = trim($line);
+                fprintf(STDERR, "%s: Error: %s\n", $url, $line);
             }
-            else
-            {
-                fprintf(STDERR, "%s: Error: Adaptation set %d, Representation %d Cross-representation validation failed\n", $url, $adaptation_set + 1, $representation + 1);
-                foreach (file($cross_ret[$cross_count]) as $line) {
-                    $line = trim($line);
-                    fprintf(STDERR, "%s: Error: %s\n", $url, $line);
-                }
-            }
-
-            $cross_count++;
         }
+
+        $cross_count++;
     }
 }
 
