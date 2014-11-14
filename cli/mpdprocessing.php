@@ -240,7 +240,7 @@ function process_mpd($url, $validation_only)
                     if(!isset($adaptsetdepth[$k]))  // adaptation set doesn't contain any baseurl information
                         $adaptsetdepth[$k]=""; 
 
-                    $direct = $dir.$perioddepth[0].'/'.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
+                    $direct = $dir.'/'.$perioddepth[0].'/'.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
                 }
 
                 if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j])) // in case of using segmenttemplate

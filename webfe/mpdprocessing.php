@@ -274,7 +274,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                         if(!isset($adaptsetdepth[$k]))  // adaptation set doesn't contain any baseurl information
                         $adaptsetdepth[$k]=""; 
 
-                        $direct = $dir.$perioddepth[0].'/'.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
+                        $direct = $dir.'/'.$perioddepth[0].'/'.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
                     }
                     
                     if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j])) // in case of using segmenttemplate
