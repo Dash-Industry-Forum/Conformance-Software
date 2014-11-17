@@ -8,7 +8,7 @@ it check the boxes within the segment and ignore Mdat box and download only othe
 function downloaddata($directory,$array_file)
 {
     global $locate; 
-    $sizefile = fopen($locate.'/mdatoffset.txt','a+b'); //create text file containing the original size of Mdat box that is ignored (Important for execution of conformance software
+    $sizefile = fopen($locate.DIRECTORY_SEPARATOR.'mdatoffset.txt','a+b'); //create text file containing the original size of Mdat box that is ignored (Important for execution of conformance software
     $initoffset = 0; // Set pointer to 0
     $totaldownloaded = 0;// bytes downloaded
     $totalDataProcessed = 0;//bytes processed within segments
@@ -22,7 +22,7 @@ function downloaddata($directory,$array_file)
         $file_size = remote_file_size2($filePath); // Get actual data size
 		if ($file_size===false)// if URL return 404 report it as broken url
 		{
-			$missing = fopen($locate.'/missinglink.txt','a+b'); 
+			$missing = fopen($locate.DIRECTORY_SEPARATOR.'missinglink.txt','a+b'); 
 
 		fwrite($missing,$filePath."\n");
 		
@@ -132,7 +132,7 @@ function downloaddata($directory,$array_file)
  function partialdownload($url,$begin,$end){
 global $locate;
 $range = $begin.'-'.$end;
-$fileName = $locate.'//'."getthefile.mp4"; // this file act as a temperoray container for partial segments downloaded
+$fileName = $locate.DIRECTORY_SEPARATOR."getthefile.mp4"; // this file act as a temperoray container for partial segments downloaded
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
