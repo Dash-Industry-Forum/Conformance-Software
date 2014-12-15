@@ -16,6 +16,10 @@ function downloaddata($directory,$array_file)
     // Load XML with SimpleXml from string
     $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>'); //xml file containing progress to be fetched by client
     
+	
+	$ch = curl_init();
+	
+
     for($index=0;$index<sizeof($array_file);$index++) //itterate on all segments
     {
         $filePath = $array_file[$index]; //get segment URL
@@ -24,9 +28,9 @@ function downloaddata($directory,$array_file)
 		{
 			$missing = fopen($locate.'/missinglink.txt','a+b'); 
 
-		fwrite($missing,$filePath."\n");
+			fwrite($missing,$filePath."\n");
 		
-		
+			error_log( "downloaddata_Missing:".$filePath );
 		}
 		else{
 
@@ -38,8 +42,7 @@ function downloaddata($directory,$array_file)
         while($sizepos<$file_size) // iterate over the content of the segment
         {
 
-           
-            $content = partialdownload($filePath,$sizepos,$sizepos+1500);  //Download 1500 byte 
+            $content = partialdownload($filePath,$sizepos,$sizepos+1500,$ch);  //Download 1500 byte 
             $totalDataDownloaded=$totalDataDownloaded+1500; // update the total size of downloaded data
             $byte_array = unpack('C*', $content); // Unpacks from a binary string into an array
             $location = 1; // temporary pointer
@@ -64,6 +67,7 @@ function downloaddata($directory,$array_file)
 
                 if($name!='mdat') // if it is not mdat box download it
                 {
+					//error_log( "Not_mdat:download");
                     $total = $location+$size; // The total size being downloaded is location + size
                     if($total<sizeof($byte_array)) // if the amount of byte processed < the data downloaded at begining  
                     {
@@ -71,16 +75,17 @@ function downloaddata($directory,$array_file)
                     }
                     else
                     {
-                        $rest = partialdownload($filePath,$sizepos,$sizepos+$size-1); //otherwise download the rest of the box from the remote segment
+                        $rest = partialdownload($filePath,$sizepos,$sizepos+$size-1,$ch); //otherwise download the rest of the box from the remote segment
                         $totalDataDownloaded=$totalDataDownloaded+$size-1; //calculate the rest being downloaded
                         fwrite($newfile,$rest);// copy the rest to the file
                     }
                 }
                 else
                 {
+					//error_log( "mdat:dontdownload");
                     fwrite($sizefile,($initoffset+$sizepos+8)." ".($size-8)."\n"); // add the original size of the mdat to text file without the name and size bytes(8 bytes) 
                     fwrite($newfile,substr($content,$location-1,8));  //copy only the mdat name and size to the segment 
-					//fwrite($newfile,str_pad("0",$size-8,"0")); //Incase of the requirement of stuffing mdat with zeros
+					////fwrite($newfile,str_pad("0",$size-8,"0")); //Incase of the requirement of stuffing mdat with zeros
                 }
 
                 $sizepos=$sizepos+$size; // move size pointer
@@ -94,16 +99,22 @@ function downloaddata($directory,$array_file)
             $progressXML->dataDownloaded = strval($totalDataDownloaded);
             // Saving the whole modified XML to a new filename
             $progressXML->asXml(trim($locate.'/progress.xml'));
-
+			
+			//error_log( "percent:".$percent );
         }
 
         fflush($newfile);
         fclose($newfile);
         $initoffset = $initoffset+$file_size; // initial offset after processing the whole file
         $totalDataProcessed = $totalDataProcessed + $file_size; // data processed 
+		//error_log( "totalDataProcessed:");
+		//error_log( $totalDataProcessed);
     }
  
  }
+ 
+ curl_close($ch);
+ 
  if (!isset($file_sizearr))
  $file_sizearr = 0;
  return $file_sizearr;
@@ -129,30 +140,51 @@ function downloaddata($directory,$array_file)
 }
 
 //This function download partial bytes of a file by giving file location + stat byte + end byte
- function partialdownload($url,$begin,$end){
-global $locate;
-$range = $begin.'-'.$end;
-$fileName = $locate.'//'."getthefile.mp4"; // this file act as a temperoray container for partial segments downloaded
-
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $url);
+ function partialdownload($url,$begin,$end,&$ch)
+ {
+		global $locate;
+		$range = $begin.'-'.$end;
+		$fileName = $locate.'//'."getthefile.mp4"; // this file act as a temperoray container for partial segments downloaded
 
 
-	curl_setopt($ch, CURLOPT_RANGE, $range);
+		$ret = curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_FAILONERROR, true);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_TIMEOUT,500); // 500 seconds
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
+		
+				
 
+		curl_setopt($ch,CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)');
+		
+		$ret = curl_setopt($ch, CURLOPT_RANGE, $range);
+		
 
-$fp = fopen($fileName, "w+");
-if (!$fp) {
-	exit;
-}
-curl_setopt($ch, CURLOPT_FILE, $fp);
-$result = curl_exec($ch);
-curl_close($ch);
+		$fp = fopen($fileName, "w+");
+		if (!$fp) {
+			error_log( "fopen:.exit!");
+			exit;
+		}
+		
+		$ret = curl_setopt($ch, CURLOPT_FILE, $fp);
+		
+		
+		$result = curl_exec($ch);
+		
+		if(curl_errno($ch))
+		{
+			error_log( "curl_errno:".curl_errno($ch));
+		}
 
+		$content = file_get_contents($fileName);
+		if(!$content)
+		{
+			error_log( "file_get_contents:failed".$url."/".$begin."/".$end );
+		}
+		fclose($fp);
 
-fclose($fp);
-$content = file_get_contents($fileName);
-return $content;
+		return $content;
 }
 
 
