@@ -24,6 +24,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
 
         $directories = array_diff(scandir(dirname(__FILE__).'/'.'temp'), array('..', '.'));
 
+		
         foreach ($directories as $file) // Clean temp folder from old sessions in order to save diskspace
         {
             if(file_exists(dirname(__FILE__).'/'.'temp'.'/'.$file)) // temp is folder contains all sessions folders
@@ -144,13 +145,18 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
         $minBufferTime = $MPD->getAttribute('minBufferTime');//get min buffer time
         $profiles = $MPD -> getAttribute('profiles');// get profiles
 
+        $periodCount = 0;   
         foreach ($dom->documentElement->childNodes as $node) // search for all nodes within mpd
         {
               
             if($node->nodeName === 'Period')
-                $periodNode = $node;   
-            
+            {
+                $periodNode = $node; 
+                $periodCount++;
+            }
         }
+        
+ 
         
         $val = $dom->getElementsByTagName('BaseURL'); // get BaseUrl node
         $segflag = $dom->getElementsByTagName('SegmentTemplate');//check if segment template exist or no
@@ -434,12 +440,14 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
         $_SESSION['period_url'] = $period_url;// save all period urls in session variable
         
         $_SESSION['Period_arr'] = $Period_arr; //save all period parameters in session variable
-        $totarr[]=sizeof($period_url); // get number of periods
+        $totarr[]=sizeof($period_url); // get number of adaptation sets
         for ($i=0;$i<sizeof($period_url);$i++) // loop on periods
         {
-            $totarr[]=sizeof($period_url[$i]);//get number of adaptationsets
+            $totarr[]=sizeof($period_url[$i]);//get number of represenations per adaptation set
         }
         $peri=null;
+        
+        $totarr[] = $periodCount;
         $totarr[] = $foldername;// add session name 
         $stri=json_encode($totarr); // encode array to send to client
 		
@@ -468,36 +476,40 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
         }
         
         if ($count1>=sizeof($period_url)) //check if all adapatationsets is processed 
-        {    
-		crossRepresentationProcess();
+        {
+			error_log("AllAdaptDownloaded" );	
+			crossRepresentationProcess();
 			$missingexist = file_exists ($locate.'\missinglink.txt'); //check if any broken urls is detected
-			if($missingexist){
-			$temp_string = str_replace (array('$Template$'),array("missinglink"),$string_info);
-        file_put_contents($locate.'\missinglink.html',$temp_string);//create html file contains report for all missing segments
-		}
-			$file_error[] = "done"; 
-			for($i=0;$i<sizeof($Period_arr);$i++){  // check all info files if they contain Error 
-			if(file_exists($locate.'\\Adapt'. $i .'_infofile.txt')) 
+			if($missingexist)
 			{
-			            $searchadapt = file_get_contents($locate.'\\Adapt'. $i .'_infofile.txt');
+				$temp_string = str_replace (array('$Template$'),array("missinglink"),$string_info);
+				file_put_contents($locate.'\missinglink.html',$temp_string);//create html file contains report for all missing segments
+			}
+			$file_error[] = "done"; 
+			for($i=0;$i<sizeof($Period_arr);$i++)
+			{  // check all info files if they contain Error 
+					if(file_exists($locate.'\\Adapt'. $i .'_infofile.txt')) 
+					{
+						$searchadapt = file_get_contents($locate.'\\Adapt'. $i .'_infofile.txt');
 						if(strpos($searchadapt,"Error")==false) 
-                $file_error[] = "noerror"; // no error found in text file
-            else
-                $file_error[] = "temp".'/'.$foldername.'/'.'Adapt'. $i .'_infofile.html'; // add error file location to array
-				}
-				else
+							$file_error[] = "noerror"; // no error found in text file
+						else
+							$file_error[] = "temp".'/'.$foldername.'/'.'Adapt'. $i .'_infofile.html'; // add error file location to array
+					}
+					else
+						$file_error[]="noerror";
+			}
+			session_destroy();
+			if($missingexist)
+			{
+				$file_error[]="temp".'/'.$foldername.'/missinglink.html';
+			}
+			else 
 				$file_error[]="noerror";
-         }
-            session_destroy();
-			if($missingexist){
-               $file_error[]="temp".'/'.$foldername.'/missinglink.html';
+			$send_string = json_encode($file_error); //encode array to string and send it 
 
-			   }
-			   else 
-			   $file_error[]="noerror";
-	   $send_string = json_encode($file_error); //encode array to string and send it 
-
-
+			error_log( "ReturnFinish:".$send_string );
+			
             echo $send_string; // send string with location of all error logs to client
             exit;
         }
@@ -506,6 +518,8 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
             $repno = "Adapt".$count1."rep".$count2; // presentation unique name
             $pathdir=$locate."\\".$repno."\\";
             
+			error_log( "Download_pathdir:". $pathdir );
+			
             if (!file_exists($pathdir))
             {
                 mkdir($pathdir, 0777, true); // create folder for each presentation
@@ -515,93 +529,97 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 			if($sizearray !==0)
 			{
 			
-            Assemble($pathdir,$period_url[$count1][$count2],$sizearray); // Assemble all presentation in to one presentation
-            rename($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
+					Assemble($pathdir,$period_url[$count1][$count2],$sizearray); // Assemble all presentation in to one presentation
+					
+					rename($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
 
-            $file_location = array();
-            $exeloc=dirname(__FILE__);
-            chdir($locate);
-            $timeSeconds=str_replace("PT","",$minBufferTime);
-            $timeSeconds=str_replace("S","",$timeSeconds);
-            $processArguments=" -minbuffertime ".$timeSeconds." -bandwidth ";
-            $processArguments=$processArguments.$Period_arr[$count1]['Representation']['bandwidth'][$count2]." ";
-            
-            if($type=== "dynamic")
-                $processArguments=$processArguments."-dynamic ";
-            
-            if($Period_arr[$count1]['Representation']['startWithSAP'][$count2] != "")
-                $processArguments=$processArguments."-startwithsap ".$Period_arr[$count1]['Representation']['startWithSAP'][$count2]." ";
-                
-            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-on-demand:2011") !== false)
-                $processArguments=$processArguments."-isoondemand ";
-                
-            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-live:2011") !== false)
-                $processArguments=$processArguments."-isolive ";
-                
-            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-main:2011") !== false)
-                $processArguments=$processArguments."-isomain ";
+					$file_location = array();
+					$exeloc=dirname(__FILE__);
+					chdir($locate);
+					$timeSeconds=str_replace("PT","",$minBufferTime);
+					$timeSeconds=str_replace("S","",$timeSeconds);
+					$processArguments=" -minbuffertime ".$timeSeconds." -bandwidth ";
+					$processArguments=$processArguments.$Period_arr[$count1]['Representation']['bandwidth'][$count2]." ";
+					
+					if($type=== "dynamic")
+						$processArguments=$processArguments."-dynamic ";
+					
+					if($Period_arr[$count1]['Representation']['startWithSAP'][$count2] != "")
+						$processArguments=$processArguments."-startwithsap ".$Period_arr[$count1]['Representation']['startWithSAP'][$count2]." ";
+						
+					if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-on-demand:2011") !== false)
+						$processArguments=$processArguments."-isoondemand ";
+						
+					if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-live:2011") !== false)
+						$processArguments=$processArguments."-isolive ";
+						
+					if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"urn:mpeg:dash:profile:isoff-main:2011") !== false)
+						$processArguments=$processArguments."-isomain ";
 
-            $dash264=false;
-            if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"http://dashif.org/guidelines/dash264") !== false)
-            {
-                   $processArguments=$processArguments."-dash264base ";
-                   $dash264=true;
-            }
-                
-          
-                
-            if($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true)
-            {
-                $processArguments=$processArguments."-dash264enc ";
-            }
-            
-            
-            $test = "validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments;
-            exec("validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments ); //Excute conformance software
-            rename($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
-       
-            $file_location[] = "temp".'/'.$foldername.'/'.$repno."_infofile.html";
+					$dash264=false;
+					if(strpos($Period_arr[$count1]['Representation']['profiles'][$count2],"http://dashif.org/guidelines/dash264") !== false)
+					{
+						   $processArguments=$processArguments."-dash264base ";
+						   $dash264=true;
+					}
+						
+				  
+						
+					if($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true)
+					{
+						$processArguments=$processArguments."-dash264enc ";
+					}
+					
+					error_log( "validatemp4" );
+					$test = "validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments;
+					exec("validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments ); //Excute conformance software
+					rename($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
+			   
+					$file_location[] = "temp".'/'.$foldername.'/'.$repno."_infofile.html";
 
-            $destiny[]=$locate.'\\'.$repno."_infofile.txt";
-            rename($locate.'\\'."stderr.txt",$locate.'\\'.$repno."log.txt");//Rename conformance software output file to representation number file
-            $temp_string = str_replace (array('$Template$'),array($repno."log"),$string_info);// this string shows a text file on HTML
+					$destiny[]=$locate.'\\'.$repno."_infofile.txt";
+					rename($locate.'\\'."stderr.txt",$locate.'\\'.$repno."log.txt");//Rename conformance software output file to representation number file
+					$temp_string = str_replace (array('$Template$'),array($repno."log"),$string_info);// this string shows a text file on HTML
 
-            file_put_contents($locate.'\\'.$repno."log.html",$temp_string); // Create html file containing log file result
-            $file_location[] = "temp".'/'.$foldername.'/'.$repno."log.html";// add it to file location which is sent to client to get URL of log file on server
+					file_put_contents($locate.'\\'.$repno."log.html",$temp_string); // Create html file containing log file result
+					$file_location[] = "temp".'/'.$foldername.'/'.$repno."log.html";// add it to file location which is sent to client to get URL of log file on server
 
-            $destiny[]=$locate.'\\'.$repno."log.txt";
+					$destiny[]=$locate.'\\'.$repno."log.txt";
 
-   
-            $file_location[] = "temp".'/'.$repno."myfile.html";
-            $destiny[]=$locate.'\\'.$repno."myfile.txt";
+		   
+					$file_location[] = "temp".'/'.$repno."myfile.html";
+					$destiny[]=$locate.'\\'.$repno."myfile.txt";
 
-            $period_url[$count1][$count2]=null;
-            ob_flush();
-            $count2 = $count2+1;
-            $search = file_get_contents($locate.'\\'.$repno."log.txt");//Search for errors within log file
-            
-            if(strpos($search,"error")==false) //if no error , notify client with no error
-                $file_location[] = "noerror";
-            else
-                $file_location[] = "error";//else notify client with error
+					$period_url[$count1][$count2]=null;
+					ob_flush();
+					$count2 = $count2+1;
+					$search = file_get_contents($locate.'\\'.$repno."log.txt");//Search for errors within log file
+					
+					if(strpos($search,"error")==false) //if no error , notify client with no error
+						$file_location[] = "noerror";
+					else
+						$file_location[] = "error";//else notify client with error
 
-            $_SESSION['count2'] = $count2;//Save the counters to session variables in order to use it the next time the client request download of next presentation
-            $_SESSION['count1'] = $count1;
-            $send_string = json_encode($file_location);
-            echo $send_string;
+					$_SESSION['count2'] = $count2;//Save the counters to session variables in order to use it the next time the client request download of next presentation
+					$_SESSION['count1'] = $count1;
+					$send_string = json_encode($file_location);
+					error_log( "RepresentationDownloaded_Return:".$send_string );
+					echo $send_string;
 			}
 			else 
-		         {
-				             $count2 = $count2+1;
-							 $_SESSION['count2'] = $count2;
-            $_SESSION['count1'] = $count1;
+			 {
+					$count2 = $count2+1;
+					$_SESSION['count2'] = $count2;
+					$_SESSION['count1'] = $count1;
 
-				 $file_location[] = 'notexist';
-				             $send_string = json_encode($file_location);
+					$file_location[] = 'notexist';
+					$send_string = json_encode($file_location);
 
-				echo $send_string;
-				 
-				 }
+					error_log( "DownloadError_Return:".$send_string );
+			
+					echo $send_string;
+			 
+			 }
 
         }
     }
