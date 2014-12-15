@@ -240,6 +240,7 @@ var  totarr = [];
 var adaptid=[];
  var file,fd,xhr;
  var uploaded = false;
+var numPeriods = 0;
 
 /////////////////////////////////////////////////////////////
 document.querySelector('#afile').addEventListener('change', function(e) {
@@ -311,6 +312,12 @@ function  progressEventHandler(){
         dataDownloaded = Math.floor( dataDownloaded / (1024) );
         var lastRep = representationid-1;
         var progressText = "Processing Representation "+lastRep+" in Adaptationset "+adaptationid+", "+progressPercent+"% done ( "+dataDownloaded+" KB downloaded, "+dataProcessed+" MB processed )";
+		
+		if( numPeriods > 1 )
+		{
+			progressText = progressText + "<br><font color='red'> MPD with multiple Periods (" + numPeriods + "). Only segments of the first period will be checked.</font>"
+		}
+		
         document.getElementById("par").innerHTML=progressText;
 
              		
@@ -373,12 +380,9 @@ function submit()
     initVariables();
     setUpTreeView();
     setStatusTextlabel("Processing...");
-
-
     document.getElementById("btn8").disabled="true";
     document.getElementById("afile").disabled="true";
 	document.getElementById('list').style.visibility='hidden';
-
     //document.getElementById('img').style.visibility='visible';
     //document.getElementById('par').style.visibility='visible';
     console.log(stringurl);
@@ -386,7 +390,7 @@ function submit()
     {urlcode:JSON.stringify(stringurl)},
     function(totarrstring)
     {
-        console.log(totarrstring);
+		console.log("process_returned:");
 		
         
         if (totarrstring.indexOf("Error:") > -1)
@@ -398,8 +402,11 @@ function submit()
             return false;
         }
         
-        console.log(totarr);
+        
         totarr=JSON.parse(totarrstring);
+		console.log("totarr=");
+		console.log(totarr);
+		
         var currentpath = window.location.pathname;
         currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
 
@@ -418,7 +425,6 @@ function submit()
             finishTest();
             return false;
         }
-
         dirid = totarr[totarr.length-1];
 	document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 	document.getElementById('list').style.visibility='visible';
@@ -429,7 +435,6 @@ function submit()
         console.log(totarrstring);
 		
         var failed ='false';
-
 
         var x=2;
         var childno=1;
@@ -442,7 +447,6 @@ function submit()
                 text: "Mpd"
             }]
             });
-
 		if(totarr[0]==='true')
 		{
 		             automate(y,x,"XLink resolving");
@@ -522,6 +526,13 @@ function submit()
             x++;
         }
         
+		numPeriods = totarr[totarr.length-2];
+		if(numPeriods > 1)
+		{
+			console.log("MDP With Multiple Period:" + numPeriods);
+			
+		}
+		
         lastloc = repid[repid.length-1]+1;
 
         progress();
@@ -533,6 +544,9 @@ function submit()
 
 function progress()
 {
+
+	console.log("progress():");
+	console.log(totarr);
     if(representationid >totarr[hinindex])
     {
         representationid = 1;
@@ -547,11 +561,10 @@ function progress()
     
     console.log("progress(): representationid=",representationid,",hinindex=",hinindex,",adaptationid=",adaptationid  );
     
-
     $.post("process.php",{download:"downloading"},
     function(response)
     {
-
+		console.log("downloading, response:");
         console.log(response);
 	var locations = JSON.parse(response);
         if (locations[0]=="done")
@@ -560,8 +573,6 @@ function progress()
 		
             for(var i =1; i<locations.length-1;i++)
             {
-
-
                     if(locations[i]=="noerror"){
 
                         tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
@@ -585,48 +596,22 @@ function progress()
                     }  
 
 
-
-
-
-
-
             }
             kidsloc.push(lastloc);
             if(locations[locations.length-1]!="noerror")
             {
                 urlarray.push(locations[locations.length-1]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 automate(1,lastloc,"Broken URL list");
                 tree.setItemImage2(lastloc,'404.jpg','404.jpg','404.jpg');
                 lastloc++;
             }
-
 			 
             console.log("go");
             clearTimeout(progressTimer);
             setStatusTextlabel("Conformance test completed");
             
             finishTest();
-
         }
         else
         {
@@ -686,10 +671,6 @@ var x=2;
 	}
 
 
-
-
-
-
 function tondblclick(id)
 {
 var urlto="";
@@ -728,6 +709,7 @@ function initVariables()
 	representationid =1;
 	adaptationid = 1;
 	hinindex = 1;
+    numPeriods = 0;
 	uploaded = false;
 }
 
@@ -753,10 +735,15 @@ function setUpTreeView()
 function setStatusTextlabel(textToSet)
 {
 	status = textToSet;
+	
+		if( numPeriods > 1 )
+		{
+			status = status + "<br><font color='red'> MPD with multiple Periods (" + numPeriods + "). Only segments of the first period were checked.</font>"
+		}
+	
 	document.getElementById("par").innerHTML=status;
 	document.getElementById('par').style.visibility='visible';
 }
-
 </script>
 
 <script>
@@ -772,7 +759,7 @@ function setStatusTextlabel(textToSet)
 </script>
 
 <footer>
- <center> <p>v0.95b
+ <center> <p>v0.96b
          <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
  </center>
 </footer>
