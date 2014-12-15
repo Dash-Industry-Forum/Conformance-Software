@@ -13,6 +13,8 @@ include 'schematronIssuesAnalyzer.php';
 
 set_time_limit(0);// php run without time limit
 session_start();// initiate session for connected client
+ini_set("log_errors", 1);
+ini_set("error_log", "myphp-error.log");
 
 $adaptsetdepth=array();// array for Baseurl 
 			$depth = array();//array contains all relative URLs exist in all mpd levels 
