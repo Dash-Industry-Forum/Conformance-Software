@@ -425,6 +425,7 @@
       </xsl:choose>
 
 		    <!--ASSERT -->
+			<!-- Commented on 18-12-2014 by Diego Suarez (Nomor Reseach GmbH): this rule is giving bad results.
 <xsl:choose>
          <xsl:when test="if ((years-from-duration(@start) + months-from-duration(@start) + days-from-duration(@start) + hours-from-duration(@start) + minutes-from-duration(@start) +  seconds-from-duration(@start)) &gt; (years-from-duration(following-sibling::dash:Period/@start) + months-from-duration(following-sibling::dash:Period/@start) + days-from-duration(following-sibling::dash:Period/@start) + hours-from-duration(following-sibling::dash:Period/@start) + minutes-from-duration(following-sibling::dash:Period/@start) +  seconds-from-duration(following-sibling::dash:Period/@start))) then false() else true()"/>
          <xsl:otherwise>
@@ -439,7 +440,7 @@
             </svrl:failed-assert>
          </xsl:otherwise>
       </xsl:choose>
-
+-->
 		    <!--ASSERT -->
 <xsl:choose>
          <xsl:when test="if ((child::dash:SegmentBase and child::dash:SegmentTemplate and child::dash:SegmentList) or (child::dash:SegmentBase and child::dash:SegmentTemplate) or (child::dash:SegmentBase and child::dash:SegmentList) or (child::dash:SegmentTemplate and child::dash:SegmentList)) then false() else true()"/>
