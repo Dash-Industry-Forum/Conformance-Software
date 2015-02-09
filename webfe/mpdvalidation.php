@@ -7,7 +7,8 @@ function mpdvalidator($mpdvalidator_path, $url, $locate, $foldername)
     $schematronIssuesReport;
 
     chdir($mpdvalidator_path);// Change default execution directory to the location of the mpd validator
-    $mpdvalidator = syscall("ant run -Dinput=".$url." -Dtmpdir=".$locate); //run mpd validator
+    $command = "ant run -Dinput='".str_replace('$','\$',$url)."' -Dtmpdir=".$locate;
+    $mpdvalidator = syscall($command); //run mpd validator
     $mpdvalidator = str_replace('[java]',"",$mpdvalidator); //save the mpd validator output to variable
     $valid_word = 'Start XLink resolving'; 
     $report_start = strpos($mpdvalidator,$valid_word); // Checking the begining of the Xlink validation
