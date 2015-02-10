@@ -115,6 +115,11 @@ function downloaddata($directory,$array_file)
  
  curl_close($ch);
  
+ fflush($sizefile);
+ fclose($sizefile);
+ 
+ fflush($missing);
+ fclose($missing);
  if (!isset($file_sizearr))
  $file_sizearr = 0;
  return $file_sizearr;

@@ -54,6 +54,7 @@ public class Validator {
 	public static void main(String[] args) {
 	    // check for minimum java version (this piece of software can only
 	    // be run with JRE 1.6.0_17 or higher)
+		Definitions.tmpOutputFile = args[1] + "\\xlink_resolved.xml";
         String version = System.getProperty("java.version");
         System.out.println("Your JRE version: " + version);
         char minor = version.charAt(2);
@@ -77,7 +78,7 @@ public class Validator {
     	   }
         }
 		
-        if (args.length != 1) {
+        if (args.length != 2) {
    		   System.out.println("Needing a file to validate");
    		   printUsage();
    		   return;
@@ -107,10 +108,10 @@ public class Validator {
 			
 			URL url = null;
 			if (system_os.equals("windows")) {
-				url = new URL("file:///" + Definitions.tmpOutputFile_);
+				url = new URL("file:///" + Definitions.tmpOutputFile);
 			}
 			else { // in linux there are different separators
-				url = new URL("file://" + Definitions.tmpOutputFile_);
+				url = new URL("file://" + Definitions.tmpOutputFile);
 				String separator = System.getProperty("file.separator");
 				Definitions.DASHXSDNAME = Definitions.DASHXSDNAME.replace("\\", separator);
 				Definitions.XSLTFILE = Definitions.XSLTFILE.replace("\\", separator);
@@ -130,7 +131,7 @@ public class Validator {
 			// Step 3:
 			// Schematron check
 			System.out.println("\nStart Schematron validation\n===========================\n");
-			retVal = XSLTTransformer.transform(Definitions.tmpOutputFile_, Definitions.XSLTFILE);
+			retVal = XSLTTransformer.transform(Definitions.tmpOutputFile, Definitions.XSLTFILE);
 			if (retVal)
 				System.out.println("Schematron validation successful - DASH is valid!\n\n");
 			else
@@ -153,7 +154,7 @@ public class Validator {
 			System.out.println("Unexpected error: " + e.getMessage());
 		} finally {
 			// delete the temporary file
-			File tmpFile = new File(Definitions.tmpOutputFile_);
+			File tmpFile = new File(Definitions.tmpOutputFile);
 			if (tmpFile != null && tmpFile.exists())
 				tmpFile.delete();
 		}

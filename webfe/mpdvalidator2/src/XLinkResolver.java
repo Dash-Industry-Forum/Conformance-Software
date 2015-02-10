@@ -157,7 +157,7 @@ public class XLinkResolver {
 			System.out.println(xmlString);
 
 		// Write newly generated XML to temp folder
-		FileWriter fstream = new FileWriter(Definitions.tmpOutputFile_);
+		FileWriter fstream = new FileWriter(Definitions.tmpOutputFile);
 		BufferedWriter out = new BufferedWriter(fstream);
 		out.write(xmlString);
 		out.close();
