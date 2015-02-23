@@ -35,7 +35,7 @@ public class Definitions {
 	public final static String HREF = "href";
 	public final static String PROTOCOL = "http://";
 	public final static String SECURE_PROTOCOL = "https://";
-	public static String tmpOutputFile_ = System.getProperty("java.io.tmpdir") + "xlink_resolved.xml";
+	public static String tmpOutputFile_ = "";
 	
 	// needed for Step 2 and 3: Schema validation and Schematron validation
 	//TODO: will maybe be replaced with remote schema!
