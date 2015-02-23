@@ -60,9 +60,21 @@ function process_mpd($url, $validation_only)
     //Create log file so that it is available if accessed
     $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>');// get progress bar update
     $progressXML->asXml($locate.DIRECTORY_SEPARATOR.'progress.xml'); //progress xml location
+    
+    $ch = curl_init($url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	$mpd = curl_exec($ch);
+	
+	$error = curl_errno($ch);
+	
+	curl_close($ch);
+	
+	if(0 != $error) {
+		return(false);
+	}
 
     //libxml_use_internal_logors(true);
-    $MPD_O = simplexml_load_file($url); // load mpd from url 
+    $MPD_O = simplexml_load_string($mpd); // load mpd from url 
     if (!$MPD_O)
     {
         return(false);
@@ -406,106 +418,128 @@ function download($adaptation_set, $representation)
     if (!file_exists($pathdir)) {
         mkdir($pathdir, 0777, true); // create folder for each presentation
     }
-        
-    $sizearray = downloaddata($pathdir,$period_url[$adaptation_set][$representation]); // download data 
-    if(!file_exists($locate.DIRECTORY_SEPARATOR."missinglink.txt") && $sizearray !== 0)
-    {
-        Assemble($pathdir,$period_url[$adaptation_set][$representation],$sizearray); // Assemble all presentation in to one presentation
-        rename($locate.DIRECTORY_SEPARATOR."mdatoffset.txt",$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
 
-        $file_location = array();
-        $exeloc=dirname(__FILE__);
-        chdir($locate);
-        $timeSeconds=str_replace("PT","",$minBufferTime);
-        $timeSeconds=str_replace("S","",$timeSeconds);
-
-        // Check the features that are supported by the ISO validator
-        exec("\"$validatemp4\" -help 2>&1", $out, $exit_code);
-        $validateMp4Features = join("\n", $out);
-
-        $processArguments = " -minbuffertime ".$timeSeconds." -bandwidth ";
-        $processArguments=$processArguments.$Period_arr[$adaptation_set]['Representation']['bandwidth'][$representation]." ";
-
-        if(false !== strpos($validateMp4Features, '-sbw')) {
-            $processArguments=$processArguments."-sbw ";
-        }
-
-        if($type=== "dynamic")
-            $processArguments=$processArguments."-dynamic ";
-
-        if($Period_arr[$adaptation_set]['Representation']['startWithSAP'][$representation] != "")
-            $processArguments=$processArguments."-startwithsap ".$Period_arr[$adaptation_set]['Representation']['startWithSAP'][$representation]." ";
-
-        if(false !== strpos($validateMp4Features, '-indexrange') && $Period_arr[$adaptation_set]['Representation']['indexRange'][$representation] != "")
-            $processArguments=$processArguments."-indexrange ".$Period_arr[$adaptation_set]['Representation']['indexRange'][$representation]." ";
-
-        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-on-demand:2011") !== false)
-            $processArguments=$processArguments."-isoondemand ";
-
-        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-live:2011") !== false)
-            $processArguments=$processArguments."-isolive ";
-
-        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-main:2011") !== false)
-            $processArguments=$processArguments."-isomain ";
-
-        $dash264=false;
-        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"http://dashif.org/guidelines/dash264") !== false)
-        {
-             $processArguments=$processArguments."-dash264base ";
-             $dash264=true;
-        }
-
-        if($Period_arr[$adaptation_set]['Representation']['ContentProtectionElementCount'][$representation] > 0 && $dash264 == true)
-        {
-            $processArguments=$processArguments."-dash264enc ";
-        }
-
-        $test = '"'.$validatemp4.'" '.
-                $locate.DIRECTORY_SEPARATOR.$repno.".mp4 ".
-                "-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt ".
-                "-offsetinfo ".$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt ".
-                "-logconsole".$processArguments;
-        $verbose && fprintf(STDOUT, "Executing command: %s\n", $test);
-        exec($test, $out, $exit_code); //Excute conformance software
-        if(0 == $exit_code)
-        {
-            rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
-            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
-
-            rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."_log.txt");//Rename conformance software output file to representation number file
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_log.txt";// add it to file location which is sent to client to get URL of log file on server
-            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_log.txt";
-
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_myfile.txt";
-            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_myfile.txt";
-
-            $period_url[$adaptation_set][$representation] = null;
-
-            $search = file_get_contents($locate.DIRECTORY_SEPARATOR.$repno."_log.txt");//Search for errors within log file
-            if(strpos($search,"error")==false) //if no error , notify client with no error
-                $file_location[] = "noerror";
-            else
-                $file_location[] = "error";//else notify client with error
-        }
-        else
-        {
-            $file_location[] = $test;
-
-            rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."_log.txt");//Rename conformance software output file to representation number file
-            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_log.txt";// add it to file location which is sent to client to get URL of log file on server
-            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_log.txt";
-
-            $file_location[] = 'validatorerror';
-        }
-    }
-    else
-    {
-        rename($locate.DIRECTORY_SEPARATOR."missinglink.txt",$locate.DIRECTORY_SEPARATOR.$repno."_missinglink.txt");//Rename conformance software output file to representation number file
-        $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_missinglink.txt";// add it to file location which is sent to client to get URL of log file on server
-        $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_missinglink.txt";
-        $file_location[] = 'notexist';
-    }
+	if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation], "urn:mpeg:dash:profile:mp2t-simple:2011") !== false)
+	{
+		// MPEG TS download and check
+	    $sizearray = downloaddata_ts($pathdir,$period_url[$adaptation_set][$representation], $locate.DIRECTORY_SEPARATOR.$repno.".ts"); // download data 
+	    if(!file_exists($locate.DIRECTORY_SEPARATOR."missinglink.txt") && $sizearray !== 0)
+	    {
+	    	$file_location[] = "noerror";
+		}
+	    else
+	    {
+	        rename($locate.DIRECTORY_SEPARATOR."missinglink.txt",$locate.DIRECTORY_SEPARATOR.$repno."_missinglink.txt");//Rename conformance software output file to representation number file
+	        $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_missinglink.txt";// add it to file location which is sent to client to get URL of log file on server
+	        $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_missinglink.txt";
+	        $file_location[] = 'notexist';
+	    }
+	}
+	else if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-on-demand:2011") !== false ||
+	        strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-live:2011") !== false ||
+	        strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-main:2011") !== false)
+	{
+		// ISO Base file format download and check 
+	    $sizearray = downloaddata($pathdir,$period_url[$adaptation_set][$representation]); // download data 
+	    if(!file_exists($locate.DIRECTORY_SEPARATOR."missinglink.txt") && $sizearray !== 0)
+	    {
+	        Assemble($pathdir,$period_url[$adaptation_set][$representation],$sizearray); // Assemble all presentation in to one presentation
+	        rename($locate.DIRECTORY_SEPARATOR."mdatoffset.txt",$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
+	
+	        $file_location = array();
+	        $exeloc=dirname(__FILE__);
+	        chdir($locate);
+	        $timeSeconds=str_replace("PT","",$minBufferTime);
+	        $timeSeconds=str_replace("S","",$timeSeconds);
+	
+	        // Check the features that are supported by the ISO validator
+	        exec("\"$validatemp4\" -help 2>&1", $out, $exit_code);
+	        $validateMp4Features = join("\n", $out);
+	
+	        $processArguments = " -minbuffertime ".$timeSeconds." -bandwidth ";
+	        $processArguments=$processArguments.$Period_arr[$adaptation_set]['Representation']['bandwidth'][$representation]." ";
+	
+	        if(false !== strpos($validateMp4Features, '-sbw')) {
+	            $processArguments=$processArguments."-sbw ";
+	        }
+	
+	        if($type=== "dynamic")
+	            $processArguments=$processArguments."-dynamic ";
+	
+	        if($Period_arr[$adaptation_set]['Representation']['startWithSAP'][$representation] != "")
+	            $processArguments=$processArguments."-startwithsap ".$Period_arr[$adaptation_set]['Representation']['startWithSAP'][$representation]." ";
+	
+	        if(false !== strpos($validateMp4Features, '-indexrange') && $Period_arr[$adaptation_set]['Representation']['indexRange'][$representation] != "")
+	            $processArguments=$processArguments."-indexrange ".$Period_arr[$adaptation_set]['Representation']['indexRange'][$representation]." ";
+	
+	        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-on-demand:2011") !== false)
+	            $processArguments=$processArguments."-isoondemand ";
+	
+	        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-live:2011") !== false)
+	            $processArguments=$processArguments."-isolive ";
+	
+	        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"urn:mpeg:dash:profile:isoff-main:2011") !== false)
+	            $processArguments=$processArguments."-isomain ";
+	
+	        $dash264=false;
+	        if(strpos($Period_arr[$adaptation_set]['Representation']['profiles'][$representation],"http://dashif.org/guidelines/dash264") !== false)
+	        {
+	             $processArguments=$processArguments."-dash264base ";
+	             $dash264=true;
+	        }
+	
+	        if($Period_arr[$adaptation_set]['Representation']['ContentProtectionElementCount'][$representation] > 0 && $dash264 == true)
+	        {
+	            $processArguments=$processArguments."-dash264enc ";
+	        }
+	
+	        $test = '"'.$validatemp4.'" '.
+	                $locate.DIRECTORY_SEPARATOR.$repno.".mp4 ".
+	                "-infofile ".$locate.DIRECTORY_SEPARATOR.$repno.".txt ".
+	                "-offsetinfo ".$locate.DIRECTORY_SEPARATOR.$repno."mdatoffset.txt ".
+	                "-logconsole".$processArguments;
+	        $verbose && fprintf(STDOUT, "Executing command: %s\n", $test);
+	        exec($test, $out, $exit_code); //Excute conformance software
+	        if(0 == $exit_code)
+	        {
+	            rename($locate.DIRECTORY_SEPARATOR."leafinfo.txt",$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
+	            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
+	            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_infofile.txt";
+	
+	            rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."_log.txt");//Rename conformance software output file to representation number file
+	            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_log.txt";// add it to file location which is sent to client to get URL of log file on server
+	            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_log.txt";
+	
+	            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_myfile.txt";
+	            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_myfile.txt";
+	
+	            $period_url[$adaptation_set][$representation] = null;
+	
+	            $search = file_get_contents($locate.DIRECTORY_SEPARATOR.$repno."_log.txt");//Search for errors within log file
+	            if(strpos($search,"error")==false) //if no error , notify client with no error
+	                $file_location[] = "noerror";
+	            else
+	                $file_location[] = "error";//else notify client with error
+	        }
+	        else
+	        {
+	            $file_location[] = $test;
+	
+	            rename($locate.DIRECTORY_SEPARATOR."stderr.txt",$locate.DIRECTORY_SEPARATOR.$repno."_log.txt");//Rename conformance software output file to representation number file
+	            $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_log.txt";// add it to file location which is sent to client to get URL of log file on server
+	            $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_log.txt";
+	
+	            $file_location[] = 'validatorerror';
+	        }
+	    }
+	    else
+	    {
+	        rename($locate.DIRECTORY_SEPARATOR."missinglink.txt",$locate.DIRECTORY_SEPARATOR.$repno."_missinglink.txt");//Rename conformance software output file to representation number file
+	        $file_location[] = "temp".DIRECTORY_SEPARATOR.$foldername.DIRECTORY_SEPARATOR.$repno."_missinglink.txt";// add it to file location which is sent to client to get URL of log file on server
+	        $destiny[]=$locate.DIRECTORY_SEPARATOR.$repno."_missinglink.txt";
+	        $file_location[] = 'notexist';
+	    }
+	}
 
     return $file_location;
 }
