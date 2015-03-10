@@ -165,10 +165,10 @@ position:absolute;
 </div>
 <div id="groupA">
 
-  <input type="text" id='urlinput' name="urlinput" class="mytext" placeholder="Enter MPD URL"/>
-  <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://localhost/content/TestCases/1b/thomson-networks/2/manifest.mpd"/-->
-  <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd"/-->
-  <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://localhost/Content/TestCases/1b/qualcomm/1/MultiRate_Broken.mpd"/-->
+  <!--input type="text" id='urlinput' name="urlinput" class="mytext" placeholder="Enter MPD URL" onkeyup="CheckKey(event)"/-->
+  <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://localhost/content/TestCases/1b/thomson-networks/2/manifest.mpd" onkeyup="CheckKey(event)"/-->
+  <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd" onkeyup="CheckKey(event)"/-->
+  <input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.193.185/Content/TestCases/1b/qualcomm/1/MultiRate_Broken.mpd" onkeyup="CheckKey(event)"/>
 
 <button id="btn8" onclick="submit()">Submit</button>
 <b>or</b>
@@ -241,7 +241,7 @@ var adaptid=[];
  var file,fd,xhr;
  var uploaded = false;
 var numPeriods = 0;
-
+var SessionID = "id"+Math.floor(100000 + Math.random() * 900000);
 /////////////////////////////////////////////////////////////
 document.querySelector('#afile').addEventListener('change', function(e) {
 
@@ -274,7 +274,14 @@ function button()
     });
 }
 
-
+function CheckKey(e) //receives event object as parameter
+{
+   var code = e.keyCode ? e.keyCode : e.which;
+   if((code === 13) && (document.getElementById("btn8").disabled == false))
+   {
+	   submit();
+   }
+}
 
 function createXMLHttpRequestObject(){ 
   var xmlHttp; // xmlHttp will store the reference to the XMLHttpRequest object
@@ -382,12 +389,12 @@ function submit()
     setStatusTextlabel("Processing...");
     document.getElementById("btn8").disabled="true";
     document.getElementById("afile").disabled="true";
-	document.getElementById('list').style.visibility='hidden';
+    document.getElementById('list').style.visibility='hidden';
     //document.getElementById('img').style.visibility='visible';
     //document.getElementById('par').style.visibility='visible';
     console.log(stringurl);
     $.post ("process.php",
-    {urlcode:JSON.stringify(stringurl)},
+    {urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID)},
     function(totarrstring)
     {
 		console.log("process_returned:");
@@ -561,7 +568,7 @@ function progress()
     
     console.log("progress(): representationid=",representationid,",hinindex=",hinindex,",adaptationid=",adaptationid  );
     
-    $.post("process.php",{download:"downloading"},
+    $.post("process.php",{download:"downloading",sessionid:JSON.stringify(SessionID)},
     function(response)
     {
 		console.log("downloading, response:");

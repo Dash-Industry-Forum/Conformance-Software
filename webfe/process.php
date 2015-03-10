@@ -12,9 +12,13 @@ include 'assemble.php';
 include 'schematronIssuesAnalyzer.php';
 
 set_time_limit(0);// php run without time limit
-session_start();// initiate session for connected client
 ini_set("log_errors", 1);
 ini_set("error_log", "myphp-error.log");
+
+$session_id = json_decode($_POST['sessionid']); // parse recieved data
+session_name($session_id); 			
+session_start();// initiate session for connected client
+error_log( "session_start:".session_name() );
 
 $adaptsetdepth=array();// array for Baseurl 
 			$depth = array();//array contains all relative URLs exist in all mpd levels 

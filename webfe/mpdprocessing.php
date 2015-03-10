@@ -3,7 +3,7 @@
 function process_mpd()
 {
     global  $Adapt_arr,$Period_arr,$repno,$repnolist,$period_url,$locate,$string_info
-    ,$count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,$type,$minBufferTime,$profiles,$MPD; //Global variables to be used within the main function
+    ,$count1,$count2,$perioddepth,$adaptsetdepth,$period_baseurl,$foldername,$type,$minBufferTime,$profiles,$MPD,$session_id; //Global variables to be used within the main function
     
   //  $path_parts = pathinfo($mpdurl); 
     $Baseurl=false; //define if Baseurl is used or no
@@ -43,7 +43,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
         // rrmdir($locate);
         $locate = dirname(__FILE__).'\\'.'temp'.'\\'.$foldername; //session  folder location
         $_SESSION['locate'] = $locate; // save session folder location 
-        mkdir($locate,0777); // create session folder
+        mkdir($locate,0777,true); // create session folder
         $totarr= array(); // array contains all data to be sent to client.
         copy(dirname(__FILE__)."\\"."validatemp4-vs2010.exe",$locate.'\\'."validatemp4-vs2010.exe");// copy conformance tool to session folder to allow multi-session operation
 		              $url_array = json_decode($_POST['urlcode']);
@@ -78,6 +78,9 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
 		$url_array[2]=1;
 		
 		}
+		
+		$url_array[3] = $locate ; //Used for e.g. placing intermediate files etc.
+		
         copy(dirname(__FILE__)."\\"."featuretable.html",$locate.'\\'."featuretable.html"); // copy features list html file to session folder
         //Create log file so that it is available if accessed
         $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>');// get progress bar update
@@ -531,7 +534,8 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 			
 					Assemble($pathdir,$period_url[$count1][$count2],$sizearray); // Assemble all presentation in to one presentation
 					
-					rename($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
+					chmod($locate.'\\'."mdatoffset.txt", 0777);
+					copy($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
 
 					$file_location = array();
 					$exeloc=dirname(__FILE__);
@@ -573,7 +577,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 					error_log( "validatemp4" );
 					$test = "validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments;
 					exec("validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments ); //Excute conformance software
-					rename($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
+					copy($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
 			   
 					$file_location[] = "temp".'/'.$foldername.'/'.$repno."_infofile.html";
 

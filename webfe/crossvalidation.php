@@ -1,12 +1,17 @@
 <?php
 function loadLeafInfoFile($fileName,$PresTimeOffset)
 {
+	global $Period_arr, $foldername,$locate,$string_info,$foldername;
+
     $info=array(); //array contains information about given info
     
-    $leafInfoFile = fopen($fileName,"rt"); // open infofile for specific presentation
+
+
+    $leafInfoFile = fopen($locate.$fileName,"rt"); // open infofile for specific presentation
     if($leafInfoFile == FALSE) // if file doesn't exist
     {
         echo "Error: Leaf info file".$fileName."not found, alignment wont be checked!";//throw error
+		error_log( "Error: Leaf info file ".$locate.$fileName." not found, alignment wont be checked!" );		
         return;
     }
     
@@ -114,8 +119,12 @@ function checkAlignment($leafInfoA,$leafInfoB,$opfile,$segmentAlignment,$subsegm
 
 function crossRepresentationProcess()
 {
-    global $Period_arr, $foldername,$locate,$string_info;
+    global $Period_arr, $foldername,$locate,$string_info,$foldername;
     
+
+
+
+
     for($i = 0; $i<sizeof($Period_arr); $i++)
     {
 	$timeoffset = 0;
@@ -141,6 +150,8 @@ function crossRepresentationProcess()
         if (!($opfile = fopen(".\\temp\\".$foldername."\\Adapt".$i."_infofile.txt", 'w')))// Create a file to contain cross presentation results
         {
             echo "Error opening cross-representation checks file".".\\temp\\".$foldername."\\Adapt".$i."_infofile.txt";
+
+
             return;
         }
         
@@ -172,7 +183,7 @@ function crossRepresentationProcess()
 					  
 			$offsetmod = $timeoffset/$timescale; // calculate presentationtimeoffset relative to timescale (in seconds)
 									   
-			$leafInfo[$j] = loadLeafInfoFile(".\\temp\\".$foldername."\\Adapt".$i."rep".$j."_infofile.txt",$offsetmod); // load values within infofile
+			$leafInfo[$j] = loadLeafInfoFile("\\Adapt".$i."rep".$j."_infofile.txt",$offsetmod); // load values within infofile
 
 			$leafInfo[$j]['id'] = $AdaptationSetAttr['Representation']['id'][$j]; //get representation ID
             }
