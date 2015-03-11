@@ -535,7 +535,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 					Assemble($pathdir,$period_url[$count1][$count2],$sizearray); // Assemble all presentation in to one presentation
 					
 					chmod($locate.'\\'."mdatoffset.txt", 0777);
-					copy($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
+					rename($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
 
 					$file_location = array();
 					$exeloc=dirname(__FILE__);
@@ -577,7 +577,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 					error_log( "validatemp4" );
 					$test = "validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments;
 					exec("validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments ); //Excute conformance software
-					copy($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
+					rename($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
 			   
 					$file_location[] = "temp".'/'.$foldername.'/'.$repno."_infofile.html";
 

@@ -83,9 +83,9 @@ function downloaddata($directory,$array_file)
                 else
                 {
 					//error_log( "mdat:dontdownload");
-                    fwrite($sizefile,($initoffset+$sizepos+8)." ".(0)."\n"); // add the original size of the mdat to text file without the name and size bytes(8 bytes) 
+                    fwrite($sizefile,($initoffset+$sizepos+8)." ".($size-8)."\n"); // add the original size of the mdat to text file without the name and size bytes(8 bytes) 
                     fwrite($newfile,substr($content,$location-1,8));  //copy only the mdat name and size to the segment 
-					fwrite($newfile,str_pad("0",$size-8,"0")); //Incase of the requirement of stuffing mdat with zeros
+					////fwrite($newfile,str_pad("0",$size-8,"0")); //Incase of the requirement of stuffing mdat with zeros
                 }
 
                 $sizepos=$sizepos+$size; // move size pointer
