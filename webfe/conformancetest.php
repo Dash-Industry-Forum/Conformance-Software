@@ -250,7 +250,7 @@ document.querySelector('#afile').addEventListener('change', function(e) {
   file = this.files[0];
    fd = new FormData();
   fd.append("afile", file);
- 
+  fd.append("sessionid", JSON.stringify(SessionID));
   xhr = new XMLHttpRequest();
   xhr.open('POST', 'process.php', true);
   
