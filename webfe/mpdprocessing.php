@@ -126,8 +126,9 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
 		if($type === 'dynamic' && $dom->getElementsByTagName('SegmentTemplate')->length==0)
 		{ 
                     $totarr[] = $foldername;
-                    $totarr[]='dynamic'; // Incase of dynamic only mpd conformance.
-                    $exit =true;		 //Session destroy flag is true
+                    //This is messed up right now: dynamic conformance
+                    //$totarr[]='dynamic'; // Incase of dynamic only mpd conformance.
+                    //$exit =true;		 //Session destroy flag is true
 		
 		}
 		

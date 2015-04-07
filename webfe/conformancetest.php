@@ -83,6 +83,11 @@ border-width:medium;
 text-align:center;
 
 }
+
+p.sansserif {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
 #btn8 {
 	-moz-box-shadow:inset 0px 1px 0px 0px #dcecfb;
 	-webkit-box-shadow:inset 0px 1px 0px 0px #dcecfb;
@@ -160,11 +165,12 @@ position:absolute;
 <body>
 <div id="dash">
         <br>
-<img id="img2" border="0" src="dashlogo.jpeg" alt="Pulpit rock" width="543" height="88" >
-    <img id="img2" border="0" src="Dash1.jpeg" alt="Pulpit rock" width="191" height="61" >
+<img id="img2" border="0" src="dashlogo.jpeg" alt ="DASH Conformance" width="543" height="88" >
+    <img id="img2" border="0" src="Dash1.jpeg" width="191" height="61" >
 
 	<br>    <br>
 </div>
+    <p align="center" class="sansserif">Validation (Conformance check) of ISO/IEC 23009-1 MPEG-DASH MPD and Segments</p>
 <div id="groupA">
 
   <input type="text" id='urlinput' name="urlinput" class="mytext" placeholder="Enter MPD URL" onkeyup="CheckKey(event)"/>
@@ -182,7 +188,7 @@ position:absolute;
 <!--<input type="file" id="selectfile" /> Uploading local mpd for testing -->
 
 <form action="">
-<input type="checkbox" id="mpdvalidation" class = "validation" value="0">MPD conformance only<br>
+<p class="sansserif"><input type="checkbox" id="mpdvalidation" class = "validation" value="0">MPD conformance only</p><br>
 </form>
 <a id="dynamic" href="url" target="_blank" style="visibility:hidden;" >Dynamic timing validation</a>
 
@@ -198,7 +204,7 @@ position:absolute;
 </div>
 <div id="to" >
 <p align="center">
-<p id="par" style="visibility:hidden;">Loading....</p>
+<p id="par" class="sansserif" style="visibility:hidden;">Loading....</p>
 
 <a id="list" href="url" target="_blank" style="visibility:hidden;" >Feature list</a>
 </div>
