@@ -182,17 +182,17 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                 {
                     $dir = $base->nodeValue;
                     if (!isAbsoluteURL($dir))   // if baseurl is relative URl
-                        $dir = dirname($GLOBALS["url"]);// use location of Baseurl as location of mpd location
+                        $dir = dirname($GLOBALS["url"]).'/';// use location of Baseurl as location of mpd location
 
                 }
 
             }
         
             if(!isset($dir))// if there is no Baseurl in mpd level 
-                $dir = dirname($GLOBALS["url"]);// set location of segments dir as mpd location
+                $dir = dirname($GLOBALS["url"]).'/';// set location of segments dir as mpd location
         }
         else
-            $dir = dirname($GLOBALS["url"]); // if there is no Baseurl in mpd level,set location of segments dir as mpd location
+            $dir = dirname($GLOBALS["url"]).'/'; // if there is no Baseurl in mpd level,set location of segments dir as mpd location
        $start =  processPeriod($periodNode,$dir); // start getting information from period level
 	   $start = timeparsing($start);//Get start time in seconds
         $segm_url = array();// contains segments url within one 
@@ -284,7 +284,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                         if(!isset($adaptsetdepth[$k]))  // adaptation set doesn't contain any baseurl information
                         $adaptsetdepth[$k]=""; 
 
-                        $direct = $dir.$perioddepth[0].'//'.$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
+                        $direct = $dir.$perioddepth[0].$adaptsetdepth[$k]; // combine baseURLs in both period level and adaptationset level
                     }
                     
                     if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j])) // in case of using segmenttemplate
