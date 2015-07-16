@@ -49,16 +49,18 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
             }
         }
 
-        //print_r2("I'm inside the mpd processing");
+        // Work out which validator binary to use
+        $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
         //var_dump( $path_parts  );
         $foldername = 'id'.rand(); // get random name for session folder
         $_SESSION['foldername']=$foldername;
         // rrmdir($locate);
-        $locate = dirname(__FILE__).'\\'.'temp'.'\\'.$foldername; //session  folder location
+        $locate = dirname(__FILE__).'/'.'temp'.'/'.$foldername; //session  folder location
         $_SESSION['locate'] = $locate; // save session folder location 
         mkdir($locate,0777,true); // create session folder
         $totarr= array(); // array contains all data to be sent to client.
-        copy(dirname(__FILE__)."\\"."validatemp4-vs2010.exe",$locate.'\\'."validatemp4-vs2010.exe");// copy conformance tool to session folder to allow multi-session operation
+        copy(dirname(__FILE__)."/".$validatemp4,$locate.'/'.$validatemp4);// copy conformance tool to session folder to allow multi-session operation
+        chmod($locate.'/'.$validatemp4, 0777);
 		              $url_array = json_decode($_POST['urlcode']);
 
 		if(isset($_SESSION['fileContent'] ))		// If file is uploaded 
@@ -94,7 +96,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
 		
 		$url_array[3] = $locate ; //Used for e.g. placing intermediate files etc.
 		
-        copy(dirname(__FILE__)."\\"."featuretable.html",$locate.'\\'."featuretable.html"); // copy features list html file to session folder
+        copy(dirname(__FILE__)."/"."featuretable.html",$locate.'/'."featuretable.html"); // copy features list html file to session folder
         //Create log file so that it is available if accessed
         $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>');// get progress bar update
         $progressXML->asXml($locate.'/progress.xml'); //progress xml location
@@ -505,9 +507,9 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 			$file_error[] = "done"; 
 			for($i=0;$i<sizeof($Period_arr);$i++)
 			{  // check all info files if they contain Error 
-					if(file_exists($locate.'\\Adapt'. $i .'_infofile.txt')) 
+					if(file_exists($locate.'/Adapt'. $i .'_infofile.txt')) 
 					{
-						$searchadapt = file_get_contents($locate.'\\Adapt'. $i .'_infofile.txt');
+						$searchadapt = file_get_contents($locate.'/Adapt'. $i .'_infofile.txt');
 						if(strpos($searchadapt,"Error")==false) 
 							$file_error[] = "noerror"; // no error found in text file
 						else
@@ -533,7 +535,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
         else
         {
             $repno = "Adapt".$count1."rep".$count2; // presentation unique name
-            $pathdir=$locate."\\".$repno."\\";
+            $pathdir=$locate."/".$repno."/";
             
 			error_log( "Download_pathdir:". $pathdir );
 			
@@ -548,8 +550,8 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 			
 					Assemble($pathdir,$period_url[$count1][$count2],$sizearray); // Assemble all presentation in to one presentation
 					
-					chmod($locate.'\\'."mdatoffset.txt", 0777);
-					rename($locate.'\\'."mdatoffset.txt",$locate.'\\'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
+					chmod($locate.'/'."mdatoffset.txt", 0777);
+					rename($locate.'/'."mdatoffset.txt",$locate.'/'.$repno."mdatoffset.txt"); //rename txt file contains mdatoffset
 
 					$file_location = array();
 					$exeloc=dirname(__FILE__);
@@ -589,29 +591,31 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 					}
 					
 					error_log( "validatemp4" );
-					$test = "validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments;
-					exec("validatemp4-vs2010 ".$locate.'\\'.$repno.".mp4 "."-infofile ".$locate.'\\'.$repno.".txt"." -offsetinfo ".$locate.'\\'.$repno."mdatoffset.txt -logconsole".$processArguments ); //Excute conformance software
-					rename($locate.'\\'."leafinfo.txt",$locate.'\\'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
+                                        // Work out which validator binary to use
+                                        $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
+					$test = $locate.'/'.$validatemp4." ".$locate.'/'.$repno.".mp4 "."-infofile ".$locate.'/'.$repno.".txt"." -offsetinfo ".$locate.'/'.$repno."mdatoffset.txt -logconsole".$processArguments;
+					exec(   $locate.'/'.$validatemp4." ".$locate.'/'.$repno.".mp4 "."-infofile ".$locate.'/'.$repno.".txt"." -offsetinfo ".$locate.'/'.$repno."mdatoffset.txt -logconsole".$processArguments ); //Excute conformance software
+					rename($locate.'/'."leafinfo.txt",$locate.'/'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
 			   
 					$file_location[] = "temp".'/'.$foldername.'/'.$repno."_infofile.html";
 
-					$destiny[]=$locate.'\\'.$repno."_infofile.txt";
-					rename($locate.'\\'."stderr.txt",$locate.'\\'.$repno."log.txt");//Rename conformance software output file to representation number file
+					$destiny[]=$locate.'/'.$repno."_infofile.txt";
+					rename($locate.'/'."stderr.txt",$locate.'/'.$repno."log.txt");//Rename conformance software output file to representation number file
 					$temp_string = str_replace (array('$Template$'),array($repno."log"),$string_info);// this string shows a text file on HTML
 
-					file_put_contents($locate.'\\'.$repno."log.html",$temp_string); // Create html file containing log file result
+					file_put_contents($locate.'/'.$repno."log.html",$temp_string); // Create html file containing log file result
 					$file_location[] = "temp".'/'.$foldername.'/'.$repno."log.html";// add it to file location which is sent to client to get URL of log file on server
 
-					$destiny[]=$locate.'\\'.$repno."log.txt";
+					$destiny[]=$locate.'/'.$repno."log.txt";
 
 		   
 					$file_location[] = "temp".'/'.$repno."myfile.html";
-					$destiny[]=$locate.'\\'.$repno."myfile.txt";
+					$destiny[]=$locate.'/'.$repno."myfile.txt";
 
 					$period_url[$count1][$count2]=null;
 					ob_flush();
 					$count2 = $count2+1;
-					$search = file_get_contents($locate.'\\'.$repno."log.txt");//Search for errors within log file
+					$search = file_get_contents($locate.'/'.$repno."log.txt");//Search for errors within log file
 					
 					if(strpos($search,"error")==false) //if no error , notify client with no error
 						$file_location[] = "noerror";
