@@ -400,7 +400,7 @@ function submit()
 	
     stringurl[0] = url;
 
-    stringurl[1] =  "MPDValidator";
+    stringurl[1] =  "mpdvalidator";
 	
     if($("#mpdvalidation").is(':checked'))
         stringurl[2] = 1;
