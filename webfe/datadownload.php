@@ -144,7 +144,7 @@ function downloaddata($directory,$array_file)
 	# Get all header information
 	$data = get_headers($url, true);
 	
-	if ($data[0]==='HTTP/1.1 404 Not Found')
+	if ($data[0]==='HTTP/1.1 404 Not Found' || $data[0]==='HTTP/1.0 404 Not Found' || $data[0]==='HTTP/2 404 Not Found')
 	{
 	return false;
 	
