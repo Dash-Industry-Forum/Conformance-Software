@@ -33,7 +33,7 @@ function mpdvalidator($result_array,$locate,$foldername){
     $temp_string = str_replace (array('$Template$'),array("mpdreport"),$string_info); // copy mpd report to html file 
     $mpd_rep_loc =  'temp/'.$foldername.'/mpdreport.html'; // location of mpd report
 
-    file_put_contents($locate.'//mpdreport.html',$temp_string); // create HTML to contain mpd report
+    file_put_contents($locate.'/mpdreport.html',$temp_string); // create HTML to contain mpd report
     $exit=false;
 
     if(strpos($mpdvalidator,"XLink resolving successful")!==false)// check if Xlink resolving is successful
