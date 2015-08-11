@@ -498,11 +498,11 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
         {
 			error_log("AllAdaptDownloaded" );	
 			crossRepresentationProcess();
-			$missingexist = file_exists ($locate.'\missinglink.txt'); //check if any broken urls is detected
+			$missingexist = file_exists ($locate.'/missinglink.txt'); //check if any broken urls is detected
 			if($missingexist)
 			{
 				$temp_string = str_replace (array('$Template$'),array("missinglink"),$string_info);
-				file_put_contents($locate.'\missinglink.html',$temp_string);//create html file contains report for all missing segments
+				file_put_contents($locate.'/missinglink.html',$temp_string);//create html file contains report for all missing segments
 			}
 			$file_error[] = "done"; 
 			for($i=0;$i<sizeof($Period_arr);$i++)
