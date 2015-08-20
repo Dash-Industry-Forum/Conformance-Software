@@ -15,7 +15,7 @@
  
 
           
-            
+ 
 
          
 	
@@ -184,7 +184,7 @@ position:absolute;
 
 	<br>    <br>
 </div>
-    <p align="center" class="sansserif">Validation (Conformance check) of ISO/IEC 23009-1 MPEG-DASH MPD and Segments</p>
+    <p id="aaaa" align="center" class="sansserif">Validation (Conformance check) of ISO/IEC 23009-1 MPEG-DASH MPD and Segments</p>
 <div id="groupA">
 
   <input type="text" id='urlinput' name="urlinput" class="mytext" placeholder="Enter MPD URL" onkeyup="CheckKey(event)"/>
@@ -193,6 +193,7 @@ position:absolute;
   <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.193.185/Content/TestCases/1b/qualcomm/1/MultiRate_Broken.mpd" onkeyup="CheckKey(event)"/-->
 
 <button id="btn8" onclick="submit()">Submit</button>
+
 <b>or</b>
 
 <input type="file" name="afile" id="afile" />
@@ -390,8 +391,19 @@ function progressupdate()
 function submit()
 {
 
-    var url = document.getElementById('urlinput').value;
+    //var url = document.getElementById('urlinput').value;
     
+    //var url = window.location.search;
+    var parts = window.location.search.substr(1).split("&");
+    var $_GET = {};
+    var temp = parts[0].split("=");
+    $_GET[decodeURIComponent(temp[0])] = decodeURIComponent(temp[1]);
+   
+
+    //alert($_GET['urlinput']);
+    var url= $_GET['urlinput'];
+    document.getElementById("urlinput").value=url;
+        
     if (uploaded===true)
 	url="upload";
     
@@ -787,6 +799,10 @@ function setStatusTextlabel(textToSet)
 
 </script>
 
+<script>
+                    submit();
+                  
+</script>
 <footer>
  <center> <p>v0.96b
          <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
