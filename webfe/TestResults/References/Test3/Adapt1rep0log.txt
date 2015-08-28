@@ -1,0 +1,6 @@
+'tkhd' alternateGroup must be 0 not 1
+Validate_ES_Descriptor: ES_ID should be 0 not 1 in media tracks
+
+Validate DecoderSpecificInfo didn't use 8 bits
+WARNING: unknown mvex atom 'trep'
+WARNING: unknown/unexpected atom 'meta'

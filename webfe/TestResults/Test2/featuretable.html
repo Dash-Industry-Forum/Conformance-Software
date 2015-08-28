@@ -1,0 +1,368 @@
+<html>
+<body>
+
+<style>
+table{background:#CCC;border:1px solid #000;transform:rotate(270deg);}
+table td{padding:15px;border:1px solid #DDD;}
+
+
+</style>
+<div id="dynamictable"></div>
+  <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script>
+////////////////////
+var dirid;
+$( document ).ready(function() {
+var pathArray = window.location.pathname.split( '/' );
+
+ dirid = pathArray[pathArray-2];
+
+setTimeout(featuretable,1);
+
+
+});
+
+
+function StringToXML(oString) {
+ //code for IE
+ if (window.ActiveXObject) { 
+ var oXML = new ActiveXObject("Microsoft.XMLDOM"); oXML.loadXML(oString);
+ return oXML;
+ }
+ // code for Chrome, Safari, Firefox, Opera, etc. 
+ else {
+ return (new DOMParser()).parseFromString(oString, "text/xml");
+ }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+function featuretable()
+{
+
+var tablelist = createXMLHttpRequestObject();
+
+if (tablelist)     // continue only if xmlHttp isn't void
+  {
+
+    try          // try to connect to the server
+    {	
+
+	  var featureDocURL='featuresList.xml';
+	    tablelist.open("GET",featureDocURL += (featureDocURL.match(/\?/) == null ? "?" : "&") +Math.random(),true);
+	  tablelist.send();
+	  tablelist.onreadystatechange=function()
+  {
+  if (tablelist.readyState==4 && tablelist.status==200)
+    {
+ //   console.log(tablelist.responseText);
+	
+	         var x = StringToXML(tablelist.responseText);
+
+               
+                                
+								 
+                                 
+  getchild($(x).children("MPD")[0]);
+  
+  
+  
+
+
+
+
+    }
+  }
+	  
+	  
+	  
+	  }
+	  catch (e)      // display an error in case of failure
+    {
+      ;//alert("Failed loading progress\n" + e.toString());
+    }
+  }
+
+
+}
+
+function getchild(node)
+{
+var listElement = document.createElement("ul");
+
+document.getElementById("dynamictable").appendChild(listElement);
+var mpdli = document.createElement('li1');
+mpdli.innerHTML = "<b>MPD</b>";
+mpdli.id = "myMPD";
+
+listElement.appendChild(mpdli);
+attributes(node,mpdli);
+for(var met=0;met<$(node).children("Metrics").length;met++)
+{
+var metrics = $(node).children("Metrics")[met];
+var metul = document.createElement ("ul");
+var metli = document.createElement("li");
+metli.innerHTML = "<b>Metrics</b>";
+metul.appendChild(metli);
+mpdli.appendChild(metul);
+attributes(metrics,metul);
+chkbaseurl(node,mpdli);
+checkproginfo(node,mpdli);
+}
+
+for(var peri=0;peri<$(node).children("Period").length ; peri++){
+var period = $(node).children("Period")[peri];
+var perul = document.createElement ("ul");
+var peli = document.createElement("li");
+peli.innerHTML = "<b>Period</b>";
+perul.appendChild(peli);
+mpdli.appendChild(perul);
+attributes(period,perul);
+checksegmentbase(period,peli);
+checkseglist(period,peli);
+checksegtemp(period,peli);
+checkeventStream(period,peli);
+var adaptation = $(period).children("Adaptationset");
+for (var adapi = 0 ;adapi<adaptation.length;adapi++)
+{
+var adaptat=adaptation[adapi];
+var adapul = document.createElement ("ul");
+var adapli = document.createElement("li");
+adapli.innerHTML = "<b>Adaptationset</b>";
+adapul.appendChild(adapli);
+perul.appendChild(adapul);
+attributes(adaptat,adapul);
+
+var replist = $(adaptat).children('Representation');
+
+var contlist = $(adaptat).children('ContentComponent');
+
+checksegmentbase(adaptat,adapli);
+checkseglist(adaptat,adapli);
+checksegtemp(adaptat,adapli);
+for(var contl = 0;contl<contlist.length;contl++)
+{
+var contobj = replist[contl];
+
+var contul = document.createElement("ul");
+var contli = document.createElement("li");
+contli.innerHTML = "<b>Representation</b>";
+contul.appendChild(contli);
+adapul.appendChild(contul);
+attributes(contobj,contul);
+}
+
+
+for(var repi = 0;repi<replist.length;repi++)
+{
+var repobj = replist[repi];
+
+var repul = document.createElement("ul");
+var repli = document.createElement("li");
+repli.innerHTML = "<b>Representation</b>";
+repul.appendChild(repli);
+adapul.appendChild(repul);
+attributes(repobj,repul);
+checksegmentbase(repobj,repli);
+checkseglist(repobj,repli);
+checksegtemp(repobj,repli);
+var sublist = $(repobj).children('SubRepresentation');
+
+for(var subl = 0;subl<sublist.length;contl++)
+{
+var subobj = sublist[subl];
+
+var subul = document.createElement("ul");
+var subli = document.createElement("li");
+subli.innerHTML = "<b>SubRepresentation</b>";
+subul.appendChild(subli);
+repul.appendChild(subul);
+attributes(subobj,subul);
+}
+
+}
+
+
+}
+}
+}
+
+function attributes(ele,li)
+{
+	var ulatt = document.createElement("ul");
+
+	li.appendChild(ulatt);
+	$.each(ele.attributes, function(i, attrib)
+	{
+				var attli = document.createElement("li");
+
+				var textWithFont = document.createElement("font");
+
+				if(attrib.name.indexOf("xmlns")!= -1 || attrib.name.indexOf("xsi")!= -1 )
+				{
+					return;
+				}
+
+				else if(attrib.name=="elementIssue")
+				{
+
+					textWithFont.color = "red";
+					textWithFont.innerHTML = "Issues of Missing Attributes: "+attrib.value+"\r\n";
+				}
+				
+				else if(attrib.value=="false") //No Schema Error
+				{
+					textWithFont.color = "green";
+					textWithFont.innerHTML = attrib.name+"\r\n";
+
+				}else //If other than "false", means that a schema error is found in that attribute
+				{
+					textWithFont.color = "red";
+					textWithFont.innerHTML = attrib.name+": "+attrib.value+"\r\n";
+				}
+
+				attli.appendChild(textWithFont);
+				ulatt.appendChild(attli);
+
+	  });
+// console.log(ele.nodeName);
+ // console.log(nametab);
+
+}
+function createXMLHttpRequestObject(){ 
+  var xmlHttp; // xmlHttp will store the reference to the XMLHttpRequest object
+  try{         // try to instantiate the native XMLHttpRequest object
+    xmlHttp = new XMLHttpRequest(); // create an XMLHttpRequest object
+  }
+  catch(e) {
+    try     // assume IE6 or older
+    {
+      xmlHttp = new ActiveXObject("Microsoft.XMLHttp");
+    }
+    catch(e) { }
+  }
+  if (!xmlHttp)       // return the created object or display an error message
+    alert("Error creating the XMLHttpRequest object.");
+  else 
+    return xmlHttp;
+}
+
+function chkbaseurl (node,mpdli)
+{
+for(var i=0;i<$(node).children("BaseURL").length;i++)
+{
+var Baseurl = $(node).children("BaseURL")[i];
+
+var metul = document.createElement ("ul");
+var metli = document.createElement("li");
+metli.innerHTML = "<b>BaseURL</b>";
+metul.appendChild(metli);
+mpdli.appendChild(metul);
+attributes(Baseurl,metul);
+}
+
+}
+
+function checkproginfo(node,mpdli)
+{
+for(var i=0;i<$(node).children("ProgramInformation").length;i++)
+{
+var ProgramInformation = $(node).children("ProgramInformation")[i];
+
+var metul = document.createElement ("ul");
+var metli = document.createElement("li");
+metli.innerHTML = "<b>ProgramInformation</b>";
+metul.appendChild(metli);
+mpdli.appendChild(metul);
+attributes(ProgramInformation,metul);
+}
+}
+
+function checksegmentbase(node,parentli)
+{
+ for(var i=0;i<$(node).children("SegmentBase").length;i++)
+{
+var SegmentBase = $(node).children("SegmentBase")[i];
+
+var metul = document.createElement ("ul");
+var metli = document.createElement("li");
+metli.innerHTML = "<b>SegmentBase</b>";
+metul.appendChild(metli);
+parentli.appendChild(metul);
+attributes(SegmentBase,metul);
+}
+
+}
+function checkseglist(node ,parentli)
+{
+ for(var i=0;i<$(node).children("SegmentList").length;i++)
+{
+var SegmentList = $(node).children("SegmentList")[i];
+
+var metul = document.createElement ("ul");
+var metli = document.createElement("li");
+metli.innerHTML = "<b>SegmentList</b>";
+metul.appendChild(metli);
+parentli.appendChild(metul);
+attributes(SegmentList,metul);
+}
+
+}
+
+function checksegtemp(node,parentli)
+{
+ for(var i=0;i<$(node).children("SegmentTemplate").length;i++)
+{
+var SegmentTemplate = $(node).children("SegmentTemplate")[i];
+
+var metul = document.createElement ("ul");
+var metli = document.createElement("li");
+metli.innerHTML = "<b>SegmentTemplate</b>";
+metul.appendChild(metli);
+parentli.appendChild(metul);
+attributes(SegmentTemplate,metul);
+for( var j = 0;j<$(SegmentTemplate).children('SegmentTimeline').length;j++)
+{
+var SegmentTimeline = $(SegmentTemplate).children('SegmentTimeline')[j];
+var tiul = document.createElement ("ul");
+var tili = document.createElement("li");
+tili.innerHTML = "<b>SegmentTimeline</b>";
+tiul.appendChild(tili);
+metli.appendChild(tiul);
+attributes(SegmentTimeline,tiul);
+for(var k = 0;k<$(SegmentTimeline).children('S').length;k++)
+{
+var S = $(SegmentTimeline).children('S')[k];
+var Sul = document.createElement("ul");
+var Sli = document.createElement("li");
+Sli.innerHTML = "<b>S</b>";
+Sul.appendChild(Sli);
+tili.appendChild(Sul);
+attributes(S,Sul);
+}
+}
+}
+}
+
+function checkeventStream(node,parentli)
+{
+for(var i=0;i<$(node).children("EventStream").length;i++)
+{
+var EventStream = $(node).children("EventStream")[i];
+
+var metul = document.createElement ("ul");
+var metli = document.createElement("li");
+metli.innerHTML = "<b>EventStream</b>";
+metul.appendChild(metli);
+parentli.appendChild(metul);
+attributes(EventStream,metul);
+
+}
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+</script>
+
+</body>
+</html>

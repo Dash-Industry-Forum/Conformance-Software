@@ -1,0 +1,4 @@
+Cross representation checks for adaptation set with id "":
+Error: Number of leafs 368 for track 1 for representation id "1" not equal to the number of leafs 367 for track 1 for representation id "3"
+Error: Number of leafs 368 for track 1 for representation id "2" not equal to the number of leafs 367 for track 1 for representation id "3"
+Checks completed.
