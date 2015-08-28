@@ -233,7 +233,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                     {
                         $duration = $duration/$timescale; // get duration
 						
-                        $segmentno = $presentationduration/$duration; //get segment number
+                        $segmentno = round($presentationduration/$duration); //get segment number
                     }
 
                     $startnumber = $Period_arr[$k]['SegmentTemplate']['startNumber'];  // get first number in segment
@@ -314,7 +314,7 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                         if($duration!=0)
                         {
                             $duration = $duration/$timescale; // get duration scaled
-                            $segmentno = $presentationduration/$duration; // get number of segments
+                            $segmentno = round($presentationduration/$duration); // get number of segments
                             //print_r2($startnumber);
                         }
                         $startnumber = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['startNumber']; // get start number
