@@ -110,9 +110,9 @@ function downloaddata($directory,$array_file)
             $progressXML->percent = strval($percent);
             $progressXML->dataProcessed = strval($totalDataProcessed + $sizepos);
             $progressXML->dataDownloaded = strval($totalDataDownloaded);
-
+            
             // Saving the whole modified XML to a new filename
-            $progressXML->asXml(trim($locate.'/progress.xml'));
+            $progressXML->asXml(trim($locate.'/progress.xml'));			
 			//error_log( "percent:".$percent );
         }
 
@@ -123,8 +123,8 @@ function downloaddata($directory,$array_file)
 		//error_log( "totalDataProcessed:");
 		//error_log( $totalDataProcessed);
     }
-
-
+   
+ 
  }
  
  curl_close($ch);
