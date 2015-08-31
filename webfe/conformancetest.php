@@ -15,7 +15,7 @@
  
 
           
-            
+ 
 
          
 	
@@ -23,6 +23,7 @@
 	<script type="text/javascript"  src="tree/dhtmlxTree/codebase/dhtmlxtree.js"></script>
 	<script type="text/javascript" src="tree/dhtmlxTree/codebase/dhtmlxcommon.js"></script>
 	  <script type="text/javascript" src="tree/dhtmlxTree/codebase/ext/dhtmlxtree_json.js"></script> 
+           
 
 <?php 
 /*This program is free software: you can redistribute it and/or modify
@@ -38,11 +39,12 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+$url = $_REQUEST['urlinput'];    
+  
 ;
 ?>
-	  
- <script type="text/javascript">
+
+<script type="text/javascript">
 	
 		function fixImage(id){
 			switch(tree.getLevel(id)){
@@ -184,7 +186,7 @@ position:absolute;
 
 	<br>    <br>
 </div>
-    <p align="center" class="sansserif">Validation (Conformance check) of ISO/IEC 23009-1 MPEG-DASH MPD and Segments</p>
+    <p id="aaaa" align="center" class="sansserif">Validation (Conformance check) of ISO/IEC 23009-1 MPEG-DASH MPD and Segments</p>
 <div id="groupA">
 
   <input type="text" id='urlinput' name="urlinput" class="mytext" placeholder="Enter MPD URL" onkeyup="CheckKey(event)"/>
@@ -193,6 +195,7 @@ position:absolute;
   <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.193.185/Content/TestCases/1b/qualcomm/1/MultiRate_Broken.mpd" onkeyup="CheckKey(event)"/-->
 
 <button id="btn8" onclick="submit()">Submit</button>
+
 <b>or</b>
 
 <input type="file" name="afile" id="afile" />
@@ -264,6 +267,7 @@ var adaptid=[];
  var uploaded = false;
 var numPeriods = 0;
 var SessionID = "id"+Math.floor(100000 + Math.random() * 900000);
+var global="";
 /////////////////////////////////////////////////////////////
 document.querySelector('#afile').addEventListener('change', function(e) {
 
@@ -337,6 +341,7 @@ function  progressEventHandler(){
         var progressPercent = progressXML.getElementsByTagName("percent")[0].childNodes[0].nodeValue;
         var dataProcessed = progressXML.getElementsByTagName("dataProcessed")[0].childNodes[0].nodeValue;
         var dataDownloaded = progressXML.getElementsByTagName("dataDownloaded")[0].childNodes[0].nodeValue;
+        
         dataProcessed = Math.floor( dataProcessed / (1024*1024) );
         dataDownloaded = Math.floor( dataDownloaded / (1024) );
         var lastRep = representationid-1;
@@ -348,6 +353,7 @@ function  progressEventHandler(){
 		}
 		
         document.getElementById("par").innerHTML=progressText;
+                  
 
              		
       }
@@ -379,6 +385,8 @@ function progressupdate()
 	                                                                                                            // https://developer.mozilla.org/es/docs/XMLHttpRequest/Usar_XMLHttpRequest#Bypassing_the_cache,
       progressXMLRequest.onreadystatechange = progressEventHandler;
       progressXMLRequest.send(null);
+      
+     
     }
     catch (e)      // display an error in case of failure
     {
@@ -390,8 +398,21 @@ function progressupdate()
 function submit()
 {
 
-    var url = document.getElementById('urlinput').value;
+    //var url = document.getElementById('urlinput').value;
+   
+    /*var url = window.location.search;
+    var parts = window.location.search.substr(1).split("&");
+    var $_GET = {};
+  var temp = parts[0].split("=");
+    $_GET[decodeURIComponent(temp[0])] = decodeURIComponent(temp[1]);
+   
+    //document.getElementById("aaaa").value="aaaa";
+    //alert($_GET['urlinput']);
+    var url=$_GET["urlinput"];*/
+        var url = "<?php echo $url; ?>";
+    document.getElementById("urlinput").value=url;
     
+     
     if (uploaded===true)
 	url="upload";
     
@@ -714,6 +735,21 @@ window.open(urlto, "_blank");
 var parsed;
 var uploaded = "false";
 
+function loadXMLDoc(dname)
+    {
+      if (window.XMLHttpRequest)
+      {
+        xhttp=new XMLHttpRequest();
+      }
+      else
+      {
+        xhttp=new ActiveXObject("Microsoft.XMLHTTP");
+      }
+      xhttp.open("GET",dname,false);
+      xhttp.send("");
+      return xhttp.responseXML;
+    }
+
 function finishTest()
 {
 	document.getElementById("btn8").disabled=false;
@@ -722,8 +758,45 @@ function finishTest()
 	clearInterval( progressTimer);
         
         setStatusTextlabel("Conformance test completed");
+      
+        	
+
+     xmlDoc=loadXMLDoc("temp/"+dirid+"/progress.xml");
+     function xml_to_string(xml_node)
+    {
+        if (xml_node.xml)
+            return xml_node.xml;
+        else if (XMLSerializer)
+        {
+            var xml_serializer = new XMLSerializer();
+            return xml_serializer.serializeToString(xml_node);
+        }
+        else
+        {
+            alert("ERROR: Extremely old browser");
+            return "";
+        }
+    }
+      
+      xmlDoc.getElementsByTagName("completed")[0].childNodes[0].nodeValue = "true";
+      	
+
+     
+  $.ajax({
+    type: 'POST',
+    url: "save_xml.php",
+    dataType: 'xml',
+    data: {filename: "temp/"+dirid+"/progress.xml", content: xml_to_string(xmlDoc)}
+    }).done( function() {
+        
+        //console.log("xml changed");
+    }).fail(function() {
+        //alert(xml_to_string(xmlDoc));
+        //alert("Unknown error. Data could not be written to the file.");
+    });
 
 }
+
 
 
 
@@ -773,6 +846,8 @@ function setStatusTextlabel(textToSet)
 	document.getElementById("par").innerHTML=status;
 	document.getElementById('par').style.visibility='visible';
 }
+
+ 
 </script>
 
 <script>
@@ -786,11 +861,17 @@ function setStatusTextlabel(textToSet)
 
 
 </script>
-
+    
+<script>
+                  submit();
+        
+</script>
+    
 <footer>
  <center> <p>v0.96b
          <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
  </center>
 </footer>
-</body>
+           
+     </body>
 </html>
