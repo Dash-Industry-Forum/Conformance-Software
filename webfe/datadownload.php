@@ -27,7 +27,7 @@ function downloaddata($directory,$array_file)
     $totalDataProcessed = 0;//bytes processed within segments
     $totalDataDownloaded = 0; 
     // Load XML with SimpleXml from string
-    $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>'); //xml file containing progress to be fetched by client
+    $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded><completed>false</completed></root>'); //xml file containing progress to be fetched by client
     
 	
 	$ch = curl_init();
@@ -110,9 +110,9 @@ function downloaddata($directory,$array_file)
             $progressXML->percent = strval($percent);
             $progressXML->dataProcessed = strval($totalDataProcessed + $sizepos);
             $progressXML->dataDownloaded = strval($totalDataDownloaded);
+
             // Saving the whole modified XML to a new filename
             $progressXML->asXml(trim($locate.'/progress.xml'));
-			
 			//error_log( "percent:".$percent );
         }
 
@@ -123,7 +123,8 @@ function downloaddata($directory,$array_file)
 		//error_log( "totalDataProcessed:");
 		//error_log( $totalDataProcessed);
     }
- 
+
+
  }
  
  curl_close($ch);
@@ -137,7 +138,7 @@ function downloaddata($directory,$array_file)
  if (!isset($file_sizearr))
  $file_sizearr = 0;
  return $file_sizearr;
- 
+
 }
 // This function get the size of the segment remotely without downloading it
  function remote_file_size2($url){
