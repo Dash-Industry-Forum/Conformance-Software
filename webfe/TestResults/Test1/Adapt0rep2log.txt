@@ -1,6 +1,0 @@
-Warning: Unknown atom found "hvcC": video sample descriptions would not normally contain this
-Warning: Unknown atom found "fiel": video sample descriptions would not normally contain this
-### error:  
-###        Section 6.3.4.3. of ISO/IEC 23009-1:2012(E): If 'sidx' is present in a Media Segment, the first 'sidx' box ... shall document the entire Segment. Violated for Media Segment 368. Segment duration 0.000000, Sidx documents 0.166667 for track 1, diff 0.166667
-### error:  
-###        Buffer underrun conformance error: first (and only one reported here) for sample 1 of run 1 of track fragment 1 of fragment 23 of track id 1 (sample absolute file offset 8521237, fragment absolute file offset 8520757, bandwidth: 2500703)

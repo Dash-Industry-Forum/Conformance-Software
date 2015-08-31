@@ -1,7 +1,0 @@
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/1/tears_of_steel_288p_500k_H265_from1080p_240.mp4
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/1/tears_of_steel_288p_500k_H265_from1080p_369.mp4
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/1/tears_of_steel_432p_1000k_H265_from1080p_369.mp4
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/1/tears_of_steel_720p_2000k_H265_from1080p_369.mp4
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/1/tears_of_steel_1080p_4000k_H265_29.mp4
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/1/tears_of_steel_1080p_4000k_H265_369.mp4
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/1/tears_of_steel_64k_audio_376.mp4

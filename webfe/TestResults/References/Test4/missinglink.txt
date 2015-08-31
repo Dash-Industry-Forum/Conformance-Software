@@ -1,5 +1,0 @@
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/2/bbb_288p_500k_H265_from1080p_300.mp4
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/2/bbb_432p_1000k_H265_from1080p_300.mp4
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/2/bbb_720p_2000k_H265_from1080p_300.mp4
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/2/bbb_1080p_4000k_H265_from1080p_300.mp4
-http://dash.edgesuite.net/dash264/TestCasesHEVC/2b/2/bbb_64k_audio_305.mp4

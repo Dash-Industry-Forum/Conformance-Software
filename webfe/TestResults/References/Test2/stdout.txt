@@ -1,5 +1,0 @@
-
-
-
-<!-- Source file is '/var/www/html/Conformance-Software/webfe/temp/id843428072/Adapt1rep0.mp4' -->
-<!#- Finished testing file '/var/www/html/Conformance-Software/webfe/temp/id843428072/Adapt1rep0.mp4' -->
