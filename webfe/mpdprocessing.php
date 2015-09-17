@@ -216,7 +216,8 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
         {
 
             for($k = 0; $k<sizeof($Period_arr); $k++) // loop on period array
-            {
+            { 
+                $Adapt_initialization_setflag=0;
                 if(!empty($Period_arr[$k]['SegmentTemplate']))
                 {
                     //print_r2($Period_arr[$k]['SegmentTemplate']);
@@ -238,6 +239,9 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
 
                     $startnumber = $Period_arr[$k]['SegmentTemplate']['startNumber'];  // get first number in segment
                     $initialization = $Period_arr[$k]['SegmentTemplate']['initialization']; // get initialization degment 
+                    if($initialization != ""){
+                        $Adapt_initialization_setflag=1;
+                    }
                     $media = $Period_arr[$k]['SegmentTemplate']['media']; // get  media template
                     $timehash=null; // used only in segment timeline 
                     $timehash=array(); // contains all segmenttimelines for all segments
@@ -319,7 +323,9 @@ $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
                         }
                         $startnumber = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['startNumber']; // get start number
 
+                        if ($Adapt_initialization_setflag==0){
                         $initialization = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['initialization']; // get initialization
+                        }
                         $media = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['media'];// get media template
 
                         if(!empty($Period_arr[$k]['Representation']['SegmentTemplate'][$j]['SegmentTimeline'])) // check timeline 
@@ -560,6 +566,9 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 					$timeSeconds=str_replace("S","",$timeSeconds);
 					$processArguments=" -minbuffertime ".$timeSeconds." -bandwidth ";
 					$processArguments=$processArguments.$Period_arr[$count1]['Representation']['bandwidth'][$count2]." ";
+                                        $processArguments=$processArguments."-width ";
+                                        $processArguments=$processArguments.$Period_arr[$count1]['Representation']['width'][$count2]." "."-height ";
+                                       $processArguments=$processArguments.$Period_arr[$count1]['Representation']['height'][$count2]." ";
 					
 					if($type=== "dynamic")
 						$processArguments=$processArguments."-dynamic ";

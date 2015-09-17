@@ -13,7 +13,7 @@
  */
 
 //$opener=$_REQUEST['handle'];
- $path = '../Conformance-Software/webfe/temp'; 
+ $path = '../webfe/temp'; 
  
 if (is_dir($path)) {
     $foldernames = scandir($path, 0);
@@ -73,7 +73,7 @@ for($l=0;$l<$j;$l++)
         $Newfolder=$foldersNew[$l];
 }
  echo "<p>New folder created is $Newfolder</p>";
- $newPath='../Conformance-Software/webfe/TestResults';
+ $newPath='../webfe/TestResults';
  $FoldName='Test';
  for($n=1;$n<=10;$n++)
  {

@@ -409,7 +409,7 @@ function submit()
     //document.getElementById("aaaa").value="aaaa";
     //alert($_GET['urlinput']);
     var url=$_GET["urlinput"];*/
-        var url = "<?php echo $url; ?>";
+     var url = "<?php echo $url; ?>";
     document.getElementById("urlinput").value=url;
     
      
