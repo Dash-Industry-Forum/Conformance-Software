@@ -21,10 +21,9 @@ Sub-representations.
 
 
 
-Usage
+Notes for testing:
+
 Find the Conformance-Software folder in your localhost and open the Test folder. Put the test vector mpd URLs in the "Test vector" field (up to 10 mpds).
 Click on "Start Testing" button, then all the test vectors will be tested one by one.
 Please make sure that user www-data has write permission in the Conformance-Software folder
 
-
-(list to be reviewed and completed)....
