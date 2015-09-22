@@ -169,6 +169,7 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
         
         if($segmenttemplate->length>0)
         {
+            $Adapt_seg_temp_setflag=0;
             for($i=0;$i<$segmenttemplate->length; $i++)
             {
                 $seg_arr = array();
@@ -179,11 +180,13 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
                 {
                    
                     $Adapt_seg_temp= processTemplate($seg);
+                    $Adapt_seg_temp_setflag=1;
                 }
                 else 
                 {
+                    if(!$Adapt_seg_temp_setflag){
                     $Adapt_seg_temp=null;
-                  
+                    }
                 }
             }
         }

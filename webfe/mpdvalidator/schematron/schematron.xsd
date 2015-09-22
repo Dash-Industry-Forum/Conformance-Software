@@ -120,7 +120,7 @@
 		<!-- R7.*: Check the conformance of SegmentTemplate -->
 		<rule context="dash:SegmentTemplate">
 			<!-- R7.0 -->
-			<assert test="if (not(@duration) and not(child::dash:SegmentTimeline)) then false() else true()">If more than one Media Segment is present the duration attribute or SegmentTimeline element shall be present.</assert>
+			<assert test="if (not(@duration) and not(child::dash:SegmentTimeline) and not(@initialization) ) then false() else true()">If more than one Media Segment is present the duration attribute or SegmentTimeline element shall be present.</assert>
 			<!-- R7.1 -->
 			<assert test="if (@duration and child::dash:SegmentTimeline) then false() else true()">Either the duration attribute or SegmentTimeline element shall be present but not both.</assert>
 			<!-- R7.2 -->
