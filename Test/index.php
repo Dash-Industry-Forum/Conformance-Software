@@ -16,6 +16,35 @@
     
     function testing()
     {
+        //test if the temp folder is empty, if not, then ask if clean it. Don't process before cleaning!
+        $.post(
+            "checkempty.php",
+            {path:'../webfe/temp'},
+            function(response)
+            {
+                console.log(response);
+            }
+        ).done(function(response){
+            if(response == "temp folder not empty")
+            {
+                while(!confirm("Temp folder not empty, clean now?")) //wait until confirmation
+                {
+                    alert("You cannot proceed before cleaning!");
+                }
+                // otherwise clean up
+//                 {
+                    $.post(
+                        "cleanup.php",
+                        {path:'../webfe/temp'},
+                        function(response)
+                        {
+                            console.log(response);
+                        }
+                    )
+//                 }
+            }
+        });
+        
         //alert('Test is running ..Please Wait');
         i=1;
         ajaxcall();
