@@ -117,7 +117,7 @@
 		</rule>
 	</pattern>
 	<pattern name="SegmentTemplate element">
-		<!-- R7.*: Check the conformance of SegmentTemplate not(following-sibling::dash:Representation/dash:SegmentTemplate/@duration)-->
+		<!-- R7.*: Check the conformance of SegmentTemplate -->
 		<rule context="dash:SegmentTemplate">
 			<!-- R7.0 -->
 			<assert test="if (not(@duration) and not(child::dash:SegmentTimeline) and not(@initialization) ) then false() else true()">If more than one Media Segment is present the duration attribute or SegmentTimeline element shall be present.</assert>
@@ -205,6 +205,8 @@
 		<rule context="dash:AudioChannelConfiguration">
 			<!-- R15.0 -->
 			<assert test="if ((@schemeIdUri = 'urn:mpeg:dash:outputChannelPositionList:2012') and not(count(tokenize(@value, ' ')) > 1)) then false() else true()">If URI urn:mpeg:dash:outputChannelPositionList:2012 is used the value attribute shall be a space-delimited list as defined in ISO/IEC 23001-8.</assert>
+
+                        <assert test="if (contains(ancestor::dash:MPD/@profiles, 'http://dashif.org/guidelines/dashif#ac-4') and not(@schemeIdUri='tag:dolby.com,2014:dash:audio_channel_configuration:2011')) then false() else true()"> If profile http://dashif.org/guidelines/dashif#ac-4 is used, then schemeIdUri attribute shall be tag:dolby.com,2014:dash:audio_channel_configuration:2011.</assert >
 		</rule>
 	</pattern>
 	

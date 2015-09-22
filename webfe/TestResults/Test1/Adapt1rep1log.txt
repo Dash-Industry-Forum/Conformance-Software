@@ -1,0 +1,2 @@
+SoundDescription numChannels must be 2 not 6
+Warning: Unknown atom found "dac4": audio sample descriptions would not normally contain this

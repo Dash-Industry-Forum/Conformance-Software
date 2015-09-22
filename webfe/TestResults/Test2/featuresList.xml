@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dolby="http://www.dolby.com/ns/online/DASH" xmlns="urn:mpeg:dash:schema:mpd:2011" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011" type="false" mediaPresentationDuration="false" minBufferTime="false" profiles="false" schemaLocation="false">
+
+ <BaseURL>./</BaseURL>
+
+ <Period start="false">
+    <!-- Video -->
+    <AdaptationSet mimeType="false" codecs="false" segmentAlignment="false" startWithSAP="false">
+      <SegmentTemplate timescale="false" media="false" initialization="false">
+        <SegmentTimeline>
+          <S t="false" d="false" r="false"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="false" bandwidth="false" width="false" height="false" frameRate="false"/>
+    </AdaptationSet>
+    <!-- Audio -->
+    <AdaptationSet mimeType="false" codecs="false" lang="false" segmentAlignment="false" startWithSAP="false">
+      <SegmentTemplate timescale="false" media="false" initialization="false">
+        <SegmentTimeline>
+          <S t="false" d="false" r="false"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="false" bandwidth="false" audioSamplingRate="false">
+        <AudioChannelConfiguration schemeIdUri="false" value="false"/>
+      </Representation>
+      <Representation id="false" bandwidth="false" audioSamplingRate="false">
+        <AudioChannelConfiguration schemeIdUri="false" value="false"/>
+      </Representation>
+    </AdaptationSet>
+ </Period>
+</MPD>
