@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dolby="http://www.dolby.com/ns/online/DASH" xmlns="urn:mpeg:dash:schema:mpd:2011" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011" type="false" mediaPresentationDuration="false" minBufferTime="false" profiles="false" schemaLocation="false">
+
+ <BaseURL>./</BaseURL>
+
+ <Period>
+    <!-- Video -->
+    <AdaptationSet mimeType="false" codecs="false" subsegmentAlignment="false" subsegmentStartsWithSAP="false">
+      <Representation id="false" bandwidth="false" width="false" height="false" frameRate="false">
+        <BaseURL>Living_Room_720p_20_96k_25fps_V.mp4</BaseURL>
+        <SegmentBase indexRange="false">
+         <Initialization range="false"/>
+        </SegmentBase>
+      </Representation>
+    </AdaptationSet>
+    <!-- Audio -->
+    <AdaptationSet mimeType="false" codecs="false" lang="false" subsegmentAlignment="false" subsegmentStartsWithSAP="false">
+      <Representation id="false" bandwidth="false" audioSamplingRate="false">
+        <AudioChannelConfiguration schemeIdUri="false" value="false"/>
+        <BaseURL>Living_Room_720p_20_96k_25fps_A.mp4</BaseURL>
+        <SegmentBase indexRange="false">
+         <Initialization range="false"/>
+        </SegmentBase>
+      </Representation>
+    </AdaptationSet>
+ </Period>
+</MPD>
