@@ -1,4 +1,0 @@
-Warning: Unknown atom found "pasp": video sample descriptions would not normally contain this
-### error: moov-1:iods-1 
-###        Validate_IODS: visualProfileLevelIndication ( IOD: 127 (0x7f) ) signalled .. but there seems to be no video track
-ssix found in Segment 0, but brand 'sims' not found in the styp for the segment, violating: Section 6.3.4.4. of ISO/IEC 23009-1:2012(E): It shall carry 'sims' in the Segment Type box ('styp') as a compatible brand.

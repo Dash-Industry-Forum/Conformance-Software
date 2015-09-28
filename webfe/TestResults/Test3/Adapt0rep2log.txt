@@ -1,4 +1,0 @@
-Warning: Unknown atom found "hvcC": video sample descriptions would not normally contain this
-Warning: Unknown atom found "fiel": video sample descriptions would not normally contain this
-### error:  
-###        Buffer underrun conformance error: first (and only one reported here) for sample 14 of run 1 of track fragment 1 of fragment 21 of track id 1 (sample absolute file offset 7458109, fragment absolute file offset 7122276, bandwidth: 1990623)

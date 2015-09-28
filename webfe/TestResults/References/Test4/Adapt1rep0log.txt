@@ -1,4 +1,0 @@
-### error: moov-1:trak-1:mdia-1:minf-1:stbl-1:stsd-1 
-###        SampleDescription sdType must be 'mp4a' or 'enca' ( 'mp4a', 'enca' )
-WARNING: Don't know about this sound descriptor type "ac-4"
-Warning: Unknown atom found "dac4": audio sample descriptions would not normally contain this
