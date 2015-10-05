@@ -102,6 +102,9 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
         $idadapt = $Adapt->getAttribute ('id');
         $scanType = $Adapt->getAttribute ('scanType');
         $mimeType = $Adapt->getAttribute ('mimeType');
+        $codecs_AdaptSet = $Adapt->getAttribute ('codecs'); // Get codecs, if present in Adaptation Set level
+                if(empty($codecs_AdaptSet))
+                    $codecs_AdaptSet=0;
         $adapsetProfiles = $Adapt->getAttribute ('profiles');
         if($adapsetProfiles === "")
             $adapsetProfiles = $periodProfiles;
@@ -307,7 +310,7 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
     'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
 	'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale);
 	// Array of all adapationsets containing all attributes and nodes including Presentations 
-        $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'Representation'=>$Rep_arr);
+        $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'codecs'=>$codecs_AdaptSet,'Representation'=>$Rep_arr);
 }
 /**
 
