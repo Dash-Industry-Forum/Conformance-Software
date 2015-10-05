@@ -590,27 +590,14 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 					{
 						   $processArguments=$processArguments."-dash264base ";
 						   $dash264=true;
-					}					
-                                  
+					}
+						
 				  
 						
 					if($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true)
 					{
 						$processArguments=$processArguments."-dash264enc ";
 					}
-                                        
-                                       if($Period_arr[$count1]['codecs']===0)
-                                        {
-                                            $codecs=$Period_arr[$count1]['Representation']['codecs'][$count2];
-                                            $processArguments=$processArguments."-codecs ";
-                                            $processArguments=$processArguments.$codecs;
-                                        }
-                                        else
-                                        {
-                                            $codecs=$Period_arr[$count1]['codecs'];
-                                            $processArguments=$processArguments."-codecs ";
-                                            $processArguments=$processArguments.$codecs;
-                                        }
 					
 					error_log( "validatemp4" );
                                         // Work out which validator binary to use
