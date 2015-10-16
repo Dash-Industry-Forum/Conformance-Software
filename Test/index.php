@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-<?php 
-;?>
 <html>
 <head>
 
@@ -54,13 +52,17 @@
         
         function ajaxcall()
         {
-            console.log("i="+i+"; vector length is "+vectors.length);
             if(i<=vectors.length)
             {
-                newtab(vectors[i-1]);  //content of this line
+                newtab(vectors[i-1]);  //process the current mpd file
                 $.post(
-                    "second.php"
-                ).done(function(){
+                    "second.php",
+                    {length:vectors.length, path:'../webfe/temp'},
+                    function(response)
+                    {
+                        console.log(response);
+                    }
+                ).done(function(response){
                     alert("Successfully tested vector "+i); 
                     i++;
                     ajaxcall();
@@ -73,7 +75,6 @@
 
 <body> 
 <br>
-
 Test vectors :<br>
 <textarea name="Text1" cols="100" rows="50" id='vectors'></textarea>
 <br><input type=button id="Start" value="Start Testing" style="width:200px;" onclick="testing()">  
