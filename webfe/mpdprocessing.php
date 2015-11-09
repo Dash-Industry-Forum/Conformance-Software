@@ -611,6 +611,25 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
                                             $processArguments=$processArguments."-codecs ";
                                             $processArguments=$processArguments.$codecs;
                                         }
+                                        
+                                        // add indexRange to process arguments to give it to MPD validator
+                                        
+                                        
+                                        if($Period_arr[$count1]['Representation']['indexRange'][$count2]!==null)
+                                        {
+                                            $indexRange=$Period_arr[$count1]['Representation']['indexRange'][$count2];
+                                            $processArguments=$processArguments." -indexrange \"";
+                                            $processArguments=$processArguments. $indexRange. "\"";
+                                        }
+                                        elseif($Period_arr[$count1]['indexRange']!==null)
+                                        {
+                                            $indexRange=$Period_arr[$count1]['indexRange'];
+                                            $processArguments=$processArguments." -indexrange \"";
+                                            $processArguments=$processArguments . $indexRange."\"";
+                                        }
+                                        
+                                                                
+                                        
 					
 					error_log( "validatemp4" );
                                         // Work out which validator binary to use

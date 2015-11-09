@@ -43,11 +43,13 @@ function processPeriod($period,&$dir)
 		   $Timeoffset =$basearray[0];
 		   
 		   if(!empty($basearray[1]))
-		   $timescale = $basearray[1];//return array contains timescale 
-		
+		   $timescale = $basearray[1];//return array contains timescale
+                   
+                    if(!empty($basearray[2])) 
+                    $indexRange = $basearray[2]; //return array contains index range
+                    }
+                   
 		}
-		
-    }
     $Adaptationset = $domper->getElementsByTagName( "AdaptationSet" ); //Get adapation set node
     $periodbase = $domper->getElementsByTagName("BaseURL"); // Get BaseURL node
     $periodProfiles = $period->getAttribute('profiles'); //get profile attribute
@@ -136,11 +138,18 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
         if($name === 'AdaptationSet') // Check if segment base is direct child of Adapatationset 
         {
 		$basearray = processSegmentBase($base); //Process segmentbase
-          if(!empty($basearray[0]))          
+                  if(!empty($basearray[0]))          
 		  $Adapt_Timeoffset = $basearray[0]; //Get timeoffset
 		  
 		  if(!empty($basearray[1]))
 		  $timescale =$basearray[1]; //get timescale
+                  
+                   if(!empty($basearray[2]))
+                   {
+                   $flag=1;    
+                   $flag_higher=1;
+		   $indexRange_higher = $basearray[2];//return array contains indexRange
+                   }
 		}
     }
      if ($Adapt_Timeoffset===0) // if timeoffset exist then It has to replace the one existed on higher nodes
@@ -217,15 +226,24 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
 		   $base= $Rep_segmentbase->item(0);
 		   
            $segarray[] = processSegmentBase($base); // Process segment base
-		   if(!empty($segarray[0]))
-		   $Rep_Timeoffset[]=$segarray[0];//Get presentationtimeoffset if exist
-		   
-		   if(!empty($segarray[1]))
-		   $timescale = $segarray[1];  // get timescale if exist
-		   
-		   }
-		   else
+		   if(!empty($segarray[$i][0]))
+		   $Rep_Timeoffset[]=$segarray[$i][0];//Get presentationtimeoffset if exist
+                   else
 		   $Rep_Timeoffset[] = $Adapt_Timeoffset; // if not exist get the upper timeoffset
+		   
+		   if(!empty($segarray[$i][1]))
+		   $timescale = $segarray[$i][1];  // get timescale if exist
+                   
+                   if(!empty($segarray[$i][2]))
+                   {
+                   $flag=0;
+                   $flag_lower=1;
+                   $indexRange_lower[] = $segarray[$i][2];//get index range if it exists
+                   }
+                   
+                   }
+		   //else
+		   //$Rep_Timeoffset[] = $Adapt_Timeoffset; // if not exist get the upper timeoffset
 		         
                 for($j=0;$j<$repbaseurl->length;$j++) // Get baseurl and Iterate it 
                 {
@@ -287,11 +305,10 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
                 if(empty($bandwidthvar))
                     $bandwidthvar=0;
                 $bandwidth[$i]=$bandwidthvar;
-				
+                
 				if($temprep->hasAttribute('timescale'))
 				$timescale = $temprep->getAttribute('timescale');
-				
-                
+                                
                 $ContentProtectionElementCountRep[$i] = $temprep->getElementsByTagName( "ContentProtection" )->length;  //Process ContentProtection
                 if($ContentProtectionElementCountRep[$i] == 0)
                 {
@@ -306,11 +323,33 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
     $Adapt_urlbase  = $rep_url; //Incase of using BaseURL just add all BaseURLs within array containint all presentations
 	
 	//Array of each presentation containing all attributes and nodes within Presentations
+    
+   if($indexRange_higher!==null && $indexRange_lower!==null)
+    {
+        $indexRange=$indexRange_higher;
+        $flag=1;
+    }
+ else {
+    $indexRange=$indexRange_lower;
+    $flag=0;
+    }
+   
+    
+    if($flag==1)
+    {
     $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
     'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
 	'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale);
 	// Array of all adapationsets containing all attributes and nodes including Presentations 
+        $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'codecs'=>$codecs_AdaptSet,'indexRange'=>$indexRange,'Representation'=>$Rep_arr);
+    }
+ elseif($flag==0) {
+        $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
+    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
+	'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale,'indexRange'=>$indexRange);
+	// Array of all adapationsets containing all attributes and nodes including Presentations 
         $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'codecs'=>$codecs_AdaptSet,'Representation'=>$Rep_arr);
+    }
 }
 /**
 
@@ -352,12 +391,14 @@ function processTemplate($segmentTemp)
 			$presentationTimeOffset =$basearray[0];
 			if(!empty($basearray[1]))
 			$timescale=$basearray[1];
+                        if(!empty($basearray[2]))
+		        $indexRange = $basearray[2];//return array contains indexRange
 			}
 			//Add all nodes and attributes to array of segment Template
 	$seg_array=array('duration'=>$duration,'startNumber'=>$startNumber,'media'=>$media,
-	'initialization'=>$initialization,'timescale'=>$timescale,'presentationTimeOffset'=>$presentationTimeOffset,'SegmentTimeline'=>$SegmentTimeline);
-	
-	
+	'initialization'=>$initialization,'timescale'=>$timescale,'presentationTimeOffset'=>$presentationTimeOffset,'SegmentTimeline'=>$SegmentTimeline,'indexRange'=>$indexRange);
+        
+        
 	
   return $seg_array;
 }
@@ -399,7 +440,10 @@ $basearray[0] = $basedom->getAttribute('presentationTimeOffset');
 if ($basedom->hasAttribute('timescale'))
 $basearray[1] = $basedom->getAttribute('timescale');
 
-return $basrarray;
+if ($basedom->hasAttribute('indexRange'))
+$basearray[2] = $basedom->getAttribute('indexRange');
+
+return $basearray;
 }
 
 //timeparsing function convert the time format specified in mpd into absolute seconds example :PT1H2M4.00S>>  3724 second
