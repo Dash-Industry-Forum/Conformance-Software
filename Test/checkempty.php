@@ -1,7 +1,7 @@
 <?php
 
 /* 
-check if folder is empty
+check if temp folder is empty
  */
  
  $path = $_REQUEST['path'];
