@@ -103,8 +103,15 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
         $scanType = $Adapt->getAttribute ('scanType');
         $mimeType = $Adapt->getAttribute ('mimeType');
         $codecs_AdaptSet = $Adapt->getAttribute ('codecs'); // Get codecs, if present in Adaptation Set level
-                if(empty($codecs_AdaptSet))
-                    $codecs_AdaptSet=0;
+        if(empty($codecs_AdaptSet))
+            $codecs_AdaptSet=0;
+        $height_AdaptSet = $Adapt->getAttribute ('height'); // Get height, if present in Adaptation Set level
+        if(empty($height_AdaptSet))
+            $height_AdaptSet=0; 
+        $width_AdaptSet = $Adapt->getAttribute ('width'); // Get width, if present in Adaptation Set level
+        if(empty($width_AdaptSet))
+            $width_AdaptSet=0;
+            
         $adapsetProfiles = $Adapt->getAttribute ('profiles');
         if($adapsetProfiles === "")
             $adapsetProfiles = $periodProfiles;
@@ -167,7 +174,7 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
             }
         }
        
-        $rep_seg_temp = array();
+        //$rep_seg_temp = array();
         $segmenttemplate = $dom->getElementsByTagName("SegmentTemplate"); //Check if segment template exist in adaptationSet level
         
         if($segmenttemplate->length>0)
@@ -198,6 +205,26 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
             $Adapt_seg_temp = 0;
         }
 
+      //Check if AudioChannelConfiguration exists at AdapatationSet level.
+        $audioChannelConfig_Adapt = $Adapt->getElementsByTagName("AudioChannelConfiguration");
+        if($audioChannelConfig_Adapt->length>0)
+        {
+            $audioCh_Adapt_item=$audioChannelConfig_Adapt->item(0);
+            $parNode = $audioCh_Adapt_item->parentNode;
+            $parName = $parNode->tagName;
+            if($parName=="AdaptationSet"){
+                $audioCh_Adapt_value = $audioCh_Adapt_item->getAttribute ('value');       
+            }
+            else{
+                $audioCh_Adapt_value=0;
+            }
+        }
+        else
+        {
+            $audioCh_Adapt_value=0;
+        }
+        
+        
         $Representation=  $dom->getElementsByTagName ("Representation"); //Get representations node within Adapatationset
         if($Representation->length>0) 
         {
@@ -298,6 +325,18 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
                     $ContentProtectionElementCountRep[$i] = $ContentProtection->length;
                 }
 
+                $audioChannelConfig_Rep=$temprep->getElementsByTagName('AudioChannelConfiguration');//Check if AudioChannelConfiguration exists
+                if($audioChannelConfig_Rep->length>0)
+                {
+                    $audioCh_Rep_item=$audioChannelConfig_Rep->item(0);
+                    $audioCh_Rep_value = $audioCh_Rep_item->getAttribute ('value');                      
+                    $audioCh_value [$i] = $audioCh_Rep_value;
+                }
+                else
+                {
+                    $audioCh_value [$i]=0;
+                }
+                
 				}
             }
        
@@ -308,9 +347,9 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
 	//Array of each presentation containing all attributes and nodes within Presentations
     $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
     'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
-	'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale);
+	'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale,'AudioChannelValue'=>$audioCh_value);
 	// Array of all adapationsets containing all attributes and nodes including Presentations 
-        $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'codecs'=>$codecs_AdaptSet,'Representation'=>$Rep_arr);
+        $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'codecs'=>$codecs_AdaptSet,'width'=>$width_AdaptSet,'height'=>$height_AdaptSet,'Representation'=>$Rep_arr,'AudioChannelValue'=>$audioCh_Adapt_value);
 }
 /**
 
