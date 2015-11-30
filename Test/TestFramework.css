@@ -1,0 +1,85 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Oct 19, 2015, 3:01:22 PM
+    Author     : nomor
+*/
+       h2{
+            position: absolute;
+            left: 5px;
+            top: -20px;
+            color: #1E90FF;
+            font-size: 250%;
+            text-shadow: 5px 5px 8px #888888;
+        }
+        #vectors{
+            position: absolute;
+            left: 10px;
+            top: 150px;
+        }
+        #Testvectors{
+            position: absolute;
+            left: 10px;
+            top: 110px;
+            font-size: 120%;
+            color: #1E00FF;
+        }
+        #status {
+            position: absolute;
+            left: 280px;
+            top: 750px;
+            font-size: 120%;
+            color: #A0522D;
+        }
+        #statusContent{
+            position: absolute;
+            left: 350px;
+            top: 752px;
+            font-size: 110%;
+            color: #A0522D;
+        }
+        #outputs{
+             position: absolute;
+            left: 910px;
+            top: 103px;
+        }
+         #results{
+             position: absolute;
+            left: 920px;
+            top: 110px;
+             font-size: 120%;
+        }
+        #Checkbox{
+            position: absolute;
+            left: 7px;
+            top: 90px;
+            transform: scale(1.2);
+        }
+        #ChecboxTitle{
+            position: absolute;
+            left: 30px;
+            top: 70px;
+            font-size: 120%;
+        }
+        #RefMsg{
+            position: absolute;
+            left: 260px;
+            top: 77px;
+            color: green;
+        }
+        #Start{
+            position: absolute;
+            left: 10px;
+            top: 760px;
+            width: 200px;
+            height: 35px;
+            font-size: 100%;
+            border-radius: 4%;
+            border: 1px solid;
+            color: green;
+        }
+         
+        

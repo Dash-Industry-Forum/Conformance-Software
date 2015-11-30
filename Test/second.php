@@ -1,116 +1,116 @@
-<!DOCTYPE html>
-
-<html>
-<head>
-</head>
-<body>
 <?php
 
 /* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+
  */
 
 //$opener=$_REQUEST['handle'];
- $path = '../webfe/temp'; 
- 
+$length = $_REQUEST['length'];
+$path = $_REQUEST['path'];
+ // To get initial list of folders inside temp.
 if (is_dir($path)) {
     $foldernames = scandir($path, 0);
     $i=0;
-     $folders=array();
-   foreach ($foldernames as $result) {
+    $folders=array();
+    foreach ($foldernames as $result) {
         if ($result === '.' or $result === '..') continue;
 
         if (is_dir($path . '/' . $result)) {
             $folders[$i]=$result;
-            echo "\r\n";
             $i=$i+1;
-
-            }
         }
-       
-    } else {
-        echo "No such directory";
-        }
+    }
     
-        
-       
+} else {
+    echo "No such directory";
+}       
+
+// To get the new list of folders which includes newly created results folder.       
 $j=0;
 while($j<=$i)
-{ 
+{
     if (is_dir($path)) 
     {
-    $foldernamesNew = scandir($path, 0);
-    $k=0;
-     $foldersNew=array();
-    foreach ($foldernamesNew as $result) {
-        if ($result === '.' or $result === '..') continue;
+        $foldernamesNew = scandir($path, 0);
+        $k=0;
+        $foldersNew=array();
+        foreach ($foldernamesNew as $result) {
+            if ($result === '.' or $result === '..') continue;
 
-        if (is_dir($path . '/' . $result)) {
-            $foldersNew[$k]=$result;
-            $k=$k+1;
-
+            if (is_dir($path . '/' . $result)) {
+                $foldersNew[$k]=$result;
+                $k=$k+1;
             }
         }
     }
     $j=$k;
-  
 }
 
+$Newfolder=$foldersNew[0];
 
-$flags=array_fill(0, $j, 0);
-for($l=0;$l<$j;$l++)
+$newPath='../webfe/TestResults';
+$FoldName='Test';
+for($n=1;$n<=$length;$n++)
 {
-    for($m=0;$m<$i;$m++)
+    if(!is_dir($newPath.'/'.$FoldName.$n))
     {
-        if($foldersNew[$l]==$folders[$m])
-        {
-            $flags[$l]=1;
-        }
+        $FoldName=$FoldName.$n;
+        break;
     }
-    if($flags[$l]==0)
-        $Newfolder=$foldersNew[$l];
+            
 }
- echo "<p>New folder created is $Newfolder</p>";
- $newPath='../webfe/TestResults';
- $FoldName='Test';
- for($n=1;$n<=10;$n++)
- {
- 
-     if(!is_dir($newPath.'/'.$FoldName.$n))
-     {
-         $FoldName=$FoldName.$n;
-         break;
-     }
-             
- }
- 
- while(1)
- {
- $xml=simplexml_load_file($path.'/'.$Newfolder.'/progress.xml');
 
- if($xml->completed=="true")
-  { 
-     rename($path.'/'.$Newfolder, $newPath.'/'.$FoldName );
-   
-     break;
-  }
-  sleep(3);
- }
- //echo "<p>testing</p>";
- if (is_dir($newPath.'/'.'References'.'/'.$FoldName))
- {
-     $oldfile=$newPath.'/'.'References'.'/'.$FoldName;
-     $newfile=$newPath.'/'.$FoldName;
-     $command = 'diff'.' '.$oldfile.' '.$newfile.' '.'>'.$newPath.'/'.$FoldName.'_diff.txt';
-     echo $command;
-     $output=array();$status=0;
-     exec($command,$output,$status);
+echo $FoldName;
+// Check progress.xml to find if Conformance Test is completed, then move the results to TestResults folder.
+while(1)
+{
+    //$feed = file_get_contents($path.'/'.$Newfolder.'/progress.xml');
+    $xml=simplexml_load_file($path.'/'.$Newfolder.'/progress.xml');
 
- }
-  //echo "<p>pasted</p>";
+    if($xml->completed=="true")
+    { 
+        rename($path.'/'.$Newfolder, $newPath.'/'.$FoldName );
+
+        break;
+    }
+    sleep(3);
+}
+// Following is to remove temp/id-random-number folder name in myphp-error.log file
+
+   $fileContents=file_get_contents($newPath.'/'.$FoldName.'/myphp-error.log');
+   $fileContents=str_replace('["temp\/'.$Newfolder, $FoldName, $fileContents); 
+   $fileContents=str_replace('"temp\/'.$Newfolder, $FoldName, $fileContents); 
+   $fileContents=str_replace('"]', '"', $fileContents);
+   file_put_contents($newPath.'/'.$FoldName.'/myphp-error.log', $fileContents);
+    
+// Remove date-time info
+   $fileContents1=file_get_contents($newPath.'/'.$FoldName.'/myphp-error.log');
+  
+    while(strpos($fileContents1, '] ')!== FALSE){
+    $startPos=  strpos($fileContents1, '[');
+    $endPos=  strpos($fileContents1, '] ');
+    $fileContents1= substr_replace($fileContents1, '', $startPos , $endPos-$startPos+2);  
+      
+    } 
+    file_put_contents($newPath.'/'.$FoldName.'/myphp-error.log', $fileContents1);
+
+// Following is to remove temp/id-random-number folder name in stdout.txt file
+   $fileContents=file_get_contents($newPath.'/'.$FoldName.'/stdout.txt');
+   $fileContents=str_replace('temp/'.$Newfolder, $FoldName, $fileContents);  
+       
+    file_put_contents($newPath.'/'.$FoldName.'/stdout.txt', $fileContents);
+    
+    // Compare and get the differences.
+if (is_dir($newPath.'/'.'References'.'/'.$FoldName))
+{
+    $oldfile=$newPath.'/'.'References'.'/'.$FoldName;
+    $newfile=$newPath.'/'.$FoldName;
+    $command = 'diff'.' '.'-r '.$oldfile.' '.$newfile.' '.'>'.$newPath.'/'.$FoldName.'_diff.txt';
+    //echo $command;
+    $output=array();$status=0;
+    exec($command,$output,$status);
+
+}
+//echo "<p>pasted</p>";
 
 ?>
-</body>
-</html>
