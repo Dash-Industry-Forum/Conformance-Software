@@ -431,7 +431,7 @@ return $Sarray;
 
 //Process Segment Base to get timescale and presentationTimeeOffset if they exist
 function processSegmentBase($basedom){
-$basearray=[];
+$basearray=array();
 if ($basedom->hasAttribute('presentationTimeOffset'))
 $basearray[0] = $basedom->getAttribute('presentationTimeOffset');
 
@@ -473,8 +473,8 @@ function timeparsing($mediaPresentationDuration)
 }
 function dynamicnumber($bufferduration, $segmentduration, $AST, $start,$periodarray)
 {
-$avgsum=[];
-$sumbandwidth=[];
+$avgsum=array();
+$sumbandwidth=array();
 for($k=0;$k<sizeof($periodarray);$k++)
 {
 $sumbandwidth[] =array_sum($periodarray[$k]['Representation']['bandwidth']);
@@ -495,7 +495,10 @@ $LSN=intval($LST/$segmentduration) ;
 $earlistsegment = $LSN - $buffercapacity*$percent;
 
 
-$result =[intval($earlistsegment),$LSN];
+$result = array();
+$result[0] = intval($earlistsegment);
+$result[1] = $LSN;
+
 return $result;
 
 

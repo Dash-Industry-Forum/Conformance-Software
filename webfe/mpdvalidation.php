@@ -18,7 +18,7 @@ function mpdvalidator($result_array,$locate,$foldername){
 
 
     global $string_info;
-    $function_result =[];
+    $function_result = array();
     $schematronIssuesReport;
     $url_array= $result_array;
     chdir($url_array[1]);// Change default execution directory to the location of the mpd validator

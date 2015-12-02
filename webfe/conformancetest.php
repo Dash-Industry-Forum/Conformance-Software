@@ -39,13 +39,30 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-$url = $_REQUEST['urlinput'];     // To get url from POST request.
-  
+if(isset($_REQUEST['mpdurl']))
+{
+	$url = $_REQUEST['mpdurl'];     // To get url from POST request.
+}
+else
+  $url = "";
 ;
 ?>
 
 <script type="text/javascript">
-	
+
+var url = "";
+
+window.onload = function()
+{	
+     url = "<?php echo $url; ?>";
+	 if(url !== "")
+         {
+		document.getElementById("urlinput").value=url;
+                submit();
+         }
+
+}
+
 		function fixImage(id){
 			switch(tree.getLevel(id)){
 			case 1:
@@ -409,9 +426,7 @@ function submit()
     //document.getElementById("aaaa").value="aaaa";
     //alert($_GET['urlinput']);
     var url=$_GET["urlinput"];*/
-     var url = "<?php echo $url; ?>";
-    document.getElementById("urlinput").value=url;
-    
+    url = document.getElementById("urlinput").value; 
      
     if (uploaded===true)
 	url="upload";
@@ -862,13 +877,8 @@ function setStatusTextlabel(textToSet)
 
 </script>
     
-<script>
-                  submit();
-        
-</script>
-    
 <footer>
- <center> <p>v0.96b
+ <center> <p>v1.1
          <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
  </center>
 </footer>
