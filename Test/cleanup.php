@@ -5,7 +5,7 @@ clean up temp folder
  */
 
 $path = $_REQUEST['path'];
-chdir("/var/www/html/Conformance-Software/webfe/temp/");
+chdir("../webfe/temp/");
 exec("sudo rm -r *");
 //rmdir_recursive($path);
 echo "cleaned temp folder";

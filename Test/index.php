@@ -14,7 +14,7 @@
     
     function newtab(mpdfile)
     {
-        window.open("http://localhost/Conformance-Software/webfe/conformancetest.php?urlinput="+mpdfile);
+        window.open("../webfe/conformancetest.php?mpdurl="+mpdfile);
     } 
     
     function testing()
@@ -125,7 +125,7 @@
                       document.body.insertAdjacentHTML('beforeend', div);
                       var y = document.getElementById(id); 
                       if(response== "wrong"){
-                      y.innerHTML ='<a href="http://localhost/Conformance-Software/webfe/TestResults/'+folder+'_diff.txt" target="_blank"> Check differences</a>';
+                      y.innerHTML ='<a href="../webfe/TestResults/'+folder+'_diff.txt" target="_blank"> Check differences</a>';
                       $('#'+id).prepend('<img id="theImg" src="button_cancel.png" />');
                       document.getElementById('statusContent').innerHTML= "Completed vector "+j;
                       if(vectors.length>j)
