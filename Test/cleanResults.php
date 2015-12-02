@@ -7,13 +7,13 @@ References folder is cleaned separately depending on user requirement.
 
 $flag = $_REQUEST['flag'];
 
-chdir("/var/www/html/Conformance-Software/webfe/TestResults/");
+chdir("../webfe/TestResults/");
 exec("sudo find * -maxdepth 0 -name 'References' -prune -o -exec rm -rf '{}' ';' ");
 //echo "cleaned Test Results folder";
 
 $path = "../webfe/TestResults/References";
 
-chdir("/var/www/html/Conformance-Software/webfe/TestResults/References");
+chdir("../webfe/TestResults/References");
 $command1="sudo find * -maxdepth 0 ";
 $output=array();
 exec($command1,$output);
@@ -33,7 +33,7 @@ else
 
 if($flag)
 {
-    chdir("/var/www/html/Conformance-Software/webfe/TestResults/References");
+    chdir("../webfe/TestResults/References");
     exec("sudo rm -r *");
     if($presentFlag)
         echo ", but Old References are removed and New References created";
