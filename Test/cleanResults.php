@@ -13,7 +13,7 @@ exec("sudo find * -maxdepth 0 -name 'References' -prune -o -exec rm -rf '{}' ';'
 
 $path = "../webfe/TestResults/References";
 
-chdir("../webfe/TestResults/References");
+chdir("References");
 $command1="sudo find * -maxdepth 0 ";
 $output=array();
 exec($command1,$output);
@@ -33,7 +33,7 @@ else
 
 if($flag)
 {
-    chdir("../webfe/TestResults/References");
+    //chdir("../webfe/TestResults/References");
     exec("sudo rm -r *");
     if($presentFlag)
         echo ", but Old References are removed and New References created";

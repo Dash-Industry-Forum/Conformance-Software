@@ -1,0 +1,2 @@
+http://10.4.246.250/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd
+http://10.4.246.250/dash264/TestCases/2b/qualcomm/2/MultiRes.mpd

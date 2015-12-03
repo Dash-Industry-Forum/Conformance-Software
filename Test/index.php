@@ -11,6 +11,11 @@
     <h2> Test Automation </h2>
 <script>
     var resultDivNum = 0;
+	
+	window.onload = function()
+	{	
+		 document.getElementById('vectors').value = <?php $file = file_get_contents( 'DefaultVectorList.txt' ); echo json_encode( $file ); ?>;
+	}
     
     function newtab(mpdfile)
     {
