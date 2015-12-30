@@ -43,13 +43,13 @@ function processPeriod($period,&$dir)
 		   $Timeoffset =$basearray[0];
 		   
 		   if(!empty($basearray[1]))
-		   $timescale = $basearray[1];//return array contains timescale
-                   
-                    if(!empty($basearray[2])) 
-                    $indexRange = $basearray[2]; //return array contains index range
-                    }
-                   
+		   $timescale = $basearray[1];//return array contains timescale 
+		   
+		   if(!empty($basearray[2]))
+                   $indexRange = $basearray[2]; //return array contains index range		
 		}
+		
+    }
     $Adaptationset = $domper->getElementsByTagName( "AdaptationSet" ); //Get adapation set node
     $periodbase = $domper->getElementsByTagName("BaseURL"); // Get BaseURL node
     $periodProfiles = $period->getAttribute('profiles'); //get profile attribute
@@ -105,8 +105,15 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
         $scanType = $Adapt->getAttribute ('scanType');
         $mimeType = $Adapt->getAttribute ('mimeType');
         $codecs_AdaptSet = $Adapt->getAttribute ('codecs'); // Get codecs, if present in Adaptation Set level
-                if(empty($codecs_AdaptSet))
-                    $codecs_AdaptSet=0;
+        if(empty($codecs_AdaptSet))
+            $codecs_AdaptSet=0;
+        $height_AdaptSet = $Adapt->getAttribute ('height'); // Get height, if present in Adaptation Set level
+        if(empty($height_AdaptSet))
+            $height_AdaptSet=0; 
+        $width_AdaptSet = $Adapt->getAttribute ('width'); // Get width, if present in Adaptation Set level
+        if(empty($width_AdaptSet))
+            $width_AdaptSet=0;
+            
         $adapsetProfiles = $Adapt->getAttribute ('profiles');
         if($adapsetProfiles === "")
             $adapsetProfiles = $periodProfiles;
@@ -138,18 +145,16 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
         if($name === 'AdaptationSet') // Check if segment base is direct child of Adapatationset 
         {
 		$basearray = processSegmentBase($base); //Process segmentbase
-                  if(!empty($basearray[0]))          
+          if(!empty($basearray[0]))          
 		  $Adapt_Timeoffset = $basearray[0]; //Get timeoffset
 		  
 		  if(!empty($basearray[1]))
 		  $timescale =$basearray[1]; //get timescale
-                  
-                   if(!empty($basearray[2]))
+		  
+                  if(!empty($basearray[2]))
                    {
-                   $flag=1;    
-                   $flag_higher=1;
-		   $indexRange_higher = $basearray[2];//return array contains indexRange
-                   }
+                   $indexRange_AdaptSet = $basearray[2];//return array contains indexRange
+                   }                 
 		}
     }
      if ($Adapt_Timeoffset===0) // if timeoffset exist then It has to replace the one existed on higher nodes
@@ -207,6 +212,26 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
             $Adapt_seg_temp = 0;
         }
 
+      //Check if AudioChannelConfiguration exists at AdapatationSet level.
+        $audioChannelConfig_Adapt = $Adapt->getElementsByTagName("AudioChannelConfiguration");
+        if($audioChannelConfig_Adapt->length>0)
+        {
+            $audioCh_Adapt_item=$audioChannelConfig_Adapt->item(0);
+            $parNode = $audioCh_Adapt_item->parentNode;
+            $parName = $parNode->tagName;
+            if($parName=="AdaptationSet"){
+                $audioCh_Adapt_value = $audioCh_Adapt_item->getAttribute ('value');       
+            }
+            else{
+                $audioCh_Adapt_value=0;
+            }
+        }
+        else
+        {
+            $audioCh_Adapt_value=0;
+        }
+        
+        
         $Representation=  $dom->getElementsByTagName ("Representation"); //Get representations node within Adapatationset
         if($Representation->length>0) 
         {
@@ -219,31 +244,27 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
                 $temprep=$Representation->item($i);
                 $repbaseurl = $temprep->getElementsByTagName('BaseURL');//check if representation contains BaseURL
 				$Rep_segmentbase = $temprep->getElementsByTagName('SegmentBase');//Check if segment Base exist
-
+                                 
            if($Rep_segmentbase->length>0)
 		   {
-		  
+		 
 		   $base= $Rep_segmentbase->item(0);
-		   
+      	   
            $segarray[] = processSegmentBase($base); // Process segment base
 		   if(!empty($segarray[$i][0]))
 		   $Rep_Timeoffset[]=$segarray[$i][0];//Get presentationtimeoffset if exist
-                   else
+		   else
 		   $Rep_Timeoffset[] = $Adapt_Timeoffset; // if not exist get the upper timeoffset
 		   
 		   if(!empty($segarray[$i][1]))
 		   $timescale = $segarray[$i][1];  // get timescale if exist
-                   
-                   if(!empty($segarray[$i][2]))
-                   {
-                   $flag=0;
-                   $flag_lower=1;
-                   $indexRange_lower[] = $segarray[$i][2];//get index range if it exists
-                   }
-                   
-                   }
-		   //else
-		   //$Rep_Timeoffset[] = $Adapt_Timeoffset; // if not exist get the upper timeoffset
+		   
+		   if(!empty($segarray[$i][2]))
+                   $indexRange_RepSet[] = $segarray[$i][2];  //get index range if it exists              
+                                      
+		   }
+		   else
+		   $Rep_Timeoffset[] = $Adapt_Timeoffset; // if not exist get the upper timeoffset
 		         
                 for($j=0;$j<$repbaseurl->length;$j++) // Get baseurl and Iterate it 
                 {
@@ -305,16 +326,28 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
                 if(empty($bandwidthvar))
                     $bandwidthvar=0;
                 $bandwidth[$i]=$bandwidthvar;
-                
+				
 				if($temprep->hasAttribute('timescale'))
 				$timescale = $temprep->getAttribute('timescale');
-                                
+				    
                 $ContentProtectionElementCountRep[$i] = $temprep->getElementsByTagName( "ContentProtection" )->length;  //Process ContentProtection
                 if($ContentProtectionElementCountRep[$i] == 0)
                 {
                     $ContentProtectionElementCountRep[$i] = $ContentProtection->length;
                 }
 
+                $audioChannelConfig_Rep=$temprep->getElementsByTagName('AudioChannelConfiguration');//Check if AudioChannelConfiguration exists
+                if($audioChannelConfig_Rep->length>0)
+                {
+                    $audioCh_Rep_item=$audioChannelConfig_Rep->item(0);
+                    $audioCh_Rep_value = $audioCh_Rep_item->getAttribute ('value');                      
+                    $audioCh_value [$i] = $audioCh_Rep_value;
+                }
+                else
+                {
+                    $audioCh_value [$i]=0;
+                }
+                
 				}
             }
        
@@ -323,33 +356,22 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
     $Adapt_urlbase  = $rep_url; //Incase of using BaseURL just add all BaseURLs within array containint all presentations
 	
 	//Array of each presentation containing all attributes and nodes within Presentations
-    
-   if($indexRange_higher!==null && $indexRange_lower!==null)
-    {
-        $indexRange=$indexRange_higher;
-        $flag=1;
-    }
- else {
-    $indexRange=$indexRange_lower;
-    $flag=0;
-    }
-   
-    
-    if($flag==1)
-    {
-    $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
-    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
-	'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale);
+	  
+     $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
+                    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
+                    'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale,'AudioChannelValue'=>$audioCh_value,'indexRange'=>$indexRange_RepSet);
 	// Array of all adapationsets containing all attributes and nodes including Presentations 
-        $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'codecs'=>$codecs_AdaptSet,'indexRange'=>$indexRange,'Representation'=>$Rep_arr);
-    }
- elseif($flag==0) {
-        $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
-    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
-	'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale,'indexRange'=>$indexRange);
+
+     $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'codecs'=>$codecs_AdaptSet,'width'=>$width_AdaptSet,'height'=>$height_AdaptSet,'Representation'=>$Rep_arr,'AudioChannelValue'=>$audioCh_Adapt_value,'indexRange'=>$indexRange_AdaptSet);
+
+  
+    /*$Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
+                    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
+                    'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale,'AudioChannelValue'=>$audioCh_value);
 	// Array of all adapationsets containing all attributes and nodes including Presentations 
-        $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'codecs'=>$codecs_AdaptSet,'Representation'=>$Rep_arr);
-    }
+
+     $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'codecs'=>$codecs_AdaptSet,'width'=>$width_AdaptSet,'height'=>$height_AdaptSet,'Representation'=>$Rep_arr,'AudioChannelValue'=>$audioCh_Adapt_value);
+*/
 }
 /**
 
@@ -391,16 +413,16 @@ function processTemplate($segmentTemp)
 			$presentationTimeOffset =$basearray[0];
 			if(!empty($basearray[1]))
 			$timescale=$basearray[1];
-                        if(!empty($basearray[2]))
+			if(!empty($basearray[2]))
 		        $indexRange = $basearray[2];//return array contains indexRange
 			}
 			//Add all nodes and attributes to array of segment Template
 	$seg_array=array('duration'=>$duration,'startNumber'=>$startNumber,'media'=>$media,
 	'initialization'=>$initialization,'timescale'=>$timescale,'presentationTimeOffset'=>$presentationTimeOffset,'SegmentTimeline'=>$SegmentTimeline,'indexRange'=>$indexRange);
-        
-        
 	
-  return $seg_array;
+	
+
+        return $seg_array;
 }
 
 function processtimeline($timelinearray)
@@ -433,7 +455,7 @@ return $Sarray;
 
 //Process Segment Base to get timescale and presentationTimeeOffset if they exist
 function processSegmentBase($basedom){
-$basearray=[];
+$basearray=array();
 if ($basedom->hasAttribute('presentationTimeOffset'))
 $basearray[0] = $basedom->getAttribute('presentationTimeOffset');
 
@@ -478,8 +500,8 @@ function timeparsing($mediaPresentationDuration)
 }
 function dynamicnumber($bufferduration, $segmentduration, $AST, $start,$periodarray)
 {
-$avgsum=[];
-$sumbandwidth=[];
+$avgsum=array();
+$sumbandwidth=array();
 for($k=0;$k<sizeof($periodarray);$k++)
 {
 $sumbandwidth[] =array_sum($periodarray[$k]['Representation']['bandwidth']);
@@ -500,7 +522,10 @@ $LSN=intval($LST/$segmentduration) ;
 $earlistsegment = $LSN - $buffercapacity*$percent;
 
 
-$result =[intval($earlistsegment),$LSN];
+$result = array();
+$result[0] = intval($earlistsegment);
+$result[1] = $LSN;
+
 return $result;
 
 
