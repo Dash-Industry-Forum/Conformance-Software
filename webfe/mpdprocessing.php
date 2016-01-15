@@ -621,6 +621,21 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
                                         }
                                         $processArguments=$processArguments.$codecs;
 					
+                                        // add indexRange to process arguments to give it to MPD validator
+                                        
+                                        if($Period_arr[$count1]['Representation']['indexRange'][$count2]!==null)
+                                        {
+                                            $indexRange=$Period_arr[$count1]['Representation']['indexRange'][$count2];
+                                            $processArguments=$processArguments." -indexrange ";
+                                            $processArguments=$processArguments. $indexRange;
+                                        }
+                                        elseif($Period_arr[$count1]['indexRange']!==null)
+                                        {
+                                            $indexRange=$Period_arr[$count1]['indexRange'];
+                                            $processArguments=$processArguments." -indexrange ";
+                                            $processArguments=$processArguments. $indexRange;
+                                        }
+					
                                         $processArguments=$processArguments." -audiochvalue ";
                                         if($Period_arr[$count1]['AudioChannelValue']===0)
                                         {
@@ -635,8 +650,27 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
 					error_log( "validatemp4" );
                                         // Work out which validator binary to use
                                         $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
-					$test = $locate.'/'.$validatemp4." ".$locate.'/'.$repno.".mp4 "."-infofile ".$locate.'/'.$repno.".txt"." -offsetinfo ".$locate.'/'.$repno."mdatoffset.txt -logconsole".$processArguments;
-					exec(   $locate.'/'.$validatemp4." ".$locate.'/'.$repno.".mp4 "."-infofile ".$locate.'/'.$repno.".txt"." -offsetinfo ".$locate.'/'.$repno."mdatoffset.txt -logconsole".$processArguments ); //Excute conformance software
+                                        
+                                        $file_loc = $locate . "/config_file.txt";
+                                        $config_file=fopen($file_loc, "w");
+                                        fwrite($config_file, $locate.'/'.$repno.".mp4 "."\n");
+                                        fwrite($config_file, "-infofile"."\n");
+                                        fwrite($config_file, $locate.'/'.$repno.".txt"."\n");
+                                        fwrite($config_file, "-offsetinfo"."\n");
+                                        fwrite($config_file, $locate.'/'.$repno."mdatoffset.txt"."\n");
+                                        //fwrite($config_file, "-logconsole"."\n");
+                                        $piece=explode(" ",$processArguments);
+                                        foreach ($piece as $pie)
+                                        {
+                                            if ($pie !=="")
+                                            fwrite($config_file, $pie."\n");
+                                        }
+                                     
+                                        fclose($config_file);
+                                        
+					$command = $locate.'/'.$validatemp4." -logconsole -configfile ".$file_loc;
+					file_put_contents($repno."_command.txt",$command);
+					exec($command);//Excute conformance software
 					rename($locate.'/'."leafinfo.txt",$locate.'/'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
 			   
 					$file_location[] = "temp".'/'.$foldername.'/'.$repno."_infofile.html";
