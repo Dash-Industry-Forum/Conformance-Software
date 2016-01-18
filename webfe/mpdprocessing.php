@@ -669,7 +669,7 @@ $signlocation = strpos($media,'%');  // clean media attribute from non existing 
                                         fclose($config_file);
                                         
 					$command = $locate.'/'.$validatemp4." -logconsole -configfile ".$file_loc;
-					file_put_contents($repno."_command.txt",$command);
+					file_put_contents("command.txt",$command);
 					exec($command);//Excute conformance software
 					rename($locate.'/'."leafinfo.txt",$locate.'/'.$repno."_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
 			   

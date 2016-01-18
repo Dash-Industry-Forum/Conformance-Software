@@ -19,7 +19,8 @@
     
     function newtab(mpdfile)
     {
-        window.open("../webfe/conformancetest.php?mpdurl="+mpdfile);
+        var testWin = window.open("../webfe/conformancetest.php?mpdurl="+mpdfile);
+		testWin.blur();
     } 
     
     function testing()

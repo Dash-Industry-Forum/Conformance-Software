@@ -94,12 +94,11 @@ while(1)
     } 
     file_put_contents($newPath.'/'.$FoldName.'/myphp-error.log', $fileContents1);
 
-// Following is to remove temp/id-random-number folder name in stdout.txt file
-   $fileContents=file_get_contents($newPath.'/'.$FoldName.'/stdout.txt');
-   $fileContents=str_replace('temp/'.$Newfolder, $FoldName, $fileContents);  
-       
-    file_put_contents($newPath.'/'.$FoldName.'/stdout.txt', $fileContents);
-    
+// Following is to remove temp/id-random-number folder name in respective files
+	replaceFolderName("stdout.txt",$newPath,$FoldName,$Newfolder);
+	replaceFolderName("config_file.txt",$newPath,$FoldName,$Newfolder);
+	replaceFolderName("command.txt",$newPath,$FoldName,$Newfolder);
+	
     // Compare and get the differences.
 if (is_dir($newPath.'/'.'References'.'/'.$FoldName))
 {
@@ -110,6 +109,15 @@ if (is_dir($newPath.'/'.'References'.'/'.$FoldName))
     $output=array();$status=0;
     exec($command,$output,$status);
 
+}
+
+function replaceFolderName($fileName,$newPath,$FoldName,$Newfolder)
+{
+  
+   $fileContents=file_get_contents($newPath.'/'.$FoldName.'/'.$fileName);
+   $fileContents=str_replace('temp/'.$Newfolder, $FoldName, $fileContents);  
+       
+    file_put_contents($newPath.'/'.$FoldName.'/'.$fileName, $fileContents);
 }
 //echo "<p>pasted</p>";
 
