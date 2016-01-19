@@ -15,7 +15,6 @@ http://10.4.247.98/server/dash264/TestCases/9c/qualcomm/1/MultiRate.mpd
 http://10.4.247.98/server/dash264/TestCasesHD/1a/qualcomm/1/MultiRate.mpd
 http://10.4.247.98/server/dash264/TestCasesHD/1b/qualcomm/2/MultiRate.mpd
 http://10.4.247.98/server/dash264/TestCasesHD/1c/qualcomm/1/MultiRate.mpd
-http://10.4.247.98/server/dash264/TestCasesHD/2a/DTV/1/ondemand.mpd
 http://10.4.247.98/server/dash264/TestCasesHD/2b/DTV/1/live.mpd
 http://10.4.247.98/server/dash264/TestCasesHD/2c/qualcomm/1/MultiResMPEG2.mpd
 http://10.4.247.98/server/dash264/TestCasesMCA/fraunhofer/HE-AACv2_Multichannel/1/6chID/6chId_480p_single_adapt_heaac5_1_sidx.mpd
