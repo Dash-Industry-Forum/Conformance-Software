@@ -9,6 +9,7 @@ http://10.4.247.98/server/dash264/TestCases/3a/fraunhofer/aac-lc_stereo_without_
 http://10.4.247.98/server/dash264/TestCases/3b/fraunhofer/aac-lc_stereo_with_video/ElephantsDream/elephants_dream_480p_aaclc_stereo_sidx.mpd
 http://10.4.247.98/server/dash264/TestCases/5b/nomor/6.mpd
 http://10.4.247.98/server/dash264/TestCases/5b/nomor/8.mpd
+http://10.4.247.98/server/dash264/TestCases/5b/nomor/9.mpd
 http://10.4.247.98/server/dash264/TestCases/9a/qualcomm/1/MultiRate.mpd
 http://10.4.247.98/server/dash264/TestCases/9b/qualcomm/1/MultiRate.mpd
 http://10.4.247.98/server/dash264/TestCases/9c/qualcomm/1/MultiRate.mpd
