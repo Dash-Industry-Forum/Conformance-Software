@@ -119,7 +119,7 @@ public class XLinkResolver {
                             Node tmpNode = newRemoteDoc.importNode(nodeCurr, true);
                             newRemoteDoc.appendChild(tmpNode);
 
-                            Element remoteRootElement = (Element)nList1.item(k);
+							Element remoteRootElement = newRemoteDoc.getDocumentElement();
                             if (!nNode.getNodeName().equals(remoteRootElement.getNodeName())) {
                                 throw new XLinkException("Referenced Document must contain same element type as referencing element!\n\n"
                                         + "Referencing element: " + nNode.getNodeName() + "\nReferenced element: " + newRemoteDoc.getDocumentElement().getNodeName());
@@ -134,6 +134,7 @@ public class XLinkResolver {
                             //printElement(remoteDoc.getDocumentElement());
                             newRemoteDoc = handleNodeList(newRemoteDoc);
                             // replace XLink included document
+							remoteRootElement = newRemoteDoc.getDocumentElement(); // The remote remoteRootElement has to be update to ensure that it takes the current values.
                             Node parent = nNode.getParentNode();
                             Node importedNode = doc.importNode(remoteRootElement, true);
                             // re-add and reset original attributes
