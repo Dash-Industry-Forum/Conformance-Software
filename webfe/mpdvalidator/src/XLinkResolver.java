@@ -120,6 +120,12 @@ public class XLinkResolver {
                             newRemoteDoc.appendChild(tmpNode);
 
 							Element remoteRootElement = newRemoteDoc.getDocumentElement();
+
+							if (remoteRootElement.getAttribute("xlink:actuate").equals("onLoad")) {
+								throw new XLinkException("URI references to remote element entities that contain another" +
+                                        " @xlink:href attribute with xlink:actuate set to onLoad are treated as invalid circular references.");
+							}
+
                             if (!nNode.getNodeName().equals(remoteRootElement.getNodeName())) {
                                 throw new XLinkException("Referenced Document must contain same element type as referencing element!\n\n"
                                         + "Referencing element: " + nNode.getNodeName() + "\nReferenced element: " + newRemoteDoc.getDocumentElement().getNodeName());
