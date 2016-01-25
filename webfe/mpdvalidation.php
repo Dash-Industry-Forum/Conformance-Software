@@ -45,7 +45,7 @@ function mpdvalidator($result_array,$locate,$foldername){
         $totarr[]=$mpd_rep_loc;// if failed send client the location of mpdvalidator report
         $exit = true;// if failed terminate conformance check 
     }
-    if(strpos($mpdvalidator,"MPD validation successful")!==false)//check if Xlink resolving is successful 
+    if(strpos($mpdvalidator,"MPD validation successful")!==false)//check if MPD resolving is successful 
     {    
         $totarr[]='true';//incase of mpd validation success send true to client
     

@@ -26,8 +26,6 @@ function process_mpd() {
         $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
     }
     if (isset($_POST['urlcode'])) { // in case of client send first connection attempt
-
-
         $sessname = 'sess' . rand(); // get a random session name
         session_name($sessname); // set session name
 
@@ -145,7 +143,6 @@ function process_mpd() {
 
         $periodCount = 0;
         foreach ($dom->documentElement->childNodes as $node) { // search for all nodes within mpd
-
             if ($node->nodeName === 'Period') {
                 $periodNode = $node;
                 $periodCount++;
@@ -184,7 +181,6 @@ function process_mpd() {
         $segm_url = array(); // contains segments url within one 
         $adapt_url = array(); // contains all segments urls within adapatations set
         if ($setsegflag) { // Segment template is used
-
             for ($k = 0; $k < sizeof($Period_arr); $k++) { // loop on period array
                 $Adapt_initialization_setflag = 0;
                 if (!empty($Period_arr[$k]['SegmentTemplate'])) {
@@ -217,8 +213,6 @@ function process_mpd() {
                         $timeseg = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][0][0]; // get time segment 
 
                         for ($lok = 0; $lok < sizeof($Period_arr[$k]['SegmentTemplate']['SegmentTimeline']); $lok++) { // loop on segment time line 
-
-
                             $d = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][$lok][1]; // get d 
                             $r = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][$lok][2]; // get r 
                             $te = $Period_arr[$k]['SegmentTemplate']['SegmentTimeline'][$lok][0]; // get t
@@ -252,7 +246,6 @@ function process_mpd() {
                     }
                 }
                 for ($j = 0; $j < sizeof($Period_arr[$k]['Representation']['bandwidth']); $j++) { // loop on adaptationset level
-
                     $direct = $dir;
                     if ($Baseurl === true) { // incase of using Base url
                         if (!isset($perioddepth[0])) // period doesn't contain any baseurl infromation
@@ -342,14 +335,12 @@ function process_mpd() {
 
 
                     if ($type === "dynamic") {
-                        if ($dom->getElementsByTagName('SegmentTimeline')->length !== 0) {
-                            $totarr[] = 'dynamic';
-                            $stri = json_encode($totarr); //Send results to client
-                            echo $stri;
-
-                            session_destroy(); //Destroy session
-                            exit;
-                        }
+//                        if ($dom->getElementsByTagName('SegmentTimeline')->length !== 0) {
+                        //TODO currently $duration and timing is not properly set
+                        //get $duration from "d" attribute
+                        //set proper timing from "t" attribute
+                        //check "r" etc.
+//                        }
                         $segmentinfo = dynamicnumber($bufferdepth, $duration, $AST, $start, $Period_arr);
                         $segmentno = $segmentinfo[1]; //Latest available segment number
                         $i = $segmentinfo[0]; // first segment in buffer
@@ -418,6 +409,18 @@ function process_mpd() {
         $_SESSION['type'] = $type;
         $_SESSION['minBufferTime'] = $minBufferTime;
 
+        if ($setsegflag) { // Segment template is used
+            if ($type === "dynamic") {
+                if ($dom->getElementsByTagName('SegmentTimeline')->length !== 0) {
+                    $totarr[] = "dynamic";
+                    $stri = json_encode($totarr); //Send results to client
+                    echo $stri;
+                    session_destroy(); //Destroy session
+                    exit;
+                }
+            }
+        }
+        
         echo $stri; // send no. of periods,adaptationsets, representation, mpd file to client
     }
     ////////////////////////////////////////////////////////////////////////////////////

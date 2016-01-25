@@ -456,7 +456,6 @@ function submit()
     function(totarrstring)
     {
 		console.log("process_returned:");
-		
         
         if (totarrstring.indexOf("Error:") > -1)
         {
@@ -480,17 +479,19 @@ function submit()
             console.log("i'M DYNAMIC");
 
             dirid = totarr[totarr.length-2];
-            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
+//            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 
             document.getElementById('dynamic').style.visibility='visible';
 
-            document.getElementById("dynamic").href='http://ec2-54-194-95-240.eu-west-1.compute.amazonaws.com/dynamic/?mpdurl=' +url ;
-            document.getElementById('list').style.visibility='visible';
+            document.getElementById("dynamic").href='http://vm1.dashif.org/DynamicServiceValidator/?mpdurl=' +url ;
+//            document.getElementById('list').style.visibility='visible';
 
-            finishTest();
-            return false;
+//            finishTest();
+//            return false;
+        }else
+        {
+            dirid = totarr[totarr.length-1];
         }
-        dirid = totarr[totarr.length-1];
 	document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 	document.getElementById('list').style.visibility='visible';
         progressTimer = setInterval(function(){progressupdate()},1000);
@@ -572,6 +573,11 @@ function submit()
                 return false;
 		}
 		
+            if(totarr[totarr.length-1]==='dynamic'){  //TODO temporarily exit before processing adaptation sets
+                finishTest();
+                return false;
+            }
+                
         for(var i=0;i<totarr[0];i++)
         { 
 

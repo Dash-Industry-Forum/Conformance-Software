@@ -19,12 +19,6 @@ if (isset($_POST['val'])) {
 //$string = file_get_contents ('./temp/'.$filename.'.txt',true);
     $stringarr = file('./temp/' . $filename . '.txt', FILE_IGNORE_NEW_LINES);
     $string = safe_json_encode($stringarr);
-
-//    if ($string == false)
-//    {        
-//        $input = iconv('UTF-8', 'UTF-8//IGNORE', utf8_encode($stringarr));
-//        $string = json_encode($input);
-//    }
     echo $string;
 }
 
