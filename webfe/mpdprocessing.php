@@ -83,7 +83,7 @@ function process_mpd() {
 
         copy(dirname(__FILE__) . "/" . "featuretable.html", $locate . '/' . "featuretable.html"); // copy features list html file to session folder
         //Create log file so that it is available if accessed
-        $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded></root>'); // get progress bar update
+        $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded><completed>false</completed></root>'); // get progress bar update
         $progressXML->asXml($locate . '/progress.xml'); //progress xml location
         //libxml_use_internal_logors(true);
         $MPD_O = simplexml_load_file($GLOBALS["url"]); // load mpd from url 

@@ -63,7 +63,7 @@ for($n=1;$n<=$length;$n++)
 echo $FoldName;
 // Check progress.xml to find if Conformance Test is completed, then move the results to TestResults folder.
 while(1)
-{
+{    if(file_exists($path.'/'.$Newfolder.'/progress.xml')){
     //$feed = file_get_contents($path.'/'.$Newfolder.'/progress.xml');
     $xml=simplexml_load_file($path.'/'.$Newfolder.'/progress.xml');
 
@@ -73,10 +73,12 @@ while(1)
 
         break;
     }
+  }
     sleep(3);
 }
 // Following is to remove temp/id-random-number folder name in myphp-error.log file
-
+   if ( file_exists( $newPath.'/'.$FoldName.'/myphp-error.log' ) )
+{
    $fileContents=file_get_contents($newPath.'/'.$FoldName.'/myphp-error.log');
    $fileContents=str_replace('["temp\/'.$Newfolder, $FoldName, $fileContents); 
    $fileContents=str_replace('"temp\/'.$Newfolder, $FoldName, $fileContents); 
@@ -93,7 +95,7 @@ while(1)
       
     } 
     file_put_contents($newPath.'/'.$FoldName.'/myphp-error.log', $fileContents1);
-
+}
 // Following is to remove temp/id-random-number folder name in respective files
 	replaceFolderName("stdout.txt",$newPath,$FoldName,$Newfolder);
 	replaceFolderName("config_file.txt",$newPath,$FoldName,$Newfolder);
@@ -113,11 +115,13 @@ if (is_dir($newPath.'/'.'References'.'/'.$FoldName))
 
 function replaceFolderName($fileName,$newPath,$FoldName,$Newfolder)
 {
-  
+  if ( file_exists( $newPath.'/'.$FoldName.'/'.$fileName) )
+ {
    $fileContents=file_get_contents($newPath.'/'.$FoldName.'/'.$fileName);
    $fileContents=str_replace('temp/'.$Newfolder, $FoldName, $fileContents);  
        
     file_put_contents($newPath.'/'.$FoldName.'/'.$fileName, $fileContents);
+ }
 }
 //echo "<p>pasted</p>";
 
