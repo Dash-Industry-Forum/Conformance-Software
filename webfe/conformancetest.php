@@ -372,7 +372,7 @@ function  progressEventHandler(){
 		
                 if( dynamicsegtimeline)
 		{
-			progressText = progressText + "<br><font color='red'> segment timeline for type dynamic is not implemented! </font>"
+			progressText = progressText + "<br><font color='red'> Segment timeline for type dynamic is not supported, only MPD will be tested. </font>"
 		}
                 
         document.getElementById("par").innerHTML=progressText;
@@ -876,7 +876,7 @@ function setStatusTextlabel(textToSet)
                 
                 if( dynamicsegtimeline)
 		{
-			status = status + "<br><font color='red'> segment timeline for type dynamic is not implemented! </font>"
+			status = status + "<br><font color='red'> Segment timeline for type dynamic is not supported, only MPD will be tested. </font>"
 		}
 	
 	document.getElementById("par").innerHTML=status;
