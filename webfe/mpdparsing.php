@@ -498,37 +498,33 @@ function timeparsing($mediaPresentationDuration)
         
 		return $presentationduration;
 }
-function dynamicnumber($bufferduration, $segmentduration, $AST, $start,$periodarray)
-{
-$avgsum=array();
-$sumbandwidth=array();
-for($k=0;$k<sizeof($periodarray);$k++)
-{
-$sumbandwidth[] =array_sum($periodarray[$k]['Representation']['bandwidth']);
-$avgsum[]=(array_sum($periodarray[$k]['Representation']['bandwidth'])/sizeof($periodarray[$k]['Representation']['bandwidth']));
-}
-$sumbandwidth = array_sum($sumbandwidth);
-$avgsum=array_sum($avgsum)/sizeof($avgsum);
-$percent = $avgsum/$sumbandwidth;
+function dynamicnumber($bufferduration, $segmentduration, $AST, $start, $periodarray) {
+    $avgsum = array();
+    $sumbandwidth = array();
+    for ($k = 0; $k < sizeof($periodarray); $k++) {
+        $sumbandwidth[] = array_sum($periodarray[$k]['Representation']['bandwidth']);
+        $avgsum[] = (array_sum($periodarray[$k]['Representation']['bandwidth']) / sizeof($periodarray[$k]['Representation']['bandwidth']));
+    }
+    $sumbandwidth = array_sum($sumbandwidth);
+    $avgsum = array_sum($avgsum) / sizeof($avgsum);
+    $percent = $avgsum / $sumbandwidth;
 
-$buffercapacity = $bufferduration/$segmentduration; //actual buffer capacity
+    $buffercapacity = $bufferduration / $segmentduration; //actual buffer capacity
 
-date_default_timezone_set("UTC"); //Set default timezone to UTC
-$now =time(); // Get actual time
-$AST = strtotime ($AST);
-$LST = $now -($AST+$start-$segmentduration);
+    date_default_timezone_set("UTC"); //Set default timezone to UTC
+    $now = time(); // Get actual time
+    $AST = strtotime($AST);
+    $LST = $now - ($AST + $start - $segmentduration);
 
-$LSN=intval($LST/$segmentduration) ;
-$earlistsegment = $LSN - $buffercapacity*$percent;
+    $LSN = intval($LST / $segmentduration);
+    $earlistsegment = $LSN - $buffercapacity * $percent;
 
 
-$result = array();
-$result[0] = intval($earlistsegment);
-$result[1] = $LSN;
+    $result = array();
+    $result[0] = intval($earlistsegment);
+    $result[1] = $LSN;
 
-return $result;
-
-
+    return $result;
 }
 
 function isAbsoluteURL($URL)
