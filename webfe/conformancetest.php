@@ -283,6 +283,7 @@ var adaptid=[];
  var file,fd,xhr;
  var uploaded = false;
 var numPeriods = 0;
+var dynamicsegtimeline = false;
 var SessionID = "id"+Math.floor(100000 + Math.random() * 900000);
 
 /////////////////////////////////////////////////////////////
@@ -369,6 +370,11 @@ function  progressEventHandler(){
 			progressText = progressText + "<br><font color='red'> MPD with multiple Periods (" + numPeriods + "). Only segments of the first period will be checked.</font>"
 		}
 		
+                if( dynamicsegtimeline)
+		{
+			progressText = progressText + "<br><font color='red'> segment timeline for type dynamic is not implemented! </font>"
+		}
+                
         document.getElementById("par").innerHTML=progressText;
 
 
@@ -477,7 +483,7 @@ function submit()
 	   
         if(totarr[totarr.length-1]==='dynamic'){
             console.log("i'M DYNAMIC");
-
+            dynamicsegtimeline = true;
             dirid = totarr[totarr.length-2];
 //            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 
@@ -596,8 +602,11 @@ function submit()
             x=x+j;
             x++;
         }
-        
-		numPeriods = totarr[totarr.length-2];
+        if(totarr[totarr.length-1]==='dynamic'){
+            numPeriods = totarr[totarr.length-3];
+        }else{
+            numPeriods = totarr[totarr.length-2];
+        }
 		if(numPeriods > 1)
 		{
 			console.log("MDP With Multiple Period:" + numPeriods);
@@ -834,6 +843,7 @@ function initVariables()
 	hinindex = 1;
     numPeriods = 0;
 	uploaded = false;
+        dynamicsegtimeline = false;
 }
 
 function setUpTreeView()
@@ -862,6 +872,11 @@ function setStatusTextlabel(textToSet)
 		if( numPeriods > 1 )
 		{
 			status = status + "<br><font color='red'> MPD with multiple Periods (" + numPeriods + "). Only segments of the first period were checked.</font>"
+		}
+                
+                if( dynamicsegtimeline)
+		{
+			progressText = progressText + "<br><font color='red'> segment timeline for type dynamic is not implemented! </font>"
 		}
 	
 	document.getElementById("par").innerHTML=status;
