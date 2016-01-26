@@ -876,7 +876,7 @@ function setStatusTextlabel(textToSet)
                 
                 if( dynamicsegtimeline)
 		{
-			progressText = progressText + "<br><font color='red'> segment timeline for type dynamic is not implemented! </font>"
+			status = status + "<br><font color='red'> segment timeline for type dynamic is not implemented! </font>"
 		}
 	
 	document.getElementById("par").innerHTML=status;
