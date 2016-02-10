@@ -162,7 +162,7 @@ function crossRepresentationProcess()
         else
             $bitstreamSwitching = "false";
         
-        if (!($opfile = fopen("./temp/".$foldername."/Adapt".$i."_infofile.txt", 'w')))// Create a file to contain cross presentation results
+        if (!($opfile = fopen($locate."/Adapt".$i."_infofile.txt", 'w')))// Create a file to contain cross presentation results
         {
             echo "Error opening cross-representation checks file"."./temp/".$foldername."/Adapt".$i."_infofile.txt";
 

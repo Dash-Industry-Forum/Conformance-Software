@@ -20,14 +20,14 @@ it check the boxes within the segment and ignore Mdat box and download only othe
 
 function downloaddata($directory,$array_file)
 {
-    global $locate; 
+    global $locate, $progressXML; 
     $sizefile = fopen($locate.'/mdatoffset.txt','a+b'); //create text file containing the original size of Mdat box that is ignored (Important for execution of conformance software
     $initoffset = 0; // Set pointer to 0
     $totaldownloaded = 0;// bytes downloaded
     $totalDataProcessed = 0;//bytes processed within segments
     $totalDataDownloaded = 0; 
     // Load XML with SimpleXml from string
-    $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded><completed>false</completed></root>'); //xml file containing progress to be fetched by client
+    //$progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded><completed>false</completed></root>'); //xml file containing progress to be fetched by client
     
 	
 	$ch = curl_init();
@@ -107,9 +107,9 @@ function downloaddata($directory,$array_file)
             }
             
             // Modify node
-            $progressXML->percent = strval($percent);
-            $progressXML->dataProcessed = strval($totalDataProcessed + $sizepos);
-            $progressXML->dataDownloaded = strval($totalDataDownloaded);
+            $progressXML->Progress->percent = strval($percent);
+            $progressXML->Progress->dataProcessed = strval($totalDataProcessed + $sizepos);
+            $progressXML->Progress->dataDownloaded = strval($totalDataDownloaded);
             
             // Saving the whole modified XML to a new filename
             $progressXML->asXml(trim($locate.'/progress.xml'));			
