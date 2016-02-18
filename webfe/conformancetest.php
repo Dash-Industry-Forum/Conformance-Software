@@ -592,7 +592,6 @@ function submit()
 		console.log(kidsloc);
 		console.log(urlarray[0]);
                 lastloc++;
-                
                 finishTest();
                 return false;
 		}
@@ -603,11 +602,20 @@ function submit()
                 return false;
             }
         //Get the number of AdaptationSets, Representations and Periods.   
-        var  AdaptRepPeriod_countXML=xmlDoc_progress.getElementsByTagName("AdaptRepPeriod_count");
-        if (AdaptRepPeriod_countXML.length==0)
+        var  Treexml=xmlDoc_progress.getElementsByTagName("Representation");
+        if (Treexml.length==0)
             return;
-        else
-            AdaptRepPeriod_count=AdaptRepPeriod_countXML[0].childNodes[0].nodeValue; 
+        else{
+            var Periodxml=xmlDoc_progress.getElementsByTagName("Period"); 
+            Adapt_count= Periodxml[0].childNodes.length;
+            var AdaptRepPeriod_count=Adapt_count;
+            var Adaptxml=xmlDoc_progress.getElementsByTagName("Adaptation");
+            for (var v=0; v<Adapt_count; v++){
+                AdaptRepPeriod_count=AdaptRepPeriod_count+" "+Adaptxml[v].childNodes.length;
+            }
+            AdaptRepPeriod_count=AdaptRepPeriod_count+" "+Periodxml.length;
+        }
+        
          
         totarr=AdaptRepPeriod_count.split(" ");
         for(var i=0;i<totarr[0];i++)
@@ -695,7 +703,7 @@ function progress()  //Progress of Segments' Conformance
                         automate(adaptid[i-1],lastloc,"Cross-representation validation error");
 
                         tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
-                        lastloc++;
+                        lastloc++; 
                     }  
 
 
@@ -708,7 +716,7 @@ function progress()  //Progress of Segments' Conformance
 
                 automate(1,lastloc,"Broken URL list");
                 tree.setItemImage2(lastloc,'404.jpg','404.jpg','404.jpg');
-                lastloc++;
+                lastloc++; 
             }
 			 
             console.log("go");
@@ -721,19 +729,19 @@ function progress()  //Progress of Segments' Conformance
             console.log("Got output:");
             console.log(lastloc);
             
-            var ResultsXML=xmlDoc_progress.getElementsByTagName("Results");                 
-            if(ResultsXML[0].childNodes.length==0){
-                return;
+            var AdaptXML=xmlDoc_progress.getElementsByTagName("Adaptation"); 
+            if(AdaptXML[adaptationid-1]== null)
+                    return;
+            else if(AdaptXML[adaptationid-1].childNodes[representationid-1] == null) {
+                    return;
             }
-            else{               
-                var AdaptXML=ResultsXML[0].childNodes;
-                    if(AdaptXML[adaptationid-1].childNodes.length < representationid){
-                        return;
-                    }
+            else{   
                     var RepXML=AdaptXML[adaptationid-1].childNodes[representationid-1].textContent;
+                    if(RepXML == "")
+                        return;
+                    console.log("Adapt:"+(adaptationid)+" Rep:"+(representationid));
+                    console.log(RepXML);
                     representationid++;
-                    console.log("Adapt:"+(adaptationid)+" Rep:"+(representationid));// console messages can be used for other applications.
-                    console.log(RepXML);                    //console messages can be used for other applications.
             }
                 
             
@@ -749,9 +757,9 @@ function progress()  //Progress of Segments' Conformance
                 tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
 
                 kidsloc.push(lastloc);
-                urlarray.push("temp/"+dirid+"/"+ (representationid-1) + "/log.html");
+                urlarray.push("temp/"+dirid+"/"+ "Adapt"+(adaptationid-1)+"rep"+(representationid-2) + "log.html");
 
-                lastloc++;
+                lastloc++;  
             }
  
             counting++;
@@ -822,7 +830,7 @@ function finishTest()
         clearInterval( progressSegmentsTimer);
         setStatusTextlabel("Conformance test completed");
         
-     xmlDoc=loadXMLDoc("temp/"+dirid+"/progress.xml");
+     /*xmlDoc=loadXMLDoc("temp/"+dirid+"/progress.xml");
      function xml_to_string(xml_node)
     {
         if (xml_node.xml)
@@ -855,7 +863,7 @@ function finishTest()
         //alert(xml_to_string(xmlDoc));
         //alert("Unknown error. Data could not be written to the file.");
     });
-
+  */
 }
 
 
