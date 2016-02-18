@@ -82,6 +82,7 @@ while(1)
    $fileContents=file_get_contents($newPath.'/'.$FoldName.'/myphp-error.log');
    $fileContents=str_replace('["temp\/'.$Newfolder, $FoldName, $fileContents); 
    $fileContents=str_replace('"temp\/'.$Newfolder, $FoldName, $fileContents); 
+   $fileContents=str_replace('temp/'.$Newfolder, 'TestResults/'.$FoldName, $fileContents);
    $fileContents=str_replace('"]', '"', $fileContents);
    file_put_contents($newPath.'/'.$FoldName.'/myphp-error.log', $fileContents);
     
