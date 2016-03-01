@@ -294,19 +294,19 @@ var pollingTimer;
 document.querySelector('#afile').addEventListener('change', function(e) {
 
   file = this.files[0];
-   fd = new FormData();
+  fd = new FormData();
   fd.append("afile", file);
   fd.append("sessionid", JSON.stringify(SessionID));
-  xhr = new XMLHttpRequest();
-  xhr.open('POST', 'process.php', true);
+  //xhr = new XMLHttpRequest();
+ // xhr.open('POST', 'process.php', true);
   
   
-  xhr.onload = function() {
+ // xhr.onload = function() {
   uploaded=true;
   submit();
 
-  };
- xhr.send(fd);
+  //};
+ //xhr.send(fd);
 }, false);
 ///////////////////////////////////////////////////////////////
 
@@ -428,7 +428,7 @@ function progressupdate()
 function submit()
 {
     url = document.getElementById("urlinput").value; 
-     
+ 
     if (uploaded===true)
 	url="upload";
     
@@ -454,12 +454,24 @@ function submit()
     console.log(stringurl);
     //Generate a random folder name for results in "temp" folder
     dirid="id"+Math.floor((Math.random() * 10000000000) + 1);
+   
+    if(uploaded===true){ // In the case of file upload.
+        fd.append("foldername", dirid);
+        fd.append("urlcode", JSON.stringify(stringurl));
+        $.ajax ({
+            type: "POST",
+            url: "process.php",
+            data: fd,
+            contentType: false,
+            processData: false
+        });
+    }else{  // Pass to server only, no JS response model.
+        $.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
+    }
     
-    $.post ("process.php",
-    {urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});// Pass to server only, no JS response model.
      //Start polling of progress.xml for the progress percentage results.
     progressTimer = setInterval(function(){progressupdate()},100);
-    pollingTimer = setInterval(function(){pollingProgress()},400);//Start polling of progress.xml for the MPD conformance results.
+    pollingTimer = setInterval(function(){pollingProgress()},800);//Start polling of progress.xml for the MPD conformance results.
 } 
     function pollingProgress()
     {
@@ -481,7 +493,7 @@ function submit()
         {
 	
             window.alert("Error loading the MPD, please check the URL.");
-			
+	    clearInterval( pollingTimer);	
             finishTest();            
             return false;
         }
@@ -592,20 +604,27 @@ function submit()
 		console.log(kidsloc);
 		console.log(urlarray[0]);
                 lastloc++;
+                clearInterval( pollingTimer);
                 finishTest();
                 return false;
 		}
 		
             //For dynamic type.
             if(totarrstring!=null && totarrstring=="true"){//TODO temporarily exit before processing adaptation sets
+                clearInterval( pollingTimer);
                 finishTest();
                 return false;
             }
         //Get the number of AdaptationSets, Representations and Periods.   
         var  Treexml=xmlDoc_progress.getElementsByTagName("Representation");
-        if (Treexml.length==0)
+        if (Treexml.length==0){
+            var complete=xmlDoc_progress.getElementsByTagName("completed");
+            if(complete[0].textContent == "true"){
+                clearInterval( pollingTimer);
+                finishTest();
+              }              
             return;
-        else{
+        }else{
             var Periodxml=xmlDoc_progress.getElementsByTagName("Period"); 
             Adapt_count= Periodxml[0].childNodes.length;
             var AdaptRepPeriod_count=Adapt_count;
@@ -804,7 +823,7 @@ window.open(urlto, "_blank");
 
 }
 var parsed;
-var uploaded = "false";
+//var uploaded = "false";
 
 function loadXMLDoc(dname)
     {
@@ -881,7 +900,7 @@ function initVariables()
 	adaptationid = 1;
 	hinindex = 1;
         numPeriods = 0;
-	uploaded = false;
+	//uploaded = false;
         dynamicsegtimeline = false;
 }
 
