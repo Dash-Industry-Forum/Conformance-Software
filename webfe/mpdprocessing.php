@@ -16,7 +16,7 @@
 
 function process_mpd() {
     global $Adapt_arr, $Period_arr, $repno, $repnolist, $period_url, $locate, $string_info
-    , $count1, $count2, $perioddepth, $adaptsetdepth, $period_baseurl, $foldername, $type, $minBufferTime, $profiles, $MPD, $session_id; //Global variables to be used within the main function
+    , $count1, $count2, $perioddepth, $adaptsetdepth, $period_baseurl, $foldername, $type, $minBufferTime, $profiles, $MPD, $session_id, $progressXML; //Global variables to be used within the main function
     //  $path_parts = pathinfo($mpdurl); 
     $Baseurl = false; //define if Baseurl is used or no
     $setsegflag = false;
@@ -25,7 +25,7 @@ function process_mpd() {
 
         $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
     }
-    if (isset($_POST['urlcode'])) { // in case of client send first connection attempt
+   // if (isset($_POST['urlcode'])) { // in case of client send first connection attempt
         $sessname = 'sess' . rand(); // get a random session name
         session_name($sessname); // set session name
 
@@ -44,7 +44,11 @@ function process_mpd() {
         // Work out which validator binary to use
         $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
         //var_dump( $path_parts  );
-        $foldername = 'id' . rand(); // get random name for session folder
+        if (isset($_POST['foldername']))
+            $foldername=$_POST['foldername'];
+        else
+            $foldername = 'id' . rand(); // get random name for session folder
+         //get a name for session folder from client.
         $_SESSION['foldername'] = $foldername;
         // rrmdir($locate);
         $locate = dirname(__FILE__) . '/' . 'temp' . '/' . $foldername; //session  folder location
@@ -83,18 +87,26 @@ function process_mpd() {
 
         copy(dirname(__FILE__) . "/" . "featuretable.html", $locate . '/' . "featuretable.html"); // copy features list html file to session folder
         //Create log file so that it is available if accessed
-        $progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded><completed>false</completed></root>'); // get progress bar update
+        $progressXML = simplexml_load_string('<root><Progress><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded><CurrentAdapt>1</CurrentAdapt><CurrentRep>1</CurrentRep></Progress><completed>false</completed></root>'); // get progress bar update
         $progressXML->asXml($locate . '/progress.xml'); //progress xml location
         //libxml_use_internal_logors(true);
         $MPD_O = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
 
         if (!$MPD_O) {
+            $progressXML->MPDError = "1"; //MPD error is updated in the progress.xml file.
+            $progressXML->asXml(trim($locate.'/progress.xml'));	
+            echo $progressXML;
             die("Error: Failed loading XML file");
+        }
+        else
+        {   $progressXML->MPDError = "0";
+            $progressXML->asXml(trim($locate.'/progress.xml'));	
         }
 
         $dom_sxe = dom_import_simplexml($MPD_O);
 
         if (!$dom_sxe) {
+            echo $progressXML;
             exit;
         }
 
@@ -102,7 +114,16 @@ function process_mpd() {
         $exit = $validate_result[0];
         $totarr = $validate_result[1];
         $schematronIssuesReport = $validate_result[2];
-
+        //MPD Conformance results are written into the progress.xml file.
+        $temp_mpdres=""; 
+        for( $totindex=0; $totindex<3; $totindex++){
+        if($totarr[$totindex]=="true")
+            $temp_mpdres=$temp_mpdres."true ";
+        else
+            $temp_mpdres=$temp_mpdres."false ";                              
+        }			
+        $progressXML->MPDConformance = $temp_mpdres;
+	$progressXML->asXml(trim($locate.'/progress.xml'));
 
         ///////////////////////////////////////Processing mpd attributes in order to get value//////////////////////////////////////////////////////////
         $dom = new DOMDocument('1.0');
@@ -135,6 +156,9 @@ function process_mpd() {
 
             echo $stri;
             session_destroy(); //Destroy session
+            $progressXML->completed = "true"; 
+	    $progressXML->asXml(trim($locate.'/progress.xml'));
+            echo $progressXML;
             exit; //Exit
         }
 
@@ -396,7 +420,7 @@ function process_mpd() {
         }
         $peri = null;
 
-        $totarr[] = $periodCount;
+        $totarr[] = $periodCount;     
         $totarr[] = $foldername; // add session name 
         $stri = json_encode($totarr); // encode array to send to client
         //print_r2($period_url);
@@ -410,28 +434,64 @@ function process_mpd() {
         $_SESSION['minBufferTime'] = $minBufferTime;
 
         if ($setsegflag) { // Segment template is used
-            if ($type === "dynamic") {
+            if ($type === "dynamic") { 
                 if ($dom->getElementsByTagName('SegmentTimeline')->length !== 0) {
                     $totarr[] = "dynamic";
+                    $progressXML->dynamic = "true"; // Update progress.xml file with info on dynamic MPD.
+                    $progressXML->asXml(trim($locate.'/progress.xml'));
                     $stri = json_encode($totarr); //Send results to client
                     echo $stri;
                     session_destroy(); //Destroy session
+                    $progressXML->completed = "true"; 
+	            $progressXML->asXml(trim($locate.'/progress.xml'));
+                    echo $progressXML;
                     exit;
                 }
             }
+            else{
+                $progressXML->dynamic = "false";
+                $progressXML->asXml(trim($locate.'/progress.xml'));
+            }
         }
         
+        $ResultXML = $progressXML->addChild('Results');// Create Results tree in progress.xml and updates tree later.
+        for($i1=0; $i1<$periodCount; $i1++)
+        {
+            $PeriodXML = $ResultXML->addChild('Period');
+            for($j1=0; $j1<sizeof($period_url); $j1++)
+            {
+               $AdaptationXML = $PeriodXML->addChild('Adaptation');
+               for($k1=0; $k1<sizeof($period_url[$j1]); $k1++)
+               {
+                     $RepXML=$AdaptationXML->addChild('Representation');
+                     $RepXML->addAttribute('id',$k1+1);
+               }
+                  
+            }
+        }
+        $progressXML->asXml(trim($locate.'/progress.xml'));
+        
         echo $stri; // send no. of periods,adaptationsets, representation, mpd file to client
-    }
+  //  }
     ////////////////////////////////////////////////////////////////////////////////////
-    if (isset($_POST['download'])) { // get request from client to download segments
+    //if (isset($_POST['download'])) { // get request from client to download segments
+            
+        //Segments are downloaded in a sequence and conformance results are written into progress.xml.
+    while($count1<=sizeof($period_url)){
         $root = dirname(__FILE__);
         $destiny = array();
-
+        
+        
         if ($count2 >= sizeof($period_url[$count1])) {//check if all representations within a segment is downloaded
             $count2 = 0;  // reset representation counter when new adaptation set is proccesed 
             $count1 = $count1 + 1; // increase adapatationset counter
-        }
+            if($count1<sizeof($period_url)){
+            //$AdaptationXML = $ResultXML->addChild('Adaptation');
+            //$AdaptationXML->addAttribute('id',$count1+1);
+            $progressXML->Progress->CurrentAdapt = $count1+1;// Update currently running AdaptationSet, used in display status message.
+            $progressXML->asXml(trim($locate.'/progress.xml'));
+            }
+        }        
 
         if ($count1 >= sizeof($period_url)) { //check if all adapatationsets is processed 
             error_log("AllAdaptDownloaded");
@@ -445,31 +505,45 @@ function process_mpd() {
             for ($i = 0; $i < sizeof($Period_arr); $i++) {  // check all info files if they contain Error 
                 if (file_exists($locate . '/Adapt' . $i . '_infofile.txt')) {
                     $searchadapt = file_get_contents($locate . '/Adapt' . $i . '_infofile.txt');
-                    if (strpos($searchadapt, "Error") == false)
+                    if (strpos($searchadapt, "Error") == false){
+                        $ResultXML->Period[0]->Adaptation[$i]->addChild('CrossRepresentation','noerror');
                         $file_error[] = "noerror"; // no error found in text file
-                    else
-                        $file_error[] = "temp" . '/' . $foldername . '/' . 'Adapt' . $i . '_infofile.html'; // add error file location to array
-                } else
-                    $file_error[] = "noerror";
+                    }else{
+                       $ResultXML->Period[0]->Adaptation[$i]->addChild('CrossRepresentation','error');
+                       $file_error[] = "temp" . '/' . $foldername . '/' . 'Adapt' . $i . '_infofile.html'; // add error file location to array
+                    }
+                } else{
+                    $ResultXML->Period[0]->Adaptation[$i]->addChild('CrossRepresentation','noerror');
+                    $file_error[] = "noerror";                    
+                  }
+                  $progressXML->asXml(trim($locate.'/progress.xml'));
             }
             session_destroy();
             if ($missingexist) {
+                $ResultXML->addChild('BrokenURL',"error");
                 $file_error[] = "temp" . '/' . $foldername . '/missinglink.html';
-            } else
+            } else{
+                $ResultXML->addChild('BrokenURL',"noerror");
                 $file_error[] = "noerror";
+            }
             $send_string = json_encode($file_error); //encode array to string and send it 
 
             error_log("ReturnFinish:" . $send_string);
 
             echo $send_string; // send string with location of all error logs to client
+            $progressXML->completed = "true"; 
+	    $progressXML->asXml(trim($locate.'/progress.xml'));
+            echo $progressXML;
             exit;
         }
         else {
             $repno = "Adapt" . $count1 . "rep" . $count2; // presentation unique name
             $pathdir = $locate . "/" . $repno . "/";
 
+            $progressXML->Progress->CurrentRep = $count2+1;// Update currently running Representation, used in display status message.
+            $progressXML->asXml(trim($locate.'/progress.xml'));
             error_log("Download_pathdir:" . $pathdir);
-
+            
             if (!file_exists($pathdir)) {
                 mkdir($pathdir, 0777, true); // create folder for each presentation
             }
@@ -602,10 +676,15 @@ function process_mpd() {
                 $count2 = $count2 + 1;
                 $search = file_get_contents($locate . '/' . $repno . "log.txt"); //Search for errors within log file
 
-                if (strpos($search, "error") == false) //if no error , notify client with no error
+                if (strpos($search, "error") == false){ //if no error , notify client with no error
+                    $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1] = "noerror";
                     $file_location[] = "noerror";
-                else
+                }
+                else{
+                    $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1] = "error";
                     $file_location[] = "error"; //else notify client with error
+                }
+                $progressXML->asXml(trim($locate.'/progress.xml'));     
 
                 $_SESSION['count2'] = $count2; //Save the counters to session variables in order to use it the next time the client request download of next presentation
                 $_SESSION['count1'] = $count1;
@@ -619,6 +698,10 @@ function process_mpd() {
                 $_SESSION['count1'] = $count1;
 
                 $file_location[] = 'notexist';
+              
+                $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1] = "notexist";
+                  
+                
                 $send_string = json_encode($file_location);
 
                 error_log("DownloadError_Return:" . $send_string);

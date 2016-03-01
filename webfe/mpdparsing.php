@@ -380,7 +380,7 @@ This function process all attributes for all segmentTemplates
 **/
 function processTemplate($segmentTemp)
 {
-
+        global $init_flag;
 	$timelineseg = $segmentTemp->getElementsByTagName('SegmentTimeline'); //Check if segmentTemplate contains node segmentTimeline
 	
 	if($timelineseg->length>0)// If segmentTimeline exist...process SegmentTimeline

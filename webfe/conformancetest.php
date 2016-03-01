@@ -285,24 +285,28 @@ var adaptid=[];
 var numPeriods = 0;
 var dynamicsegtimeline = false;
 var SessionID = "id"+Math.floor(100000 + Math.random() * 900000);
+var totarrstring=[];
+var xmlDoc_progress;
+var progressSegmentsTimer;
+var pollingTimer;
 
 /////////////////////////////////////////////////////////////
 document.querySelector('#afile').addEventListener('change', function(e) {
 
   file = this.files[0];
-   fd = new FormData();
+  fd = new FormData();
   fd.append("afile", file);
   fd.append("sessionid", JSON.stringify(SessionID));
-  xhr = new XMLHttpRequest();
-  xhr.open('POST', 'process.php', true);
+  //xhr = new XMLHttpRequest();
+ // xhr.open('POST', 'process.php', true);
   
   
-  xhr.onload = function() {
+ // xhr.onload = function() {
   uploaded=true;
   submit();
 
-  };
- xhr.send(fd);
+  //};
+ //xhr.send(fd);
 }, false);
 ///////////////////////////////////////////////////////////////
 
@@ -362,8 +366,10 @@ function  progressEventHandler(){
 
         dataProcessed = Math.floor( dataProcessed / (1024*1024) );
         dataDownloaded = Math.floor( dataDownloaded / (1024) );
-        var lastRep = representationid-1;
-        var progressText = "Processing Representation "+lastRep+" in Adaptationset "+adaptationid+", "+progressPercent+"% done ( "+dataDownloaded+" KB downloaded, "+dataProcessed+" MB processed )";
+        //Get currently running Adaptation and Representation numbers.
+        var lastRep = progressXML.getElementsByTagName("CurrentRep")[0].childNodes[0].nodeValue;
+        var lastAdapt =progressXML.getElementsByTagName("CurrentAdapt")[0].childNodes[0].nodeValue;
+        var progressText = "Processing Representation "+lastRep+" in Adaptationset "+lastAdapt+", "+progressPercent+"% done ( "+dataDownloaded+" KB downloaded, "+dataProcessed+" MB processed )";
 		
 		if( numPeriods > 1 )
 		{
@@ -390,6 +396,7 @@ function  progressEventHandler(){
       ;//alert("" + );        // display status message
     }
   }
+
 }
 
 function progressupdate()
@@ -420,20 +427,8 @@ function progressupdate()
 
 function submit()
 {
-
-    //var url = document.getElementById('urlinput').value;
-   
-    /*var url = window.location.search;
-    var parts = window.location.search.substr(1).split("&");
-    var $_GET = {};
-  var temp = parts[0].split("=");
-    $_GET[decodeURIComponent(temp[0])] = decodeURIComponent(temp[1]);
-   
-    //document.getElementById("aaaa").value="aaaa";
-    //alert($_GET['urlinput']);
-    var url=$_GET["urlinput"];*/
     url = document.getElementById("urlinput").value; 
-     
+ 
     if (uploaded===true)
 	url="upload";
     
@@ -457,34 +452,62 @@ function submit()
     //document.getElementById('img').style.visibility='visible';
     //document.getElementById('par').style.visibility='visible';
     console.log(stringurl);
-    $.post ("process.php",
-    {urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID)},
-    function(totarrstring)
+    //Generate a random folder name for results in "temp" folder
+    dirid="id"+Math.floor((Math.random() * 10000000000) + 1);
+   
+    if(uploaded===true){ // In the case of file upload.
+        fd.append("foldername", dirid);
+        fd.append("urlcode", JSON.stringify(stringurl));
+        $.ajax ({
+            type: "POST",
+            url: "process.php",
+            data: fd,
+            contentType: false,
+            processData: false
+        });
+    }else{  // Pass to server only, no JS response model.
+        $.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
+    }
+    
+     //Start polling of progress.xml for the progress percentage results.
+    progressTimer = setInterval(function(){progressupdate()},100);
+    pollingTimer = setInterval(function(){pollingProgress()},800);//Start polling of progress.xml for the MPD conformance results.
+} 
+    function pollingProgress()
     {
-		console.log("process_returned:");
+        console.log("process_returned:");
+        xmlDoc_progress=loadXMLDoc("temp/"+dirid+"/progress.xml");
         
-        if (totarrstring.indexOf("Error:") > -1)
+        if (xmlDoc_progress == null)
+            return;
+        else
+            var MPDError=xmlDoc_progress.getElementsByTagName("MPDError");
+        
+        if(MPDError.length== 0)
+           return;
+        else    
+            totarrstring=MPDError[0].childNodes[0].nodeValue;
+  
+        console.log(totarrstring);
+        if (totarrstring==1)//Check for the error in MPD loading.
         {
 	
             window.alert("Error loading the MPD, please check the URL.");
-			
+	    clearInterval( pollingTimer);	
             finishTest();            
             return false;
         }
-        
-        
-        totarr=JSON.parse(totarrstring);
-		console.log("totarr=");
-		console.log(totarr);
+
 		
         var currentpath = window.location.pathname;
         currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
-
-	   
-        if(totarr[totarr.length-1]==='dynamic'){
+   
+        //Check if the MPD is dynamic.
+        totarrstring=xmlDoc_progress.getElementsByTagName("dynamic");
+        console.log(totarrstring);
+        if(totarrstring!=null && totarrstring=="true"){
             console.log("i'M DYNAMIC");
             dynamicsegtimeline = true;
-            dirid = totarr[totarr.length-2];
 //            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 
             document.getElementById('dynamic').style.visibility='visible';
@@ -494,18 +517,25 @@ function submit()
 
 //            finishTest();
 //            return false;
-        }else
-        {
-            dirid = totarr[totarr.length-1];
         }
+        
 	document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 	document.getElementById('list').style.visibility='visible';
-        progressTimer = setInterval(function(){progressupdate()},1000);
-		console.log("dirid=");
-        console.log(dirid);
-		console.log("totarrstring=");
-        console.log(totarrstring);
-		
+        
+        console.log("dirid=");
+            console.log(dirid);
+	
+       //Get MPD Conformance results from progress.xml file.
+       var MPDtotalResultXML=xmlDoc_progress.getElementsByTagName("MPDConformance");
+       if(MPDtotalResultXML.length==0)
+           return;
+       else
+           var MPDtotalResult=MPDtotalResultXML[0].childNodes[0].nodeValue; 
+          
+       totarr=MPDtotalResult.split(" ");
+       
+       console.log("totarr=");
+		console.log(totarr);
         var failed ='false';
 
         var x=2;
@@ -529,7 +559,7 @@ function submit()
 		else {
 		automate(y,x,"XLink resolving");
 	   				             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
-								 failed=totarr[0];
+								 failed='temp/'+dirid+'/mpdreport.html';//totarr[0];
 		}
 		totarr.splice(0,1);
 		 x++;
@@ -546,7 +576,7 @@ function submit()
 		{
 		automate(y,x,"MPD validation");
 					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
-								 failed=totarr[0];
+								 failed='temp/'+dirid+'/mpdreport.html';//totarr[0];
 		}
 				totarr.splice(0,1);
 				 x++;
@@ -560,7 +590,7 @@ function submit()
 		else {
 		automate(y,x,"Schematron validation");
 					             tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
-								 failed=totarr[0];
+								 failed='temp/'+dirid+'/mpdreport.html';//totarr[0];
 		}
 		totarr.splice(0,1);
 		 x++;
@@ -574,16 +604,39 @@ function submit()
 		console.log(kidsloc);
 		console.log(urlarray[0]);
                 lastloc++;
-                
+                clearInterval( pollingTimer);
                 finishTest();
                 return false;
 		}
 		
-            if(totarr[totarr.length-1]==='dynamic'){  //TODO temporarily exit before processing adaptation sets
+            //For dynamic type.
+            if(totarrstring!=null && totarrstring=="true"){//TODO temporarily exit before processing adaptation sets
+                clearInterval( pollingTimer);
                 finishTest();
                 return false;
             }
-                
+        //Get the number of AdaptationSets, Representations and Periods.   
+        var  Treexml=xmlDoc_progress.getElementsByTagName("Representation");
+        if (Treexml.length==0){
+            var complete=xmlDoc_progress.getElementsByTagName("completed");
+            if(complete[0].textContent == "true"){
+                clearInterval( pollingTimer);
+                finishTest();
+              }              
+            return;
+        }else{
+            var Periodxml=xmlDoc_progress.getElementsByTagName("Period"); 
+            Adapt_count= Periodxml[0].childNodes.length;
+            var AdaptRepPeriod_count=Adapt_count;
+            var Adaptxml=xmlDoc_progress.getElementsByTagName("Adaptation");
+            for (var v=0; v<Adapt_count; v++){
+                AdaptRepPeriod_count=AdaptRepPeriod_count+" "+Adaptxml[v].childNodes.length;
+            }
+            AdaptRepPeriod_count=AdaptRepPeriod_count+" "+Periodxml.length;
+        }
+        
+         
+        totarr=AdaptRepPeriod_count.split(" ");
         for(var i=0;i<totarr[0];i++)
         { 
 
@@ -602,11 +655,9 @@ function submit()
             x=x+j;
             x++;
         }
-        if(totarr[totarr.length-1]==='dynamic'){
-            numPeriods = totarr[totarr.length-3];
-        }else{
-            numPeriods = totarr[totarr.length-2];
-        }
+        
+          numPeriods = totarr[totarr.length-1];
+        
 		if(numPeriods > 1)
 		{
 			console.log("MDP With Multiple Period:" + numPeriods);
@@ -614,19 +665,18 @@ function submit()
 		}
 		
         lastloc = repid[repid.length-1]+1;
-
-        progress();
+        clearInterval( pollingTimer);
+        progressSegmentsTimer = setInterval(function(){progress()},400);
         document.getElementById('par').style.visibility='visible';
         document.getElementById('list').style.visibility='visible';
-    });
+    
+    }
 
-}
-
-function progress()
+function progress()  //Progress of Segments' Conformance
 {
-
-	console.log("progress():");
-	console.log(totarr);
+    xmlDoc_progress=loadXMLDoc("temp/"+dirid+"/progress.xml");
+    console.log("progress():");
+    console.log(totarr);
     if(representationid >totarr[hinindex])
     {
         representationid = 1;
@@ -635,25 +685,25 @@ function progress()
     }
     
     //var status = "Processing Representation "+representationid+" in Adaptationset "+adaptationid;
-    representationid++;
+    
     //document.getElementById("par").innerHTML=status;
     tree.setItemImage2( repid[counting],'progress3.gif','progress3.gif','progress3.gif');
     
     console.log("progress(): representationid=",representationid,",hinindex=",hinindex,",adaptationid=",adaptationid  );
     
-    $.post("process.php",{download:"downloading",sessionid:JSON.stringify(SessionID)},
-    function(response)
-    {
-		console.log("downloading, response:");
-        console.log(response);
-	var locations = JSON.parse(response);
-        if (locations[0]=="done")
+    
+    console.log("downloading, response:");
+       
+        if(xmlDoc_progress == null)
+            return;
+        var  CrossRepValidation=xmlDoc_progress.getElementsByTagName("CrossRepresentation");
+        if(CrossRepValidation.length!=0 && adaptationid>totarr[0])
         {
             console.log("Inside locations");
 		
-            for(var i =1; i<locations.length-1;i++)
+            for(var i =1; i<=CrossRepValidation.length;i++)
             {
-                    if(locations[i]=="noerror"){
+                    if(CrossRepValidation[i-1].textContent=="noerror"){
 
                         tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
                         automate(adaptid[i-1],lastloc,"Cross-representation validation success");
@@ -667,42 +717,54 @@ function progress()
 
                         tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
                         kidsloc.push(lastloc);
-                        urlarray.push(locations[i]);
+                        //urlarray.push(locations[i]);
 
                         automate(adaptid[i-1],lastloc,"Cross-representation validation error");
 
                         tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
-                        lastloc++;
+                        lastloc++; 
                     }  
 
 
             }
             kidsloc.push(lastloc);
-            if(locations[locations.length-1]!="noerror")
+            var BrokenURL=xmlDoc_progress.getElementsByTagName("BrokenURL");
+            if( BrokenURL != null && BrokenURL == "error")//if(locations[locations.length-1]!="noerror")
             {
-                urlarray.push(locations[locations.length-1]);
+                urlarray.push("temp/" + dirid+"/missinglink.html");//urlarray.push(locations[locations.length-1]);
 
                 automate(1,lastloc,"Broken URL list");
                 tree.setItemImage2(lastloc,'404.jpg','404.jpg','404.jpg');
-                lastloc++;
+                lastloc++; 
             }
 			 
             console.log("go");
             clearTimeout(progressTimer);
             setStatusTextlabel("Conformance test completed");
-            
             finishTest();
         }
         else
         {
             console.log("Got output:");
-            console.log(response);
-            console.log(locations);
-
-            //setTimeout(automate(repid[counting],lastloc,"infofile"),1);
             console.log(lastloc);
-
-            if(locations[3]==="noerror")
+            
+            var AdaptXML=xmlDoc_progress.getElementsByTagName("Adaptation"); 
+            if(AdaptXML[adaptationid-1]== null)
+                    return;
+            else if(AdaptXML[adaptationid-1].childNodes[representationid-1] == null) {
+                    return;
+            }
+            else{   
+                    var RepXML=AdaptXML[adaptationid-1].childNodes[representationid-1].textContent;
+                    if(RepXML == "")
+                        return;
+                    console.log("Adapt:"+(adaptationid)+" Rep:"+(representationid));
+                    console.log(RepXML);
+                    representationid++;
+            }
+                
+            
+            if(RepXML == "noerror")
                 tree.setItemImage2( repid[counting],'right.jpg','right.jpg','right.jpg');
             else
             {
@@ -714,17 +776,15 @@ function progress()
                 tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
 
                 kidsloc.push(lastloc);
-                urlarray.push(locations[1]);
+                urlarray.push("temp/"+dirid+"/"+ "Adapt"+(adaptationid-1)+"rep"+(representationid-2) + "log.html");
 
-                lastloc++;
+                lastloc++;  
             }
-
-            //lastloc++;
+ 
             counting++;
 
             progress();
         }
-    });
 }
 /////////////////////////Automation starts///////////////////////////////////////////////////
 var urlarray=[];
@@ -763,7 +823,7 @@ window.open(urlto, "_blank");
 
 }
 var parsed;
-var uploaded = "false";
+//var uploaded = "false";
 
 function loadXMLDoc(dname)
     {
@@ -786,12 +846,10 @@ function finishTest()
 	document.getElementById("afile").disabled=false;
 	
 	clearInterval( progressTimer);
-        
+        clearInterval( progressSegmentsTimer);
         setStatusTextlabel("Conformance test completed");
-      
-        	
-
-     xmlDoc=loadXMLDoc("temp/"+dirid+"/progress.xml");
+        
+     /*xmlDoc=loadXMLDoc("temp/"+dirid+"/progress.xml");
      function xml_to_string(xml_node)
     {
         if (xml_node.xml)
@@ -824,7 +882,7 @@ function finishTest()
         //alert(xml_to_string(xmlDoc));
         //alert("Unknown error. Data could not be written to the file.");
     });
-
+  */
 }
 
 
@@ -841,8 +899,8 @@ function initVariables()
 	representationid =1;
 	adaptationid = 1;
 	hinindex = 1;
-    numPeriods = 0;
-	uploaded = false;
+        numPeriods = 0;
+	//uploaded = false;
         dynamicsegtimeline = false;
 }
 
