@@ -168,7 +168,9 @@ function process_mpd() {
         $periodCount = 0;
         foreach ($dom->documentElement->childNodes as $node) { // search for all nodes within mpd
             if ($node->nodeName === 'Period') {
-                $periodNode = $node;
+                if ($periodCount === 0){ //only process the first Period
+                    $periodNode = $node;
+                }
                 $periodCount++;
             }
         }

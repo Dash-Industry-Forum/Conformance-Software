@@ -729,7 +729,7 @@ function progress()  //Progress of Segments' Conformance
             }
             kidsloc.push(lastloc);
             var BrokenURL=xmlDoc_progress.getElementsByTagName("BrokenURL");
-            if( BrokenURL != null && BrokenURL == "error")//if(locations[locations.length-1]!="noerror")
+            if( BrokenURL != null && BrokenURL[0].textContent == "error")//if(locations[locations.length-1]!="noerror")
             {
                 urlarray.push("temp/" + dirid+"/missinglink.html");//urlarray.push(locations[locations.length-1]);
 
