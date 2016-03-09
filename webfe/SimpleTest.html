@@ -9,59 +9,60 @@ and open the template in the editor.
         <meta charset="UTF-8">
         <title></title>
     </head>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.min.js"></script>
-<script type="text/javascript">
-    var mpdurl = "http://10.4.247.98/server/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd";
-    var pollingTimer;
-    var xmlDoc_progress;
-    
-    //Settings as required for process.php
-    var stringurl = [];
-    stringurl[0] = mpdurl;
-    stringurl[1] =  "mpdvalidator";
-    stringurl[2] = 0 ;
-    //Generate a random folder name for results in "temp" folder
-    var dirid="id"+Math.floor((Math.random() * 10000000000) + 1);
-    
-    $.post ("process.php",
-    {urlcode:JSON.stringify(stringurl),foldername: dirid});// Pass to server.
-       
-    pollingTimer = setInterval(function(){pollingProgress()},400);//Start polling of progress.xml to check completion.
-    function pollingProgress()
-    {
-       xmlDoc_progress=loadXMLDoc("temp/"+dirid+"/progress.xml");
-       if(xmlDoc_progress == null)
-          return;
-        
-       var completed=xmlDoc_progress.getElementsByTagName("completed");
-       if(completed[0].childNodes[0].nodeValue== "false")
-          return;
-       else{
-           document.getElementById("msg").innerHTML="Completed";
-           window.open("temp/"+dirid);
-           clearInterval( pollingTimer);
-       }   
-    }
-    
-    function loadXMLDoc(dname)
-    {
-      if (window.XMLHttpRequest)
-      {
-        xhttp=new XMLHttpRequest();
-      }
-      else
-      {
-        xhttp=new ActiveXObject("Microsoft.XMLHTTP");
-      }
-      xhttp.open("GET",dname,false);
-      xhttp.send("");
-      return xhttp.responseXML;
-    }
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+        var mpdurl = "http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd";
+        var pollingTimer;
+        var xmlDoc_progress;
 
-    
-</script>
-<body>
-<p id="msg">Running, Please wait...</p>
-</body>
+        //Settings as required for process.php
+        var stringurl = [];
+        stringurl[0] = mpdurl;
+        stringurl[1] = "mpdvalidator";
+        stringurl[2] = 0;
+        //Generate a random folder name for results in "temp" folder
+        var dirid = "id" + Math.floor((Math.random() * 10000000000) + 1);
+
+        $.post("process.php", {urlcode: JSON.stringify(stringurl), foldername: dirid});// Pass to server.
+        setTimeout(function(){ window.open("temp/" + dirid);},3000); //jump to the results folder after 3 seconds
+
+//        pollingTimer = setInterval(function () {pollingProgress()}, 400);//Start polling of progress.xml to check completion.
+//        function pollingProgress()
+//        {
+//            xmlDoc_progress = loadXMLDoc("temp/" + dirid + "/progress.xml");
+//            if (xmlDoc_progress == null)
+//                return;
+//
+//            var completed = xmlDoc_progress.getElementsByTagName("completed");
+//            if (completed.length > 0) {
+//                if (completed[0].childNodes[0].nodeValue === "false")
+//                    return;
+//                else {
+//                    document.getElementById("msg").innerHTML = "Completed";
+//                    clearInterval(pollingTimer);
+//                }
+//            }
+//        }
+
+        function loadXMLDoc(dname)
+        {
+            if (window.XMLHttpRequest)
+            {
+                xhttp = new XMLHttpRequest();
+            }
+            else
+            {
+                xhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            xhttp.open("GET", dname, false);
+            xhttp.send("");
+            return xhttp.responseXML;
+        }
+
+    </script>
+    <body>
+        <!--<p id="msg">Running, Please wait...</p>-->
+        <p id="msg">Please refresh the folder in the new window to see the results!</p>
+    </body>
 </html>

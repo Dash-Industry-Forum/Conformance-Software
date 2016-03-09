@@ -95,18 +95,18 @@ function process_mpd() {
         if (!$MPD_O) {
             $progressXML->MPDError = "1"; //MPD error is updated in the progress.xml file.
             $progressXML->asXml(trim($locate.'/progress.xml'));	
-            echo $progressXML;
+            echo $progressXML->asXML();
             die("Error: Failed loading XML file");
         }
         else
         {   $progressXML->MPDError = "0";
-            $progressXML->asXml(trim($locate.'/progress.xml'));	
+            $progressXML->asXml(trim($locate.'/progress.xml'));
         }
 
         $dom_sxe = dom_import_simplexml($MPD_O);
 
         if (!$dom_sxe) {
-            echo $progressXML;
+            echo $progressXML->asXML();
             exit;
         }
 
@@ -117,10 +117,10 @@ function process_mpd() {
         //MPD Conformance results are written into the progress.xml file.
         $temp_mpdres=""; 
         for( $totindex=0; $totindex<3; $totindex++){
-        if($totarr[$totindex]=="true")
-            $temp_mpdres=$temp_mpdres."true ";
-        else
-            $temp_mpdres=$temp_mpdres."false ";                              
+            if($totarr[$totindex]=="true")
+                $temp_mpdres=$temp_mpdres."true ";
+            else
+                $temp_mpdres=$temp_mpdres."false ";                              
         }			
         $progressXML->MPDConformance = $temp_mpdres;
 	$progressXML->asXml(trim($locate.'/progress.xml'));
@@ -154,11 +154,11 @@ function process_mpd() {
             $stri = json_encode($totarr); //Send results to client
 
 
-            echo $stri;
+//            echo $stri;
             session_destroy(); //Destroy session
             $progressXML->completed = "true"; 
 	    $progressXML->asXml(trim($locate.'/progress.xml'));
-            echo $progressXML;
+            echo $progressXML->asXML();
             exit; //Exit
         }
 
@@ -442,11 +442,11 @@ function process_mpd() {
                     $progressXML->dynamic = "true"; // Update progress.xml file with info on dynamic MPD.
                     $progressXML->asXml(trim($locate.'/progress.xml'));
                     $stri = json_encode($totarr); //Send results to client
-                    echo $stri;
+//                    echo $stri;
                     session_destroy(); //Destroy session
                     $progressXML->completed = "true"; 
 	            $progressXML->asXml(trim($locate.'/progress.xml'));
-                    echo $progressXML;
+                    echo $progressXML->asXML();
                     exit;
                 }
             }
@@ -473,7 +473,7 @@ function process_mpd() {
         }
         $progressXML->asXml(trim($locate.'/progress.xml'));
         
-        echo $stri; // send no. of periods,adaptationsets, representation, mpd file to client
+//        echo $stri; // send no. of periods,adaptationsets, representation, mpd file to client
   //  }
     ////////////////////////////////////////////////////////////////////////////////////
     //if (isset($_POST['download'])) { // get request from client to download segments
@@ -518,6 +518,7 @@ function process_mpd() {
                     $ResultXML->Period[0]->Adaptation[$i]->addChild('CrossRepresentation','noerror');
                     $file_error[] = "noerror";                    
                   }
+                  $ResultXML->Period[0]->Adaptation[$i]->CrossRepresentation->addAttribute('url', substr_replace($locate . '/Adapt' . $i . '_infofile.txt', 'http://vm1.dashif.org/conformance/current', 0, 13));
                   $progressXML->asXml(trim($locate.'/progress.xml'));
             }
             session_destroy();
@@ -532,10 +533,10 @@ function process_mpd() {
 
             error_log("ReturnFinish:" . $send_string);
 
-            echo $send_string; // send string with location of all error logs to client
+//            echo $send_string; // send string with location of all error logs to client
             $progressXML->completed = "true"; 
 	    $progressXML->asXml(trim($locate.'/progress.xml'));
-            echo $progressXML;
+            echo $progressXML->asXML();
             exit;
         }
         else {
@@ -677,7 +678,7 @@ function process_mpd() {
                 ob_flush();
                 $count2 = $count2 + 1;
                 $search = file_get_contents($locate . '/' . $repno . "log.txt"); //Search for errors within log file
-
+                
                 if (strpos($search, "error") == false){ //if no error , notify client with no error
                     $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1] = "noerror";
                     $file_location[] = "noerror";
@@ -686,13 +687,14 @@ function process_mpd() {
                     $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1] = "error";
                     $file_location[] = "error"; //else notify client with error
                 }
-                $progressXML->asXml(trim($locate.'/progress.xml'));     
+                $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1]->addAttribute('url', substr_replace($locate . '/' . $repno . "log.txt", 'http://vm1.dashif.org/conformance/current', 0, 13));
+                $progressXML->asXml(trim($locate.'/progress.xml'));
 
                 $_SESSION['count2'] = $count2; //Save the counters to session variables in order to use it the next time the client request download of next presentation
                 $_SESSION['count1'] = $count1;
                 $send_string = json_encode($file_location);
                 error_log("RepresentationDownloaded_Return:" . $send_string);
-                echo $send_string;
+//                echo $send_string;
             }
             else {
                 $count2 = $count2 + 1;
@@ -708,7 +710,7 @@ function process_mpd() {
 
                 error_log("DownloadError_Return:" . $send_string);
 
-                echo $send_string;
+//                echo $send_string;
             }
         }
     }

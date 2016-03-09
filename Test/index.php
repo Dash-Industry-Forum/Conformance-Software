@@ -112,7 +112,7 @@
                 }
              //To check progress of Conformance Test and paste results into TestResults folder and References folder accordingly.             
                 $.post(
-                    "second.php/",
+                    "second.php",
                     {length:vectors.length, path:'../webfe/temp'}
                 ).done(function(response){
                     var folder=response;

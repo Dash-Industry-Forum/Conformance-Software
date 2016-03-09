@@ -289,6 +289,7 @@ var totarrstring=[];
 var xmlDoc_progress;
 var progressSegmentsTimer;
 var pollingTimer;
+//var first_entry = true;
 
 /////////////////////////////////////////////////////////////
 document.querySelector('#afile').addEventListener('change', function(e) {
@@ -475,7 +476,6 @@ function submit()
 } 
     function pollingProgress()
     {
-        console.log("process_returned:");
         xmlDoc_progress=loadXMLDoc("temp/"+dirid+"/progress.xml");
         
         if (xmlDoc_progress == null)
@@ -488,16 +488,15 @@ function submit()
         else    
             totarrstring=MPDError[0].childNodes[0].nodeValue;
   
+        console.log("process_returned:");
         console.log(totarrstring);
         if (totarrstring==1)//Check for the error in MPD loading.
         {
-	
             window.alert("Error loading the MPD, please check the URL.");
 	    clearInterval( pollingTimer);	
             finishTest();            
             return false;
         }
-
 		
         var currentpath = window.location.pathname;
         currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
@@ -677,30 +676,33 @@ function progress()  //Progress of Segments' Conformance
     xmlDoc_progress=loadXMLDoc("temp/"+dirid+"/progress.xml");
     console.log("progress():");
     console.log(totarr);
+//    console.log(first_entry);
     if(representationid >totarr[hinindex])
     {
         representationid = 1;
         hinindex++;
         adaptationid++;
     }
-    
+
     //var status = "Processing Representation "+representationid+" in Adaptationset "+adaptationid;
     
     //document.getElementById("par").innerHTML=status;
     tree.setItemImage2( repid[counting],'progress3.gif','progress3.gif','progress3.gif');
     
+    if(xmlDoc_progress == null)
+        return;
     console.log("progress(): representationid=",representationid,",hinindex=",hinindex,",adaptationid=",adaptationid  );
-    
-    
     console.log("downloading, response:");
-       
-        if(xmlDoc_progress == null)
-            return;
-        var  CrossRepValidation=xmlDoc_progress.getElementsByTagName("CrossRepresentation");
-        if(CrossRepValidation.length!=0 && adaptationid>totarr[0])
+    var CrossRepValidation=xmlDoc_progress.getElementsByTagName("CrossRepresentation");
+//    if(first_entry)
+//    {
+        if (CrossRepValidation.length!=0 && adaptationid>totarr[0])
         {
             console.log("Inside locations");
-		
+//            if(first_entry)
+//            {
+//                first_entry = false;
+//            }
             for(var i =1; i<=CrossRepValidation.length;i++)
             {
                     if(CrossRepValidation[i-1].textContent=="noerror"){
@@ -785,6 +787,12 @@ function progress()  //Progress of Segments' Conformance
 
             progress();
         }
+//    }
+//    else
+//    {
+//        clearInterval( pollingTimer);	
+//        finishTest();
+//    }
 }
 /////////////////////////Automation starts///////////////////////////////////////////////////
 var urlarray=[];
@@ -957,8 +965,11 @@ function setStatusTextlabel(textToSet)
 </script>
     
 <footer>
- <center> <p>v1.1
+ <center> <p>v2.0
          <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
+ </center>
+ <center> <p>Source Code
+         <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/">GitHub</a></p>
  </center>
 </footer>
 </body>
