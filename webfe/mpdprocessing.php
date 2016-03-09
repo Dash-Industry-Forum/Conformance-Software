@@ -123,6 +123,7 @@ function process_mpd() {
                 $temp_mpdres=$temp_mpdres."false ";                              
         }			
         $progressXML->MPDConformance = $temp_mpdres;
+        $progressXML->MPDConformance->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/mpdreport.txt'));
 	$progressXML->asXml(trim($locate.'/progress.xml'));
 
         ///////////////////////////////////////Processing mpd attributes in order to get value//////////////////////////////////////////////////////////
@@ -518,7 +519,7 @@ function process_mpd() {
                     $ResultXML->Period[0]->Adaptation[$i]->addChild('CrossRepresentation','noerror');
                     $file_error[] = "noerror";                    
                   }
-                  $ResultXML->Period[0]->Adaptation[$i]->CrossRepresentation->addAttribute('url', substr_replace($locate . '/Adapt' . $i . '_infofile.txt', 'http://vm1.dashif.org/conformance/current', 0, 13));
+                  $ResultXML->Period[0]->Adaptation[$i]->CrossRepresentation->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/Adapt' . $i . '_infofile.txt'));
                   $progressXML->asXml(trim($locate.'/progress.xml'));
             }
             session_destroy();
@@ -687,7 +688,7 @@ function process_mpd() {
                     $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1] = "error";
                     $file_location[] = "error"; //else notify client with error
                 }
-                $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1]->addAttribute('url', substr_replace($locate . '/' . $repno . "log.txt", 'http://vm1.dashif.org/conformance/current', 0, 13));
+                $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1]->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/' . $repno . "log.txt"));
                 $progressXML->asXml(trim($locate.'/progress.xml'));
 
                 $_SESSION['count2'] = $count2; //Save the counters to session variables in order to use it the next time the client request download of next presentation

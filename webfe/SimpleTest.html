@@ -1,9 +1,4 @@
 <!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <html>
     <head>
         <meta charset="UTF-8">
@@ -27,42 +22,9 @@ and open the template in the editor.
         $.post("process.php", {urlcode: JSON.stringify(stringurl), foldername: dirid});// Pass to server.
         setTimeout(function(){ window.open("temp/" + dirid);},3000); //jump to the results folder after 3 seconds
 
-//        pollingTimer = setInterval(function () {pollingProgress()}, 400);//Start polling of progress.xml to check completion.
-//        function pollingProgress()
-//        {
-//            xmlDoc_progress = loadXMLDoc("temp/" + dirid + "/progress.xml");
-//            if (xmlDoc_progress == null)
-//                return;
-//
-//            var completed = xmlDoc_progress.getElementsByTagName("completed");
-//            if (completed.length > 0) {
-//                if (completed[0].childNodes[0].nodeValue === "false")
-//                    return;
-//                else {
-//                    document.getElementById("msg").innerHTML = "Completed";
-//                    clearInterval(pollingTimer);
-//                }
-//            }
-//        }
-
-        function loadXMLDoc(dname)
-        {
-            if (window.XMLHttpRequest)
-            {
-                xhttp = new XMLHttpRequest();
-            }
-            else
-            {
-                xhttp = new ActiveXObject("Microsoft.XMLHTTP");
-            }
-            xhttp.open("GET", dname, false);
-            xhttp.send("");
-            return xhttp.responseXML;
-        }
-
     </script>
     <body>
         <!--<p id="msg">Running, Please wait...</p>-->
-        <p id="msg">Please refresh the folder in the new window to see the results!</p>
+        <p id="msg">Please refresh the new page to see the results!</p>
     </body>
 </html>
