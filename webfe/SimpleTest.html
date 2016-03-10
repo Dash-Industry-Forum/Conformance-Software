@@ -19,6 +19,8 @@
         //Generate a random folder name for results in "temp" folder
         var dirid = "id" + Math.floor((Math.random() * 10000000000) + 1);
 
+//NOTE: the requests come from the same client AND the same browser will be queued for most browsers!!! 
+//So make sure that you only opened one instance of SimpleTest in the same browser at the same time!!!
         $.post("process.php", {urlcode: JSON.stringify(stringurl), foldername: dirid});// Pass to server.
         setTimeout(function(){ window.open("temp/" + dirid);},3000); //jump to the results folder after 3 seconds
 
