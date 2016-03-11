@@ -659,12 +659,12 @@ function progress()  //Progress of Segments' Conformance
                 tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
                 lastloc++;
 
-//            console.log("errors");
+//                console.log("errors");
 
                 automate(adaptid[i-1],lastloc,"log");
                 tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
                 kidsloc.push(lastloc);
-                urlarray.push("temp/"+dirid+"/"+ "Adapt"+(adaptationid-2)+ "_infofile.html");
+                urlarray.push("temp/"+dirid+"/"+ "Adapt"+(i-1)+ "_infofile.html");
                 lastloc++;
             }
         }
