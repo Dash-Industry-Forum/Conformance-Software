@@ -31,12 +31,16 @@ function process_mpd() {
 
         $directories = array_diff(scandir(dirname(__FILE__) . '/' . 'temp'), array('..', '.'));
 
-
         foreach ($directories as $file) { // Clean temp folder from old sessions in order to save diskspace
             if (file_exists(dirname(__FILE__) . '/' . 'temp' . '/' . $file)) { // temp is folder contains all sessions folders
-                $change = time() - filemtime(dirname(__FILE__) . '/' . 'temp' . '/' . $file); // duration of file implementation
-
-                if ($change > 300)
+                $tempXML = simplexml_load_file(dirname(__FILE__) . '/' . 'temp' . '/' . $file . '/progress.xml');
+                if ($tempXML->completed->attributes()){
+                    $change1 = time() - $tempXML->completed->attributes(); //duration after conformance test is done
+                }
+                else {
+                    $change2 = time() - filemtime(dirname(__FILE__) . '/' . 'temp' . '/' . $file); // duration of file implementation
+                }
+                if ($change1 > 300 || $change2 > 1800)  //clean folder after 5 mins after test completed or 30 mins after test started
                     rrmdir(dirname(__FILE__) . '/' . 'temp' . '/' . $file); // if last time folder was modified exceed 300 second it should be removed 
             }
         }
@@ -54,7 +58,7 @@ function process_mpd() {
         $locate = dirname(__FILE__) . '/' . 'temp' . '/' . $foldername; //session  folder location
         $_SESSION['locate'] = $locate; // save session folder location 
         mkdir($locate, 0777, true); // create session folder
-        $totarr = array(); // array contains all data to be sent to client.
+//        $totarr = array(); // array contains all data to be sent to client.
         copy(dirname(__FILE__) . "/" . $validatemp4, $locate . '/' . $validatemp4); // copy conformance tool to session folder to allow multi-session operation
         chmod($locate . '/' . $validatemp4, 0777);
         $url_array = json_decode($_POST['urlcode']);
@@ -153,12 +157,11 @@ function process_mpd() {
                 $totarr[] = $foldername;
             }
             $stri = json_encode($totarr); //Send results to client
-
-
 //            echo $stri;
             session_destroy(); //Destroy session
             $progressXML->completed = "true"; 
-	    $progressXML->asXml(trim($locate.'/progress.xml'));
+            $progressXML->completed->addAttribute('time', time());
+            $progressXML->asXml(trim($locate.'/progress.xml'));
             echo $progressXML->asXML();
             exit; //Exit
         }
@@ -175,9 +178,7 @@ function process_mpd() {
                 $periodCount++;
             }
         }
-
-
-
+        
         $val = $dom->getElementsByTagName('BaseURL'); // get BaseUrl node
         $segflag = $dom->getElementsByTagName('SegmentTemplate'); //check if segment template exists or not
 
@@ -233,7 +234,7 @@ function process_mpd() {
                         $Adapt_initialization_setflag = 1;
                     }
                     $media = $Period_arr[$k]['SegmentTemplate']['media']; // get  media template
-                    $timehash = null; // used only in segment timeline 
+//                    $timehash = null; // used only in segment timeline 
                     $timehash = array(); // contains all segmenttimelines for all segments
 
                     if (!empty($Period_arr[$k]['SegmentTemplate']['SegmentTimeline'])) { // in case of using Segment timeline
@@ -409,11 +410,6 @@ function process_mpd() {
             if ($setsegflag === false)
                 $period_url = $period_baseurl; // if segment template is not used, use baseurl
         }
-
-        $size = array();
-
-
-
         $_SESSION['period_url'] = $period_url; // save all period urls in session variable
 
         $_SESSION['Period_arr'] = $Period_arr; //save all period parameters in session variable
@@ -421,8 +417,6 @@ function process_mpd() {
         for ($i = 0; $i < sizeof($period_url); $i++) { // loop on periods
             $totarr[] = sizeof($period_url[$i]); //get number of represenations per adaptation set
         }
-        $peri = null;
-
         $totarr[] = $periodCount;     
         $totarr[] = $foldername; // add session name 
         $stri = json_encode($totarr); // encode array to send to client
@@ -445,7 +439,8 @@ function process_mpd() {
                     $stri = json_encode($totarr); //Send results to client
 //                    echo $stri;
                     session_destroy(); //Destroy session
-                    $progressXML->completed = "true"; 
+                    $progressXML->completed = "true";
+                    $progressXML->completed->addAttribute('time', time());
 	            $progressXML->asXml(trim($locate.'/progress.xml'));
                     echo $progressXML->asXML();
                     exit;
@@ -483,8 +478,7 @@ function process_mpd() {
     while($count1<=sizeof($period_url)){
         $root = dirname(__FILE__);
         $destiny = array();
-        
-        
+                
         if ($count2 >= sizeof($period_url[$count1])) {//check if all representations within a segment is downloaded
             $count2 = 0;  // reset representation counter when new adaptation set is proccesed 
             $count1 = $count1 + 1; // increase adapatationset counter
@@ -525,6 +519,7 @@ function process_mpd() {
             session_destroy();
             if ($missingexist) {
                 $ResultXML->addChild('BrokenURL',"error");
+                $ResultXML->BrokenURL->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/missinglink.txt'));
                 $file_error[] = "temp" . '/' . $foldername . '/missinglink.html';
             } else{
                 $ResultXML->addChild('BrokenURL',"noerror");
@@ -536,7 +531,8 @@ function process_mpd() {
 
 //            echo $send_string; // send string with location of all error logs to client
             $progressXML->completed = "true"; 
-	    $progressXML->asXml(trim($locate.'/progress.xml'));
+            $progressXML->completed->addAttribute('time', time());
+            $progressXML->asXml(trim($locate.'/progress.xml'));
             echo $progressXML->asXML();
             exit;
         }
@@ -600,8 +596,6 @@ function process_mpd() {
                     $processArguments = $processArguments . "-dash264base ";
                     $dash264 = true;
                 }
-
-
 
                 if ($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true) {
                     $processArguments = $processArguments . "-dash264enc ";

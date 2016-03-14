@@ -544,7 +544,7 @@ function pollingProgress()
     {
         automate(y,x,"mpd error log");
         tree.setItemImage2(x,'log.jpg','log.jpg','log.jpg');
-                        kidsloc.push(x);
+        kidsloc.push(x);
         urlarray.push(failed);
 //        console.log(kidsloc);
 //        console.log(urlarray[0]);
@@ -638,29 +638,35 @@ function progress()  //Progress of Segments' Conformance
 //        console.log("Inside locations");
         for(var i =1; i<=CrossRepValidation.length;i++)
         {
-                if(CrossRepValidation[i-1].textContent=="noerror"){
+            if(CrossRepValidation[i-1].textContent=="noerror"){
 
-                    tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
-                    automate(adaptid[i-1],lastloc,"Cross-representation validation success");
+                tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
+                automate(adaptid[i-1],lastloc,"Cross-representation validation success");
 
-                    tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
-                    lastloc++;
-                // 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
+                tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
+                lastloc++;
+            // 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
 
-                }
-                else{
+            }
+            else{
 
-                    tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
-                    kidsloc.push(lastloc);
-                    //urlarray.push(locations[i]);
+                tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
+//                kidsloc.push(lastloc);
+                //urlarray.push(locations[i]);
 
-                    automate(adaptid[i-1],lastloc,"Cross-representation validation error");
+                automate(adaptid[i-1],lastloc,"Cross-representation validation error");
 
-                    tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
-                    lastloc++; 
-                }  
+                tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
+                lastloc++;
 
+//                console.log("errors");
 
+                automate(adaptid[i-1],lastloc,"log");
+                tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
+                kidsloc.push(lastloc);
+                urlarray.push("temp/"+dirid+"/"+ "Adapt"+(i-1)+ "_infofile.html");
+                lastloc++;
+            }
         }
         kidsloc.push(lastloc);
         var BrokenURL=xmlDoc_progress.getElementsByTagName("BrokenURL");
@@ -813,46 +819,43 @@ function setUpTreeView()
     tree.setImagePath("img/");
     tree.enableDragAndDrop(true);
 }
+
 function setStatusTextlabel(textToSet)
 {
     status = textToSet;
 
-            if( numPeriods > 1 )
-            {
-                    status = status + "<br><font color='red'> MPD with multiple Periods (" + numPeriods + "). Only segments of the first period were checked.</font>"
-            }
+    if( numPeriods > 1 )
+    {
+        status = status + "<br><font color='red'> MPD with multiple Periods (" + numPeriods + "). Only segments of the first period were checked.</font>"
+    }
 
-            if( dynamicsegtimeline)
-            {
-                    status = status + "<br><font color='red'> Segment timeline for type dynamic is not supported, only MPD will be tested. </font>"
-            }
+    if( dynamicsegtimeline)
+    {
+        status = status + "<br><font color='red'> Segment timeline for type dynamic is not supported, only MPD will be tested. </font>"
+    }
 
     document.getElementById("par").innerHTML=status;
     document.getElementById('par').style.visibility='visible';
 }
-
-
 </script>
 
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-  ga('create', 'UA-48482208-1', 'dashif.org');
-  ga('send', 'pageview');
-
-
+    ga('create', 'UA-48482208-1', 'dashif.org');
+    ga('send', 'pageview');
 </script>
     
 <footer>
- <center> <p>v2.0
-         <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
- </center>
- <center> <p>
-         <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/">GitHub</a></p>
- </center>
+    <center> <p>v2.0
+        <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
+    </center>
+    <center> <p>
+        <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/">GitHub</a></p>
+    </center>
 </footer>
 </body>
 </html>
