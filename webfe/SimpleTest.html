@@ -7,26 +7,17 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.min.js"></script>
     <script type="text/javascript">
-        var mpdurl = "http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd";
-        var pollingTimer;
-        var xmlDoc_progress;
 
-        //Settings as required for process.php
-        var stringurl = [];
-        stringurl[0] = mpdurl;
-        stringurl[1] = "mpdvalidator";
-        stringurl[2] = 0;
+        var stringurl = ["http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd", "mpdvalidator", 0];
         //Generate a random folder name for results in "temp" folder
         var dirid = "id" + Math.floor((Math.random() * 10000000000) + 1);
 
-//NOTE: the requests come from the same client AND the same browser will be queued for most browsers!!! 
-//So make sure that you only opened one instance of SimpleTest in the same browser at the same time!!!
         $.post("process.php", {urlcode: JSON.stringify(stringurl), foldername: dirid});// Pass to server.
         setTimeout(function(){ window.open("temp/" + dirid);},3000); //jump to the results folder after 3 seconds
 
     </script>
     <body>
         <!--<p id="msg">Running, Please wait...</p>-->
-        <p id="msg">Please refresh the new page to see the results!</p>
+        <p id="msg">Please refresh the new page to see the results as they are being updated!</p>
     </body>
 </html>
