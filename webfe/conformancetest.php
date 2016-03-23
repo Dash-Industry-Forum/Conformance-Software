@@ -19,26 +19,12 @@
     <script type="text/javascript" src="tree/dhtmlxTree/codebase/ext/dhtmlxtree_json.js"></script>
     
 <?php 
-/*This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-if(isset($_REQUEST['mpdurl']))
-{
-    $url = $_REQUEST['mpdurl'];     // To get url from POST request.
-}
-else
-    $url = "";
-;
+    if(isset($_REQUEST['mpdurl']))
+    {
+        $url = $_REQUEST['mpdurl'];     // To get url from POST request.
+    }
+    else
+        $url = "";
 ?>
 
 <script type="text/javascript">
@@ -181,7 +167,6 @@ else
         position:absolute;
         top:280px;
         right:40px;
-
     }
 
 </style>
@@ -213,7 +198,7 @@ else
     <a id="dynamic" href="url" target="_blank" style="visibility:hidden;" >Dynamic timing validation</a>
 </div>
 
-<div id="progressbar" style="width:100;background:#FFFFF;"></div>
+<div id="progressbar" style="width:100px;background:#FFFFF;"></div>
 
 <div id = "not">
     <br>    <br>
@@ -222,13 +207,14 @@ else
 <div id="to" >
     <p align="center"></p>
     <p id="par" class="sansserif" style="visibility:hidden;">Loading....</p>
+    <p id="profile" class="sansserif" style="visibility:hidden;">Profiles: </p>
     <a id="list" href="url" target="_blank" style="visibility:hidden;" >Feature list</a>
 </div>
     
 <table>
     <tr>
         <td valign="top">
-            <div id="treeboxbox_tree" style="width:500px; height:500px;background-color:#0000;border :none;; overflow:auto;"></div>
+            <div id="treeboxbox_tree" style="width:500px; height:400px;background-color:#0000;border :none;; overflow:auto;"></div>
         </td>
         
         <td rowspan="2" style="padding-left:25" valign="top">
@@ -345,6 +331,14 @@ function  progressEventHandler(){
 		}
                 
                 document.getElementById("par").innerHTML=progressText;
+                
+                //update only once
+                if (document.getElementById("profile").innerHTML === "Profiles: ")
+                {
+                    var profileList = progressXML.getElementsByTagName("Profile")[0].childNodes[0].nodeValue;
+                    document.getElementById("profile").innerHTML="Profiles: " + profileList;            
+                    document.getElementById('profile').style.visibility='visible';
+                }
             }
             catch(e)
             {
