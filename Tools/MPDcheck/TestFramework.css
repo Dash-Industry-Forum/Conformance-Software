@@ -42,15 +42,21 @@ and open the template in the editor.
             color: #A0522D;
         }
         #outputs{
-             position: absolute;
+            position: absolute;
             left: 910px;
             top: 103px;
         }
-         #results{
-             position: absolute;
+        #results{
+            position: absolute;
             left: 920px;
             top: 110px;
-             font-size: 120%;
+            font-size: 120%;
+        }
+        #results2{
+            position: absolute;
+            left: 1120px;
+            top: 110px;
+            font-size: 120%;
         }
         #Checkbox{
             position: absolute;
