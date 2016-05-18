@@ -47,8 +47,12 @@ function process_mpd() {
         // Work out which validator binary to use
         $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
         //var_dump( $path_parts  );
-        if (isset($_POST['foldername']))
+        if (isset($_POST['foldername'])){
             $foldername=$_POST['foldername'];
+            $paths = split("/", $foldername);
+            if(count($paths)>1)
+                $foldername = end($paths);
+        }
         else
             $foldername = 'id' . rand(); // get random name for session folder
          //get a name for session folder from client.
