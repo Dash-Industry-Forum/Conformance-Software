@@ -39,7 +39,7 @@ function process_mpd() {
                 if ((string)$tempXML->completed === "true"){
                     $change1 = time() - (int)$tempXML->completed->attributes(); 
                 }
-                if ($change1 > 300 || $change2 > 1800)  //clean folder after 5 mins after test completed or 30 mins after test started
+                if ($change1 > 1800 || $change2 > 1800)  //clean folder after 30 mins after test completed or 30 mins after test started
                     rrmdir(dirname(__FILE__) . '/' . 'temp' . '/' . $file); // if last time folder was modified exceed 300 second it should be removed 
             }
         }
@@ -47,8 +47,12 @@ function process_mpd() {
         // Work out which validator binary to use
         $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
         //var_dump( $path_parts  );
-        if (isset($_POST['foldername']))
+        if (isset($_POST['foldername'])){
             $foldername=$_POST['foldername'];
+            $paths = split("/", $foldername);
+            if(count($paths)>1)
+                $foldername = end($paths);
+        }
         else
             $foldername = 'id' . rand(); // get random name for session folder
          //get a name for session folder from client.
