@@ -39,7 +39,7 @@ function process_mpd() {
                 if ((string)$tempXML->completed === "true"){
                     $change1 = time() - (int)$tempXML->completed->attributes(); 
                 }
-                if ($change1 > 300 || $change2 > 1800)  //clean folder after 5 mins after test completed or 30 mins after test started
+                if ($change1 > 1800 || $change2 > 1800)  //clean folder after 30 mins after test completed or 30 mins after test started
                     rrmdir(dirname(__FILE__) . '/' . 'temp' . '/' . $file); // if last time folder was modified exceed 300 second it should be removed 
             }
         }
