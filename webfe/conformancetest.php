@@ -255,6 +255,7 @@ var file,fd,xhr;
 var uploaded = false;
 var numPeriods = 0;
 var dynamicsegtimeline = false;
+var segmentListExist = false;
 var SessionID = "id"+Math.floor(100000 + Math.random() * 900000);
 var totarrstring=[];
 var xmlDoc_progress;
@@ -332,7 +333,12 @@ function  progressEventHandler(){
                 //Get currently running Adaptation and Representation numbers.
                 var lastRep = progressXML.getElementsByTagName("CurrentRep")[0].childNodes[0].nodeValue;
                 var lastAdapt =progressXML.getElementsByTagName("CurrentAdapt")[0].childNodes[0].nodeValue;
-                var progressText = "Processing Representation "+lastRep+" in Adaptationset "+lastAdapt+", "+progressPercent+"% done ( "+dataDownloaded+" KB downloaded, "+dataProcessed+" MB processed )";
+                
+                var progressText;
+                if (lastRep == 1 && lastAdapt == 1 && progressPercent == 0 && dataDownloaded == 0 && dataProcessed == 0) //initial state
+                    progressText = "Processing MPD, please wait...";
+                else
+                    progressText = "Processing Representation "+lastRep+" in Adaptationset "+lastAdapt+", "+progressPercent+"% done ( "+dataDownloaded+" KB downloaded, "+dataProcessed+" MB processed )";
 
 		if( numPeriods > 1 )
 		{
@@ -342,6 +348,11 @@ function  progressEventHandler(){
                 if( dynamicsegtimeline)
 		{
                     progressText = progressText + "<br><font color='red'> Segment timeline for type dynamic is not supported, only MPD will be tested. </font>"
+		}
+                
+                if(segmentListExist)
+		{
+                    progressText = progressText + "<br><font color='red'> SegmentList is not supported, only MPD will be tested. </font>"
 		}
                 
                 document.getElementById("par").innerHTML=progressText;
@@ -446,7 +457,7 @@ function pollingProgress()
         var MPDError=xmlDoc_progress.getElementsByTagName("MPDError");
 
     if(MPDError.length== 0)
-       return;
+        return;
     else    
         totarrstring=MPDError[0].childNodes[0].nodeValue;
 
@@ -464,9 +475,8 @@ function pollingProgress()
     currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
 
     //Check if the MPD is dynamic.
-    totarrstring=xmlDoc_progress.getElementsByTagName("dynamic");
-//    console.log(totarrstring);
-    if(totarrstring!=null && totarrstring=="true"){
+    if(xmlDoc_progress.getElementsByTagName("dynamic").length !== 0)
+    {
 //        console.log("i'M DYNAMIC");
         dynamicsegtimeline = true;
 //            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
@@ -479,7 +489,14 @@ function pollingProgress()
 //            finishTest();
 //            return false;
     }
-
+    
+    //check if SegmentList exist
+    if(xmlDoc_progress.getElementsByTagName("segmentList").length !== 0)
+    {
+//        console.log("SegmentList exist!");
+        segmentListExist = true;
+    }
+    
     document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
     document.getElementById('list').style.visibility='visible';
 
@@ -806,6 +823,7 @@ function initVariables()
     numPeriods = 0;
     //uploaded = false;
     dynamicsegtimeline = false;
+    segmentListExist = false;
 }
 
 function setUpTreeView()
@@ -840,6 +858,11 @@ function setStatusTextlabel(textToSet)
     if( dynamicsegtimeline)
     {
         status = status + "<br><font color='red'> Segment timeline for type dynamic is not supported, only MPD will be tested. </font>"
+    }
+    
+    if(segmentListExist)
+    {
+        status = status + "<br><font color='red'> SegmentList is not supported, only MPD will be tested. </font>"
     }
 
     document.getElementById("par").innerHTML=status;

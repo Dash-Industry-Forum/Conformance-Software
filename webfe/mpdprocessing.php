@@ -459,6 +459,21 @@ function process_mpd() {
                 $progressXML->asXml(trim($locate.'/progress.xml'));
             }
         }
+        
+        //check if SegmentList exist
+        if($dom->getElementsByTagName('SegmentList')->length !== 0)
+        {
+            $progressXML->segmentList = "true";
+            $progressXML->asXml(trim($locate.'/progress.xml'));
+            $stri = json_encode($totarr); //Send results to client
+//                    echo $stri;
+            session_destroy(); //Destroy session
+            $progressXML->completed = "true";
+            $progressXML->completed->addAttribute('time', time());
+            $progressXML->asXml(trim($locate.'/progress.xml'));
+            echo $progressXML->asXML();
+            exit;
+        }            
             
         $ResultXML = $progressXML->addChild('Results');// Create Results tree in progress.xml and updates tree later.
         for($i1=0; $i1<$periodCount; $i1++)
@@ -557,8 +572,7 @@ function process_mpd() {
                 mkdir($pathdir, 0777, true); // create folder for each presentation
                 umask($oldmask);
             }
-            
-            
+
             $tempcount1 = $count1; //don't know why we need a buffer, but it only works this way with php 7
             $sizearray = downloaddata($pathdir, $period_url[$count1][$count2]); // download data 
             if ($sizearray !== 0) {
