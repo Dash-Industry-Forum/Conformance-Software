@@ -49,7 +49,7 @@ function process_mpd() {
         //var_dump( $path_parts  );
         if (isset($_POST['foldername'])){
             $foldername=$_POST['foldername'];
-            $paths = split("/", $foldername);
+            $paths = explode("/", $foldername);
             if(count($paths)>1)
                 $foldername = end($paths);
         }
@@ -459,6 +459,21 @@ function process_mpd() {
                 $progressXML->asXml(trim($locate.'/progress.xml'));
             }
         }
+        
+        //check if SegmentList exist
+        if($dom->getElementsByTagName('SegmentList')->length !== 0)
+        {
+            $progressXML->segmentList = "true";
+            $progressXML->asXml(trim($locate.'/progress.xml'));
+            $stri = json_encode($totarr); //Send results to client
+//                    echo $stri;
+            session_destroy(); //Destroy session
+            $progressXML->completed = "true";
+            $progressXML->completed->addAttribute('time', time());
+            $progressXML->asXml(trim($locate.'/progress.xml'));
+            echo $progressXML->asXML();
+            exit;
+        }            
             
         $ResultXML = $progressXML->addChild('Results');// Create Results tree in progress.xml and updates tree later.
         for($i1=0; $i1<$periodCount; $i1++)
@@ -557,7 +572,8 @@ function process_mpd() {
                 mkdir($pathdir, 0777, true); // create folder for each presentation
                 umask($oldmask);
             }
-                
+
+            $tempcount1 = $count1; //don't know why we need a buffer, but it only works this way with php 7
             $sizearray = downloaddata($pathdir, $period_url[$count1][$count2]); // download data 
             if ($sizearray !== 0) {
                 
@@ -683,16 +699,17 @@ function process_mpd() {
                 ob_flush();
                 $count2 = $count2 + 1;
                 $search = file_get_contents($locate . '/' . $repno . "log.txt"); //Search for errors within log file
-                    
-                if (strpos($search, "error") == false){ //if no error , notify client with no error
-                    $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1] = "noerror";
+                
+                if (strpos($search, "error") === false){ //if no error , notify client with no error
+                    $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2-1] = "noerror";
                     $file_location[] = "noerror";
                 }
                 else{
-                    $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1] = "error";
+                    $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2-1] = "error";
                     $file_location[] = "error"; //else notify client with error
                 }
-                $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1]->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/' . $repno . "log.txt"));
+                
+                $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2-1]->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/' . $repno . "log.txt"));
                 $progressXML->asXml(trim($locate.'/progress.xml'));
                     
                 $_SESSION['count2'] = $count2; //Save the counters to session variables in order to use it the next time the client request download of next presentation
@@ -707,10 +724,8 @@ function process_mpd() {
                 $_SESSION['count1'] = $count1;
                     
                 $file_location[] = 'notexist';
-                    
-                $ResultXML->Period[0]->Adaptation[$count1]->Representation[$count2-1] = "notexist";
-                    
-                    
+                $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2-1] = "notexist";
+
                 $send_string = json_encode($file_location);
                     
                 error_log("DownloadError_Return:" . $send_string);
