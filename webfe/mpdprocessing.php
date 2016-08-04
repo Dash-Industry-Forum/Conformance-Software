@@ -626,7 +626,7 @@ function process_mpd() {
                 if ($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true) {
                     $processArguments = $processArguments . "-dash264enc ";
                 }
-                    
+
                 $processArguments = $processArguments . "-codecs ";
                 if ($Period_arr[$count1]['codecs'] === 0) {
                     $codecs = $Period_arr[$count1]['Representation']['codecs'][$count2];
@@ -654,7 +654,17 @@ function process_mpd() {
                     $audioChValue = $Period_arr[$count1]['AudioChannelValue'];
                 }
                 $processArguments = $processArguments . $audioChValue;
-                    
+                
+//                $test= $Period_arr[$count1];
+//                $test1= $Period_arr[$count1]['Representation']['SegmentBase'];
+//                $test2= $Period_arr[$count1]['Representation']['SegmentBase']['RepresentationIndex'];
+                if ($Period_arr[$count1]['Representation']['SegmentTemplate']['RepresentationIndex'] !== null || 
+                        $Period_arr[$count1]['Representation']['SegmentBase']['RepresentationIndex'] !== null ||
+                        $Period_arr[$count1]['SegmentTemplate']['RepresentationIndex'] !== null||
+                        $Period_arr[$count1]['SegmentBase']['RepresentationIndex'] !== null){
+                    $processArguments = $processArguments . "-repIndex ";
+                }
+                
                 error_log("validatemp4");
                 // Work out which validator binary to use
                 $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
