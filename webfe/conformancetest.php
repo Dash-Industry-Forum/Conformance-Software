@@ -478,7 +478,8 @@ function pollingProgress()
     if(xmlDoc_progress.getElementsByTagName("dynamic").length !== 0)
     {
 //        console.log("i'M DYNAMIC");
-        dynamicsegtimeline = true;
+        if (xmlDoc_progress.getElementsByTagName("SegmentTimeline").length !== 0)
+            dynamicsegtimeline = true;
 //            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 
         document.getElementById('dynamic').style.visibility='visible';
