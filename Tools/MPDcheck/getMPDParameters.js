@@ -1,14 +1,15 @@
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/* This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -20,38 +21,27 @@
         maxNumRepr(xml, data);
         printSize(xml, data);
         listMimeType(xml, data);
-//                        checkMimeType(xml);
         printCodecs(xml, data);
         checkSegmentTemplate(xml,"", data);
         checkSegmentTemplate(xml,"media", data);
         checkSegmentTemplate(xml,"duration", data);
-        checkSegmentTimeline(xml, data);
+        checkSegmentTemplate(xml,"presentationTimeOffset", data);
+        checkElement(xml,"SegmentTimeline", data);
+        checkElement(xml, "UTCTiming", data);
+        checkElement(xml,"cenc:pssh", data);
+        checkElement(xml, "InbandEventStream", data);
         checkSchIU(xml,"ContentProtection", data);
         checkSchIU(xml,"EssentialProperty", data);
         checkSchIU(xml,"UTCTiming", data);
         checkSchIU(xml,"InbandEventStream", data);
-        contentPro(xml, data);
-        countBaseURL(xml, data);
-        checkSegmentTemplate(xml,"presentationTimeOffset", data);
-        checkSegmentBase(xml,"presentationTimeOffset", data);
         checkSchIU(xml,"SupplementalProperty", data);  //for "urn:mpeg:dash:period_continuity:2014"
-        checkUTCTiming(xml, data);
+        countBaseURL(xml, data);
+        checkSegmentBase(xml,"presentationTimeOffset", data);
         checkPeriod(xml, data);
-        verifyEarlyTerminated(xml, data);  //needs manual check
+        verifyEarlyTerminated(xml, data);  //NOTE: needs manual check!
         verifyDefaultContent(xml, data);
-//                        checkContentType(xml);
-//                        maxNumAdapt(xml);
-//                        printAdaptRep(xml, "frameRate", "video");
-//                        printAdaptRep(xml, "sar", "video");
-//                        printAdapt(xml, "par");
-//                        printRep(xml, "bandwidth", "video");
-//                        printRep(xml, "bandwidth", "audio");
-//                        printAdapt(xml, "segmentAlignment");
-//                        printAdapt(xml, "subsegmentAlignment");
-//                        printAdaptRep(xml, "startWithSAP", "both");
-//                        printAdapt(xml, "subsegmentStartsWithSAP");
-//                        printAdaptRep(xml, "audioSamplingRate", "audio");
-return data;
+        
+        return data;
     }
 
     function verifyEarlyTerminated(xmlDoc, currentData)
@@ -92,7 +82,7 @@ return data;
             currentData.push("no");
             return;
         }
-        currentData.push("check");
+        currentData.push("x");
     }
 
     function verifyDefaultContent(xmlDoc, currentData)
@@ -496,40 +486,60 @@ return data;
 
     function checkSchIU(xmlDoc, name, currentData)
     {
-        currentData.push(name+"@schemeIdUri");
-        var schIUs = [];
-        var CP = xmlDoc.getElementsByTagName(name);
-        if(CP.length === 0)
+        if (name === "SupplementalProperty")
         {
-//                        currentData.push("no");
-            currentData.push("x");
-            return;
-        }
-//                    currentData.push("yes");
-        for (var k = 0; k < CP.length; k++)
-        {
-            var schIU = CP[k].getAttribute("schemeIdUri");
-            if(schIU === null || schIU === "")
+            currentData.push("urn:mpeg:dash:period_continuity:2014");
+            var schIUs = [];
+            var CP = xmlDoc.getElementsByTagName(name);
+            if(CP.length === 0)
             {
-                alert("ContentProtection don't have @schemeIdUri!!!");
+                currentData.push("no");
+                return;
             }
-            else
+            
+            var continuous = false;
+            for (var k = 0; k < CP.length; k++)
             {
-                schIUs.push(schIU);
+                var schIU = CP[k].getAttribute("schemeIdUri");
+                if(schIU === null || schIU === "")
+                {
+                    alert(name + " don't have @schemeIdUri!!!");
+                }
+                else if (schIU === "urn:mpeg:dash:period_continuity:2014")
+                {
+                    currentData.push("yes");
+                    return;
+                }
             }
-        }
-        schIUs = filterResults(schIUs);
-        currentData.push(schIUs);
-    }
-
-    function checkUTCTiming(xmlDoc, currentData)
-    {
-        currentData.push("UTCTiming");
-        var values = xmlDoc.getElementsByTagName("UTCTiming");
-        if (values.length > 0)
-            currentData.push("yes");
-        else
             currentData.push("no");
+        }
+        else
+        {
+            currentData.push(name+"@schemeIdUri");
+            var schIUs = [];
+            var CP = xmlDoc.getElementsByTagName(name);
+            if(CP.length === 0)
+            {
+    //                        currentData.push("no");
+                currentData.push("x");
+                return;
+            }
+    //                    currentData.push("yes");
+            for (var k = 0; k < CP.length; k++)
+            {
+                var schIU = CP[k].getAttribute("schemeIdUri");
+                if(schIU === null || schIU === "")
+                {
+                    alert(name + " don't have @schemeIdUri!!!");
+                }
+                else
+                {
+                    schIUs.push(schIU);
+                }
+            }
+            schIUs = filterResults(schIUs);
+            currentData.push(schIUs);
+        }
     }
 
     function checkSegmentTemplate(xmlDoc, attrib, currentData)
@@ -638,10 +648,11 @@ return data;
 //                    resultDivNum = i+vectors.length*5+1;
     }
 
-    function checkSegmentTimeline(xmlDoc, currentData)
+    function checkElement(xmlDoc, name, currentData)
     {
-        var segTemp = xmlDoc.getElementsByTagName("SegmentTimeline");
-        var exist = (segTemp.length>0)? "yes":"no";
+        var elements = xmlDoc.getElementsByTagName(name);
+        var exist = (elements.length>0)? "yes":"no";
+        currentData.push(name);
         currentData.push(exist);
 //        $('#' + id7).prepend(exist);
 //        document.getElementById('statusContent').innerHTML = "Completed vector " + i;
@@ -1108,16 +1119,6 @@ return data;
         currentData.push(value);
         currentData.push("AssetIdentifier");
         currentData.push(existAsset);
-    }
-
-    function contentPro(xmlDoc, currentData)
-    {
-        currentData.push("cenc:pssh");
-        var value = xmlDoc.getElementsByTagName("cenc:pssh");
-        if (value.length > 0)
-            currentData.push("yes");
-        else
-            currentData.push("no");
     }
     
     //helper functions
