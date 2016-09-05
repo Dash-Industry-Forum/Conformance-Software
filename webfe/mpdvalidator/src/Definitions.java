@@ -35,6 +35,7 @@ public class Definitions {
 	public final static String HREF = "href";
 	public final static String PROTOCOL = "http://";
 	public final static String SECURE_PROTOCOL = "https://";
+	public final static String RESOLVE_TO_ZERO = "urn:mpeg:dash:resolve-to-zero:2013";
 	public static String tmpOutputFile_ = "";
 	
 	// needed for Step 2 and 3: Schema validation and Schematron validation

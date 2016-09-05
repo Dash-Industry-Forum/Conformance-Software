@@ -47,7 +47,7 @@
 			<!-- R2.4 -->
 			<assert test="if (not(@id) and ancestor::dash:MPD/@type = 'dynamic') then false() else true()">If the MPD is dynamic the Period element shall have an id.</assert>
 			<!-- R2.5 -->
-			<assert test="if (not(descendant-or-self::dash:BaseURL) and not(descendant-or-self::dash:SegmentTemplate) and not(descendant-or-self::dash:SegmentList)) then false() else true()">At least one BaseURL, SegmentTemplate or SegmentList shall be defined in Period, AdaptationSet or Representation.</assert>
+			<assert test="if (not(descendant-or-self::dash:BaseURL) and not(descendant-or-self::dash:SegmentTemplate) and not(descendant-or-self::dash:SegmentList) and not(@xlink:href = 'urn:mpeg:dash:resolve-to-zero:2013')) then false() else true()">At least one BaseURL, SegmentTemplate or SegmentList shall be defined in Period, AdaptationSet or Representation.</assert>
             		<assert test="if (@duration = 0 and count(child::dash:AdaptationSet)) then false() else true()">If the duration attribute is set to zero, there should only be a single AdaptationSet present.</assert>
 			<!-- RD2.0	DASH-IF -->
 			<assert test="if (contains(ancestor::dash:MPD/@profiles, 'http://dashif.org/guidelines/dash') and dash:SegmentList) then false() else true()">DASH-IF IOP Section 3.2.2: "the Period.SegmentList element shall not be present" violated here </assert>
