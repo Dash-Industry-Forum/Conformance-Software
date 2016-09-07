@@ -233,7 +233,7 @@ function process_mpd() {
                     if ($duration != 0) {
                         $duration = $duration / $timescale; // get duration
                             
-                        $segmentno = round($presentationduration / $duration); //get segment number
+                        $segmentno = round($presentationduration / $duration + 0.5); //get segment number
                     }
                         
                     $startnumber = $Period_arr[$k]['SegmentTemplate']['startNumber'];  // get first number in segment
@@ -303,7 +303,7 @@ function process_mpd() {
                                 
                         if ($duration != 0) {
                             $duration = $duration / $timescale; // get duration scaled
-                            $segmentno = round($presentationduration / $duration); // get number of segments
+                            $segmentno = round($presentationduration / $duration + 0.5); // get number of segments
                             //print_r2($startnumber);
                         }
                         $startnumber = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['startNumber']; // get start number
@@ -353,7 +353,11 @@ function process_mpd() {
                     $id = $Period_arr[$k]['Representation']['id'][$j]; // get id of given representation
                         
                     $init = str_replace(array('$Bandwidth$', '$RepresentationID$'), array($bandwidth, $id), $initialization); //get initialization segment template is replaced by bandwidth and id 
-                    $initurl = $direct . "/" . $init; //full initialization URL
+                    //test is $direct contains "/" in the end
+                    if (substr($direct, -1) == '/')
+                        $initurl = $direct . $init; //full initialization URL
+                    else
+                        $initurl = $direct . "/" . $init; //full initialization URL
                     $segm_url[] = $initurl; //add segment to URL
                     $timehashmask = 0; // default value if timeline doesnt exist
                     if (!empty($timehash)) { // if time line exist
