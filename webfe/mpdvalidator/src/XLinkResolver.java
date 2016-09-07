@@ -87,7 +87,8 @@ public class XLinkResolver {
 				if (Definitions.debug_)
 					printNode(nNode);
 				String link = extractXLinkHref(nNode);
-				if (link != null) {
+				String resolveToZeroPeriod = new String("urn:mpeg:dash:resolve-to-zero:2013");
+				if (link != null && !link.equals(resolveToZeroPeriod)) {
                     Document remoteDoc = parseXML(link);
                     // Earlier the calling xlink node can be directly replaced with the remoteDoc's root element.
                     // But this is no longer possible, because we add a manual root element.
@@ -261,9 +262,9 @@ public class XLinkResolver {
 		}
 		
 		// we only allow http links
-		if (href != null && (!href.startsWith(Definitions.PROTOCOL) && !href.startsWith(Definitions.SECURE_PROTOCOL)))
-			throw new XLinkException("Only HTTP links are allowed!");
-		
+		if (href != null && (!href.startsWith(Definitions.PROTOCOL) && !href.startsWith(Definitions.SECURE_PROTOCOL) && !href.startsWith(Definitions.RESOLVE_TO_ZERO)))
+			throw new XLinkException("Only HTTP links or urn:mpeg:dash:resolve-to-zero:2013 are allowed!");
+
 		return href;
 	}
 	
