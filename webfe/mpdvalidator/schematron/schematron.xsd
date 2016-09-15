@@ -60,6 +60,8 @@
 		<rule context="dash:AdaptationSet">
 			<!-- R3.0 -->
 			<assert test="if (@id = preceding-sibling::dash:AdaptationSet/@id) then false() else true()">The id of each AdaptationSet within a Period shall be unique.</assert>
+			<!-- DASH-IF v 3.3 Section 3.8  -->
+			<assert test="if ((descendant::dash:SupplementalProperty/@value = following-sibling::dash:AdaptationSet/@id) and (@segmentAlignment='true') and (following-sibling::dash:AdaptationSet/@segmentAlignment = 'false')) then false() else true()">If the content author signals the ability of Adaptation Set switching and as @segmentAlignment or @subsegmentAlignment are set to TRUE for one Adaptation Set, the (Sub)Segment alignment shall hold for all Representations in all Adaptation Sets for which the @id value is included in the @value attribute of the Supplemental descriptor.</assert>
 			<!-- R3.1 -->
 			<assert test="if ((@lang = descendant::dash:ContentComponent/@lang) or (@contentType = descendant::dash:ContentComponent/@contentType) or (@par = descendant::dash:ContentComponent/@par)) then false() else true()">Attributes from the AdaptationSet shall not be repeated in the descendanding ContentComponent elements.</assert>
 			<!-- R3.2 -->
