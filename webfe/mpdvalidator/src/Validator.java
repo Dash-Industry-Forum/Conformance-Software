@@ -134,8 +134,17 @@ public class Validator {
 
 			
 			boolean retVal = false;
-			
-			String pathToMPD = args[0];
+			String pathToMPDWithAnchor = args[0];
+			String[] parts = pathToMPDWithAnchor.split("#");
+			String pathToMPD = parts[0];
+			if( parts.length > 1) {
+				String mpdAnchor = parts[1];
+				if (mpdAnchor.contains("posix") && mpdAnchor.contains("period")){
+					System.out.println("URL validation not successful. \n" +
+							"The #t=posix:xxx notation parameter shall not be used if a period parameter is used in the " +
+							"mpd anchor.\n===================\n");
+				}
+			}
 			URL pathToXSD = null;
 			if (args.length == 3 && args[2] != null && !args[2].equals("")) {
 				if (args[2].contains(":"))
@@ -152,7 +161,7 @@ public class Validator {
 
 			// Step 1:
 			// XLink resolving and validation
-			System.out.println("\nStart XLink resolving\n=====================\n");
+			System.out.println("\nStart XLink 1 resolving\n=====================\n");
 			
 			XLinkResolver xlinkResolver = new XLinkResolver();
 			xlinkResolver.resolveXLinks(pathToMPD);		
