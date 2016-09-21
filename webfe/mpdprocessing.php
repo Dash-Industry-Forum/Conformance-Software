@@ -233,7 +233,7 @@ function process_mpd() {
                     if ($duration != 0) {
                         $duration = $duration / $timescale; // get duration
                             
-                        $segmentno = round($presentationduration / $duration); //get segment number
+                        $segmentno = round($presentationduration / $duration + 0.5); //get segment number
                     }
                         
                     $startnumber = $Period_arr[$k]['SegmentTemplate']['startNumber'];  // get first number in segment
@@ -303,7 +303,7 @@ function process_mpd() {
                                 
                         if ($duration != 0) {
                             $duration = $duration / $timescale; // get duration scaled
-                            $segmentno = round($presentationduration / $duration); // get number of segments
+                            $segmentno = round($presentationduration / $duration + 0.5); // get number of segments
                             //print_r2($startnumber);
                         }
                         $startnumber = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['startNumber']; // get start number
@@ -353,7 +353,11 @@ function process_mpd() {
                     $id = $Period_arr[$k]['Representation']['id'][$j]; // get id of given representation
                         
                     $init = str_replace(array('$Bandwidth$', '$RepresentationID$'), array($bandwidth, $id), $initialization); //get initialization segment template is replaced by bandwidth and id 
-                    $initurl = $direct . "/" . $init; //full initialization URL
+                    //test is $direct contains "/" in the end
+                    if (substr($direct, -1) == '/')
+                        $initurl = $direct . $init; //full initialization URL
+                    else
+                        $initurl = $direct . "/" . $init; //full initialization URL
                     $segm_url[] = $initurl; //add segment to URL
                     $timehashmask = 0; // default value if timeline doesnt exist
                     if (!empty($timehash)) { // if time line exist
@@ -626,7 +630,7 @@ function process_mpd() {
                 if ($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true) {
                     $processArguments = $processArguments . "-dash264enc ";
                 }
-                    
+
                 $processArguments = $processArguments . "-codecs ";
                 if ($Period_arr[$count1]['codecs'] === 0) {
                     $codecs = $Period_arr[$count1]['Representation']['codecs'][$count2];
@@ -654,7 +658,17 @@ function process_mpd() {
                     $audioChValue = $Period_arr[$count1]['AudioChannelValue'];
                 }
                 $processArguments = $processArguments . $audioChValue;
-                    
+                
+//                $test= $Period_arr[$count1];
+//                $test1= $Period_arr[$count1]['Representation']['SegmentBase'];
+//                $test2= $Period_arr[$count1]['Representation']['SegmentBase']['RepresentationIndex'];
+                if ($Period_arr[$count1]['Representation']['SegmentTemplate']['RepresentationIndex'] !== null || 
+                        $Period_arr[$count1]['Representation']['SegmentBase']['RepresentationIndex'] !== null ||
+                        $Period_arr[$count1]['SegmentTemplate']['RepresentationIndex'] !== null||
+                        $Period_arr[$count1]['SegmentBase']['RepresentationIndex'] !== null){
+                    $processArguments = $processArguments . "-repIndex ";
+                }
+                
                 error_log("validatemp4");
                 // Work out which validator binary to use
                 $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";

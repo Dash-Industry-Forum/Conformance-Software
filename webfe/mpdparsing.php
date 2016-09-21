@@ -211,7 +211,7 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
         {
             $Adapt_seg_temp = 0;
         }
-
+        
       //Check if AudioChannelConfiguration exists at AdapatationSet level.
         $audioChannelConfig_Adapt = $Adapt->getElementsByTagName("AudioChannelConfiguration");
         if($audioChannelConfig_Adapt->length>0)
@@ -358,11 +358,12 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
 	//Array of each presentation containing all attributes and nodes within Presentations
 	  
     $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
-    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
+    'sar'=>$sar,'bandwidth'=>$bandwidth,'SegmentTemplate'=>$rep_seg_temp, 'SegmentBase'=>$segarray, 'startWithSAP'=>$repStartWithSAP, 'profiles'=>$repProfiles,
                     'ContentProtectionElementCount'=>$ContentProtectionElementCountRep,'presentationTimeOffset'=>$Rep_Timeoffset,'timescale'=>$timescale,'AudioChannelValue'=>$audioCh_value,'indexRange'=>$indexRange_RepSet);
 	// Array of all adapationsets containing all attributes and nodes including Presentations 
 
-     $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching, 'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp,'codecs'=>$codecs_AdaptSet,'width'=>$width_AdaptSet,'height'=>$height_AdaptSet,'Representation'=>$Rep_arr,'AudioChannelValue'=>$audioCh_Adapt_value,'indexRange'=>$indexRange_AdaptSet);
+     $Adapt_arr=array('startWithSAP'=>$startWithSAP,'segmentAlignment'=>$segmentAlignment,'subsegmentAlignment'=>$subsegmentAlignment,'bitstreamSwitching'=>$bitstreamSwitching,
+         'id'=>$idadapt,'scanType'=>$scanType,'mimeType'=>$mimeType,'SegmentTemplate'=>$Adapt_seg_temp, 'SegmentBase'=>$basearray, 'codecs'=>$codecs_AdaptSet,'width'=>$width_AdaptSet,'height'=>$height_AdaptSet,'Representation'=>$Rep_arr,'AudioChannelValue'=>$audioCh_Adapt_value,'indexRange'=>$indexRange_AdaptSet);
 
   
     /*$Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
