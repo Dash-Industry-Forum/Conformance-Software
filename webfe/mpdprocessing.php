@@ -233,7 +233,7 @@ function process_mpd() {
                     if ($duration != 0) {
                         $duration = $duration / $timescale; // get duration
                             
-                        $segmentno = round($presentationduration / $duration + 0.5); //get segment number
+                        $segmentno = ceil(($presentationduration - $start) / $duration); //get segment number
                     }
                         
                     $startnumber = $Period_arr[$k]['SegmentTemplate']['startNumber'];  // get first number in segment
@@ -303,7 +303,7 @@ function process_mpd() {
                                 
                         if ($duration != 0) {
                             $duration = $duration / $timescale; // get duration scaled
-                            $segmentno = round($presentationduration / $duration + 0.5); // get number of segments
+                            $segmentno = ceil(($presentationduration - $start) / $duration); // get number of segments
                             //print_r2($startnumber);
                         }
                         $startnumber = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['startNumber']; // get start number
