@@ -76,7 +76,7 @@ function checkRepresentationsConformance(){
         }
         
         if(!file_exists($loc))
-            fprintf ($opfile, "**Error: Tried to retrieve data from a location that does not exist. \n (Possible cause: Representations are not valid and no file/directory for box info is created.)");
+            fprintf ($opfile, "**Tried to retrieve data from a location that does not exist. \n (Possible cause: Representations are not valid and no file/directory for box info is created.)");
         else if($filecount == 0)                     //if no file exists in the directory, nothing to check
             fprintf($opfile, "**Nothing to check for in Adaptationset ".($i+1)."\n");
         else{                                   //if file(s) do(es) exist, then start checking
