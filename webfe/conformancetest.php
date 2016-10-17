@@ -451,19 +451,19 @@ function pollingProgress()
 {
     xmlDoc_progress=loadXMLDoc("temp/"+dirid+"/progress.xml");
 
-    if (xmlDoc_progress == null)
+    if (xmlDoc_progress === null)
         return;
     else
         var MPDError=xmlDoc_progress.getElementsByTagName("MPDError");
 
-    if(MPDError.length== 0)
+    if(MPDError.length === 0)
         return;
     else    
         totarrstring=MPDError[0].childNodes[0].nodeValue;
 
 //    console.log("process_returned:");
 //    console.log(totarrstring);
-    if (totarrstring==1)//Check for the error in MPD loading.
+    if (totarrstring === 1)//Check for the error in MPD loading.
     {
         window.alert("Error loading the MPD, please check the URL.");
         clearInterval( pollingTimer);	
@@ -477,19 +477,24 @@ function pollingProgress()
     //Check if the MPD is dynamic.
     if(xmlDoc_progress.getElementsByTagName("dynamic").length !== 0)
     {
-//        console.log("i'M DYNAMIC");
-        if (xmlDoc_progress.getElementsByTagName("SegmentTimeline").length !== 0)
-            dynamicsegtimeline = true;
-//            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
+        if (xmlDoc_progress.getElementsByTagName("dynamic")[0].innerHTML === "true")
+        {
+    //        console.log("i'M DYNAMIC");
+            if (xmlDoc_progress.getElementsByTagName("SegmentTimeline").length !== 0)
+                dynamicsegtimeline = true;
+    //            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 
-        document.getElementById('dynamic').style.visibility='visible';
+            document.getElementById('dynamic').style.visibility='visible';
 
-        document.getElementById("dynamic").href='http://vm1.dashif.org/DynamicServiceValidator/?mpdurl=' +url ;
-//            document.getElementById('list').style.visibility='visible';
+            document.getElementById("dynamic").href='http://vm1.dashif.org/DynamicServiceValidator/?mpdurl=' +url ;
+    //            document.getElementById('list').style.visibility='visible';
 
-//            finishTest();
-//            return false;
+    //            finishTest();
+    //            return false;
+        }
     }
+    else
+        return;
     
     //check if SegmentList exist
     if(xmlDoc_progress.getElementsByTagName("segmentList").length !== 0)
