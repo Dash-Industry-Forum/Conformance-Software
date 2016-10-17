@@ -444,11 +444,12 @@ function process_mpd() {
             
         if ($setsegflag) { // Segment template is used
             if ($type === "dynamic") { 
+                $totarr[] = "dynamic";
+                $progressXML->dynamic = "true"; // Update progress.xml file with info on dynamic MPD.
+                $progressXML->asXml(trim($locate.'/progress.xml'));
+                $stri = json_encode($totarr); //Send results to client
                 if ($dom->getElementsByTagName('SegmentTimeline')->length !== 0) {
-                    $totarr[] = "dynamic";
-                    $progressXML->dynamic = "true"; // Update progress.xml file with info on dynamic MPD.
-                    $progressXML->asXml(trim($locate.'/progress.xml'));
-                    $stri = json_encode($totarr); //Send results to client
+                    $progressXML->SegmentTimeline = "true";
 //                    echo $stri;
                     session_destroy(); //Destroy session
                     $progressXML->completed = "true";
