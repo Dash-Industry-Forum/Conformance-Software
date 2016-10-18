@@ -20,6 +20,7 @@ function process_mpd() {
     //  $path_parts = pathinfo($mpdurl); 
     $Baseurl = false; //define if Baseurl is used or no
     $setsegflag = false;
+    $shouldCompare = false; // to decide if the representations should be compared
     // $mpdfilename = $path_parts['filename'];		// determine name of actual MPD file
     if (isset($_FILES['afile']['tmp_name'])) {
         
@@ -529,6 +530,9 @@ function process_mpd() {
         $destiny = array();
             
         if ($count2 >= sizeof($period_url[$count1])) {//check if all representations within a segment is downloaded
+            if ($shouldCompare)  // if all data in an adaptation set is downloaded properly, then start comparing
+                compareRepresentations();
+            
             $count2 = 0;  // reset representation counter when new adaptation set is proccesed 
             $count1 = $count1 + 1; // increase adapatationset counter
             if($count1<sizeof($period_url)){
@@ -541,6 +545,7 @@ function process_mpd() {
             
         if ($count1 >= sizeof($period_url)) { //check if all adapatationsets is processed 
             error_log("AllAdaptDownloaded");
+            checkRepresentationsConformance();
             crossRepresentationProcess();
             $missingexist = file_exists($locate . '/missinglink.txt'); //check if any broken urls is detected
             if ($missingexist) {
@@ -562,7 +567,25 @@ function process_mpd() {
                     $ResultXML->Period[0]->Adaptation[$i]->addChild('CrossRepresentation','noerror');
                     $file_error[] = "noerror";                    
                   }
+                  
+                if(file_exists($locate . '/Adapt' . $i . '_compInfo.txt')){
+                    $searchfiles = file_get_contents($locate . '/Adapt' . $i . '_compInfo.txt');
+                    if(strpos($searchfiles, "Error") == false){
+                        $ResultXML->Period[0]->Adaptation[$i]->addChild('ComparedRepresentations', 'noerror');
+                        $file_error[] = "noerror"; // no error found in text file
+                    }
+                    else{
+                        $ResultXML->Period[0]->Adaptation[$i]->addChild('ComparedRepresentations', 'error');
+                        $file_error[] = $locate.'/Adapt'.$i.'_compInfo.html'; // add error file location to array
+                    }
+                }
+                else{
+                    $ResultXML->Period[0]->Adaptation[$i]->addChild('ComparedRepresentations', 'noerror');
+                    $file_error[] = "noerror";
+                }
+                
                   $ResultXML->Period[0]->Adaptation[$i]->CrossRepresentation->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/Adapt' . $i . '_infofile.txt'));
+                  $ResultXML->Period[0]->Adaptation[$i]->ComparedRepresentations->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate.'/Adapt'.$i.'_compInfo.txt'));
                   $progressXML->asXml(trim($locate.'/progress.xml'));
             }
             session_destroy();
@@ -754,10 +777,33 @@ function process_mpd() {
                 if (strpos($search, "error") === false){ //if no error , notify client with no error
                     $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2-1] = "noerror";
                     $file_location[] = "noerror";
+                    $shouldCompare = true;  // if data is downloaded properly, then it's ready for comparison
                 }
                 else{
                     $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2-1] = "error";
                     $file_location[] = "error"; //else notify client with error
+                    $shouldCompare = false; // if data is not downloaded properly, then it shouldnt be used for comparison
+                }
+                
+                // Compare representations
+                if($shouldCompare){
+                    $new_pathdir = $locate . "/Adapt" . $count1;
+                    if (!file_exists($new_pathdir)){
+                        $oldmask = umask(0);
+                        mkdir($new_pathdir, 0777, true); // create folder for each presentation
+                        umask($oldmask);
+                    }
+                    rename($locate . '/' . "atominfo.xml", $new_pathdir . '/' . $repno . ".xml");
+                
+                    $new_pathdir =  $new_pathdir . "/comparisonResults"; 
+                    if (!file_exists($new_pathdir)){
+                        $oldmask = umask(0);
+                        mkdir($new_pathdir, 0777, true); // create folder for each presentation
+                        umask($oldmask);
+                    }
+                }
+                else{
+                    unlink($locate . '/' . "atominfo.xml");
                 }
                 
                 $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2-1]->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/' . $repno . "log.txt"));
