@@ -12,15 +12,15 @@
 			<!-- R1.1 -->
 			<assert test="if (@type = 'dynamic' and not(@publishTime)) then false() else true()">If MPD is of type "dynamic" publishTime shall be defined.</assert>
 			<!-- R1.2 -->
-			<assert test="if (@type = 'static' and @timeShiftBufferDepth) then false() else true()">If MPD is of type "static" timeShiftBufferDepth shall not be defined.</assert>
+			<assert test="if (@type = 'static' and @timeShiftBufferDepth and contains(@profiles, 'http://dashif.org/guidelines/dash')) then false() else true()">If MPD is of type "static" and if the profile contains a DASH-IF IOP profile, then the timeShiftBufferDepth shall not be defined.</assert>
 			<!-- R1.3 -->
-			<assert test="if (@type = 'static' and not(@mediaPresentationDuration)) then false() else true()">If MPD is of type "static" mediaPresentationDuration shall be defined.</assert>
+			<!-- <assert test="if (@type = 'static' and not(@mediaPresentationDuration)) then false() else true()">If MPD is of type "static" mediaPresentationDuration shall be defined.</assert>  -->
 			<!-- R1.4 -->
 			<assert test="if (@type = 'static' and descendant::dash:Period[1]/@start and (years-from-duration(descendant::dash:Period[1]/@start) + months-from-duration(descendant::dash:Period[1]/@start) + days-from-duration(descendant::dash:Period[1]/@start) + hours-from-duration(descendant::dash:Period[1]/@start) + minutes-from-duration(descendant::dash:Period[1]/@start) +  seconds-from-duration(descendant::dash:Period[1]/@start)) > 0) then false() else true()">If MPD is of type "static" and the first period has a start attribute the start attribute shall be zero.</assert>
 			<!-- R1.5 -->
 			<assert test="if (not(@mediaPresentationDuration) and not(@minimumUpdatePeriod)) then false() else true()">If mediaPresentationDuration is not defined for the MPD minimumUpdatePeriod shall be defined or vice versa.</assert>
 			<!-- R1.6 -->
-			<assert test="if (@type = 'static' and @minimumUpdatePeriod) then false() else true()">If MPD is of type "static" minimumUpdatePeriod shall not be defined.</assert>
+			<assert test="if (@type = 'static' and @minimumUpdatePeriod and contains(@profiles, 'http://dashif.org/guidelines/dash')) then false() else true()">If MPD is of type "static" and if the profile contains a DASH-IF IOP profile, then the minimumUpdatePeriod shall not be defined.</assert>
 			<!-- R1.7 -->
 			<assert test="if (not(@profiles) or (contains(@profiles, 'urn:mpeg:dash:profile:isoff-on-demand:2011') or contains(@profiles, 'urn:mpeg:dash:profile:isoff-live:2011') or contains(@profiles, 'urn:mpeg:dash:profile:isoff-main:2011') or contains(@profiles, 'urn:mpeg:dash:profile:full:2011') or contains(@profiles, 'urn:mpeg:dash:profile:mp2t-main:2011') or contains(@profiles, 'urn:mpeg:dash:profile:mp2t-simple:2011') or contains (@profiles, 'http://dashif.org/guidelines/dashif#ac-4') or contains (@profiles, 'http://dashif.org/guidelines/dashif#mha1'))) then true() else false()">The On-Demand profile shall be identified by the URN "urn:mpeg:dash:profile:isoff-on-demand:2011". The live profile shall be identified by the URN "urn:mpeg:dash:profile:isoff-live:2011". The main profile shall be identified by the URN "urn:mpeg:dash:profile:isoff-main:2011". The full profile shall be identified by the URN "urn:mpeg:dash:profile:full:2011". The mp2t-main profile shall be identified by the URN "urn:mpeg:dash:profile:mp2t-main:2011". The mp2t-simple profile shall be identified by the URN "urn:mpeg:dash:profile:mp2t-simple:2011".The Dolby AC-4 profile shall be identified by "http://dashif.org/guidelines/dashif#ac-4". The multichannel audio extension with MPEG-H 3D Audio profile shall be identified by "http://dashif.org/guidelines/dashif#mha1".</assert>
 			<!-- R1.8 -->
