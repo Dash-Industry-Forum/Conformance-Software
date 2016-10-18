@@ -366,14 +366,6 @@ function process_mpd() {
                         $timehashmask = $timehash;
                     }
                         
-                    $signlocation = strpos($media, '%');  // clean media attribute from non existing values
-                    if ($signlocation !== false) {
-                        if ($signlocation - strpos($media, 'Number') === 6) {
-                            $media = str_replace('$Number', '', $media);
-                        }
-                    }
-                        
-                        
                     if ($type === "dynamic") {
 //                        if ($dom->getElementsByTagName('SegmentTimeline')->length !== 0) {
                         //TODO currently $duration and timing is not properly set
@@ -386,10 +378,39 @@ function process_mpd() {
                         $i = $segmentinfo[0]; // first segment in buffer
                     } else
                         $i = 0;
+                    
                     while ($i < $segmentno) {
+                        // here $Number$ / $Time$ is replaced (if it exists)
                         $segmenturl = str_replace(array('$Bandwidth$', '$Number$', '$RepresentationID$', '$Time$'), array($bandwidth, $i + $startnumber, $id, $timehashmask[$i]), $media); //replace all media template values by actuall values
-                        $segmenturl = sprintf($segmenturl, $startnumber + $i);
-                        $segmenturl = str_replace('$', '', $segmenturl); //clean segment url from any extra signs
+                        
+                        // when the format is $Number%xd$ / $Time%xd$
+                        $pos = strpos($segmenturl, '$Number');
+                        if ($pos !== false)
+                        {
+                            if (substr($segmenturl, $pos + strlen('$Number'), 1) === '%')
+                            {
+                                $segmenturl = sprintf($segmenturl, $startnumber + $i);
+                                $segmenturl = str_replace('$Number', '', $segmenturl);
+                                $segmenturl = str_replace('$', '', $segmenturl);
+                            } else
+                            {
+                                error_log("It cannot happen! the format should be either \$Number$ or \$Number%xd$!");
+                            }
+                        }
+                        $pos = strpos($segmenturl, '$Time');
+                        if ($pos !== false)
+                        {
+                            if (substr($segmenturl, $pos + strlen('$Time'), 1) === '%')
+                            {
+                                $segmenturl = sprintf($segmenturl, $timehashmask[$i]);
+                                $segmenturl = str_replace('$Time', '', $segmenturl);
+                                $segmenturl = str_replace('$', '', $segmenturl);
+                            } else
+                            {
+                                error_log("It cannot happen! the format should be either \$Time$ or \$Time%xd$!");
+                            }
+                        }
+//                        $segmenturl = str_replace('$', '', $segmenturl); //clean segment url from any extra signs
                         $segmenturl = $direct . "/" . $segmenturl; // get full segment url
                         $segm_url[] = removeabunchofslashes($segmenturl); //add URL to segments URL array
                         $i++;
