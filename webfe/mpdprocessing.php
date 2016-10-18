@@ -722,7 +722,11 @@ function process_mpd() {
                     if ( filesize( $locate . '/' . "stderr.txt" ) == 0)
                     {
                         // file is empty, add error information
-                        file_put_contents($locate . '/' . "stderr.txt", "### error:  \n###        Failed to process " . $repno . "!");
+                        $pos = strlen('Adapt'); 
+                        $Adaptnum = (int)substr($repno, $pos, 1) + 1;
+                        $pos += strlen('rep');
+                        $repnum = (int)substr($repno, $pos, 1) + 1;
+                        file_put_contents($locate . '/' . "stderr.txt", "### error:  \n###        Failed to process Adaptation Set " . $Adaptnum . ", Representation " . $repnum . "!");
                     }
                 }                    
                 rename($locate . '/' . "leafinfo.txt", $locate . '/' . $repno . "_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
