@@ -63,7 +63,7 @@ function rrmdir($dir) {
 
 // Modification of standard PHP System() function to have system output from both the STDERR and STDOUT
 function syscall($command){
-$result=0;
+    $result=0;
     if ($proc = popen("($command)2>&1","r")){
         while (!feof($proc)) $result .= fgets($proc, 1000);
         pclose($proc);

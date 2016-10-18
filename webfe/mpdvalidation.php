@@ -65,8 +65,8 @@ function mpdvalidator($result_array,$locate,$foldername){
         $exit =true;// if failed terminate conformance check
     }
     if ($url_array[2] ===1)  // only mpd validation requested       
-    {    $exit =true;	
-    
+    {
+        $exit =true;
     }
     
     $function_result[0]=$exit;

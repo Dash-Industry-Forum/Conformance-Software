@@ -444,11 +444,12 @@ function process_mpd() {
             
         if ($setsegflag) { // Segment template is used
             if ($type === "dynamic") { 
+                $totarr[] = "dynamic";
+                $progressXML->dynamic = "true"; // Update progress.xml file with info on dynamic MPD.
+                $progressXML->asXml(trim($locate.'/progress.xml'));
+                $stri = json_encode($totarr); //Send results to client
                 if ($dom->getElementsByTagName('SegmentTimeline')->length !== 0) {
-                    $totarr[] = "dynamic";
-                    $progressXML->dynamic = "true"; // Update progress.xml file with info on dynamic MPD.
-                    $progressXML->asXml(trim($locate.'/progress.xml'));
-                    $stri = json_encode($totarr); //Send results to client
+                    $progressXML->SegmentTimeline = "true";
 //                    echo $stri;
                     session_destroy(); //Destroy session
                     $progressXML->completed = "true";
@@ -691,7 +692,18 @@ function process_mpd() {
                     
                 $command = $locate . '/' . $validatemp4 . " -logconsole -configfile " . $file_loc;
                 file_put_contents("command.txt", $command);
-                exec($command); //Excute conformance software
+                $output = [];
+                $returncode = 0; //the return code should stay 0 when there is no error!
+                exec($command, $output, $returncode); //Excute conformance software
+                if ($returncode !== 0)
+                {
+                    error_log("Processing " . $repno . " returns: " . $returncode);
+                    if ( filesize( $locate . '/' . "stderr.txt" ) == 0)
+                    {
+                        // file is empty, add error information
+                        file_put_contents($locate . '/' . "stderr.txt", "### error:  \n###        Failed to process " . $repno . "!");
+                    }
+                }                    
                 rename($locate . '/' . "leafinfo.txt", $locate . '/' . $repno . "_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
                     
                 $file_location[] = "temp" . '/' . $foldername . '/' . $repno . "_infofile.html";
