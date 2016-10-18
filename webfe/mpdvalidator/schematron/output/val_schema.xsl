@@ -294,32 +294,16 @@
 
 		    <!--ASSERT -->
 <xsl:choose>
-         <xsl:when test="if (@type = 'static' and @timeShiftBufferDepth) then false() else true()"/>
+         <xsl:when test="if (@type = 'static' and @timeShiftBufferDepth and contains(@profiles, 'http://dashif.org/guidelines/dash')) then false() else true()"/>
          <xsl:otherwise>
             <svrl:failed-assert xmlns:xs="http://www.w3.org/2001/XMLSchema"
                                 xmlns:schold="http://www.ascc.net/xml/schematron"
                                 xmlns:svrl="http://purl.oclc.org/dsdl/svrl"
-                                test="if (@type = 'static' and @timeShiftBufferDepth) then false() else true()">
+                                test="if (@type = 'static' and @timeShiftBufferDepth and contains(@profiles, 'http://dashif.org/guidelines/dash')) then false() else true()">
                <xsl:attribute name="location">
                   <xsl:apply-templates select="." mode="schematron-get-full-path"/>
                </xsl:attribute>
-               <svrl:text>If MPD is of type "static" timeShiftBufferDepth shall not be defined.</svrl:text>
-            </svrl:failed-assert>
-         </xsl:otherwise>
-      </xsl:choose>
-
-		    <!--ASSERT -->
-<xsl:choose>
-         <xsl:when test="if (@type = 'static' and not(@mediaPresentationDuration)) then false() else true()"/>
-         <xsl:otherwise>
-            <svrl:failed-assert xmlns:xs="http://www.w3.org/2001/XMLSchema"
-                                xmlns:schold="http://www.ascc.net/xml/schematron"
-                                xmlns:svrl="http://purl.oclc.org/dsdl/svrl"
-                                test="if (@type = 'static' and not(@mediaPresentationDuration)) then false() else true()">
-               <xsl:attribute name="location">
-                  <xsl:apply-templates select="." mode="schematron-get-full-path"/>
-               </xsl:attribute>
-               <svrl:text>If MPD is of type "static" mediaPresentationDuration shall be defined.</svrl:text>
+               <svrl:text>If MPD is of type "static" and if the profile contains a DASH-IF IOP profile, then the timeShiftBufferDepth shall not be defined.</svrl:text>
             </svrl:failed-assert>
          </xsl:otherwise>
       </xsl:choose>
@@ -358,16 +342,16 @@
 
 		    <!--ASSERT -->
 <xsl:choose>
-         <xsl:when test="if (@type = 'static' and @minimumUpdatePeriod) then false() else true()"/>
+         <xsl:when test="if (@type = 'static' and @minimumUpdatePeriod and contains(@profiles, 'http://dashif.org/guidelines/dash')) then false() else true()"/>
          <xsl:otherwise>
             <svrl:failed-assert xmlns:xs="http://www.w3.org/2001/XMLSchema"
                                 xmlns:schold="http://www.ascc.net/xml/schematron"
                                 xmlns:svrl="http://purl.oclc.org/dsdl/svrl"
-                                test="if (@type = 'static' and @minimumUpdatePeriod) then false() else true()">
+                                test="if (@type = 'static' and @minimumUpdatePeriod and contains(@profiles, 'http://dashif.org/guidelines/dash')) then false() else true()">
                <xsl:attribute name="location">
                   <xsl:apply-templates select="." mode="schematron-get-full-path"/>
                </xsl:attribute>
-               <svrl:text>If MPD is of type "static" minimumUpdatePeriod shall not be defined.</svrl:text>
+               <svrl:text>If MPD is of type "static" and if the profile contains a DASH-IF IOP profile, then the minimumUpdatePeriod shall not be defined.</svrl:text>
             </svrl:failed-assert>
          </xsl:otherwise>
       </xsl:choose>
