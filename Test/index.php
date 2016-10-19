@@ -11,16 +11,16 @@
     <h2> Test Automation </h2>
 <script>
     var resultDivNum = 0;
-	
-	window.onload = function()
-	{	
-		 document.getElementById('vectors').value = <?php $file = file_get_contents( 'DefaultVectorList.txt' ); echo json_encode( $file ); ?>;
-	}
+    
+    window.onload = function()
+    {	
+        document.getElementById('vectors').value = <?php $file = file_get_contents( 'DefaultVectorList.txt' ); echo json_encode( $file ); ?>;
+    }
     
     function newtab(mpdfile)
     {
-        var testWin = window.open("../webfe/conformancetest.php?mpdurl="+mpdfile);
-		testWin.blur();
+        var testWin = window.open("../webfe/conformancetest.php?mpdurl="+mpdfile,"test");
+        testWin.blur();
     } 
     
     function testing()
@@ -80,11 +80,8 @@
         {
             var vectors = vectorstr.split("\n");
             console.log(vectors);
-          
         }
        
-    
-        
         function ajaxcall()
         {
             if(i<=vectors.length)
