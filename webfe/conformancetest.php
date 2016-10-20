@@ -659,66 +659,71 @@ function progress()  //Progress of Segments' Conformance
 //    console.log("progress(): representationid=",representationid,",hinindex=",hinindex,",adaptationid=",adaptationid  );
 //    console.log("downloading, response:");
     var CrossRepValidation=xmlDoc_progress.getElementsByTagName("CrossRepresentation");
-    if (CrossRepValidation.length!=0 && adaptationid>totarr[0])
+    var ComparedRepresentations = xmlDoc_progress.getElementsByTagName("ComparedRepresentations");
+    if ((CrossRepValidation.length!=0 && adaptationid>totarr[0]) || ComparedRepresentations.length !=0 && adaptationid>totarr[0])
     {
 //        console.log("Inside locations");
-        for(var i =1; i<=CrossRepValidation.length;i++)
-        {
-            if(CrossRepValidation[i-1].textContent=="noerror"){
+        if(CrossRepValidation.length!=0 && adaptationid>totarr[0]){
+            for(var i =1; i<=CrossRepValidation.length;i++)
+            {
+                if(CrossRepValidation[i-1].textContent=="noerror"){
 
-                tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
-                automate(adaptid[i-1],lastloc,"Cross-representation validation success");
+                    tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
+                    automate(adaptid[i-1],lastloc,"Cross-representation validation success");
 
-                tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
-                lastloc++;
-            // 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
+                    tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
+                    lastloc++;
+                // 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
 
-            }
-            else{
+                }
+                else{
 
-                tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
-//                kidsloc.push(lastloc);
-                //urlarray.push(locations[i]);
+                    tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
+//                  kidsloc.push(lastloc);
+                    //urlarray.push(locations[i]);
 
-                automate(adaptid[i-1],lastloc,"Cross-representation validation error");
+                    automate(adaptid[i-1],lastloc,"Cross-representation validation error");
 
-                tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
-                lastloc++;
+                    tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
+                    lastloc++;
 
 //                console.log("errors");
 
-                automate(adaptid[i-1],lastloc,"log");
-                tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
-                kidsloc.push(lastloc);
-                urlarray.push("temp/"+dirid+"/"+ "Adapt"+(i-1)+ "_infofile.html");
-                lastloc++;
+                    automate(adaptid[i-1],lastloc,"log");
+                    tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
+                    kidsloc.push(lastloc);
+                    urlarray.push("temp/"+dirid+"/"+ "Adapt"+(i-1)+ "_infofile.html");
+                    lastloc++;
+                }
             }
         }
-    }
-    if(ComparedRepresentations.length !=0 && adaptationid>totarr[0]){
-        for(var i =1; i<=ComparedRepresentations.length;i++){
+        
+        if(ComparedRepresentations.length !=0 && adaptationid>totarr[0]){
+            for(var i =1; i<=ComparedRepresentations.length;i++){
             
-            if(ComparedRepresentations[i-1].textContent=="noerror"){
-                tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
-                automate(adaptid[i-1],lastloc,"Compared representations validation success");
+                if(ComparedRepresentations[i-1].textContent=="noerror"){
+                    tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
+                    automate(adaptid[i-1],lastloc,"Compared representations validation success");
 
-                tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
-                lastloc++;
-            }
-            else{
-                tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
-                automate(adaptid[i-1],lastloc,"Compared representations validation error");
+                    tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
+                    lastloc++;
+                }
+                else{
+                    tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
+                    automate(adaptid[i-1],lastloc,"Compared representations validation error");
 
-                tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
-                lastloc++;
+                    tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
+                    lastloc++;
                 
-                automate(adaptid[i-1],lastloc,"log");
-                tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
-                kidsloc.push(lastloc);
-                urlarray.push("temp/"+dirid+"/"+ "Adapt"+(i-1)+ "_compInfo.html");
-                lastloc++;
+                    automate(adaptid[i-1],lastloc,"log");
+                    tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
+                    kidsloc.push(lastloc);
+                    urlarray.push("temp/"+dirid+"/"+ "Adapt"+(i-1)+ "_compInfo.html");
+                    lastloc++;
+                }
             }
         }
+        
         kidsloc.push(lastloc);
         var BrokenURL=xmlDoc_progress.getElementsByTagName("BrokenURL");
         if( BrokenURL != null && BrokenURL[0].textContent == "error")//if(locations[locations.length-1]!="noerror")
