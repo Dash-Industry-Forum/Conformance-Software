@@ -39,6 +39,13 @@
     }
     else
         $url = "";
+    
+    if(isset($_REQUEST['cmaf']))
+    {
+        $cmaf = $_REQUEST['cmaf'];
+    }
+    else
+        $cmaf = "";
 ?>
 
 <script type="text/javascript">
@@ -416,6 +423,7 @@ function submit()
         stringurl[2] = 1;
     else
    	stringurl[2] = 0 ;
+    stringurl[4] = "<?php echo $cmaf; ?>";
     initVariables();
     setUpTreeView();
     setStatusTextlabel("Processing...");

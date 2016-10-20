@@ -95,7 +95,8 @@ function process_mpd() {
         }
             
         $url_array[3] = $locate; //Used for e.g. placing intermediate files etc.
-            
+        $cmaf_val = $url_array[4];     
+        
         copy(dirname(__FILE__) . "/" . "featuretable.html", $locate . '/' . "featuretable.html"); // copy features list html file to session folder
         //Create log file so that it is available if accessed
         $progressXML = simplexml_load_string('<root><Profile></Profile><Progress><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded><CurrentAdapt>1</CurrentAdapt><CurrentRep>1</CurrentRep></Progress><completed>false</completed></root>'); // get progress bar update
@@ -234,7 +235,7 @@ function process_mpd() {
                     if ($duration != 0) {
                         $duration = $duration / $timescale; // get duration
                             
-                        $segmentno = ceil(($presentationduration - $start) / $duration); //get segment number
+                        $segmentno = round($presentationduration / $duration); //get segment number
                     }
                         
                     $startnumber = $Period_arr[$k]['SegmentTemplate']['startNumber'];  // get first number in segment
@@ -304,7 +305,7 @@ function process_mpd() {
                                 
                         if ($duration != 0) {
                             $duration = $duration / $timescale; // get duration scaled
-                            $segmentno = ceil(($presentationduration - $start) / $duration); // get number of segments
+                            $segmentno = round($presentationduration / $duration); // get number of segments
                             //print_r2($startnumber);
                         }
                         $startnumber = $Period_arr[$k]['Representation']['SegmentTemplate'][$j]['startNumber']; // get start number
@@ -354,11 +355,7 @@ function process_mpd() {
                     $id = $Period_arr[$k]['Representation']['id'][$j]; // get id of given representation
                         
                     $init = str_replace(array('$Bandwidth$', '$RepresentationID$'), array($bandwidth, $id), $initialization); //get initialization segment template is replaced by bandwidth and id 
-                    //test is $direct contains "/" in the end
-                    if (substr($direct, -1) == '/')
-                        $initurl = $direct . $init; //full initialization URL
-                    else
-                        $initurl = $direct . "/" . $init; //full initialization URL
+                    $initurl = $direct . "/" . $init; //full initialization URL
                     $segm_url[] = $initurl; //add segment to URL
                     $timehashmask = 0; // default value if timeline doesnt exist
                     if (!empty($timehash)) { // if time line exist
@@ -506,11 +503,11 @@ function process_mpd() {
     while($count1<=sizeof($period_url)){
         $root = dirname(__FILE__);
         $destiny = array();
-            
+         
         if ($count2 >= sizeof($period_url[$count1])) {//check if all representations within a segment is downloaded
-            if ($shouldCompare)  // if all data in an adaptation set is downloaded properly, then start comparing
+            if ($cmaf_val == "yes" && $shouldCompare)  // if all data in an adaptation set is downloaded properly, then start comparing
                 compareRepresentations();
-            
+
             $count2 = 0;  // reset representation counter when new adaptation set is proccesed 
             $count1 = $count1 + 1; // increase adapatationset counter
             if($count1<sizeof($period_url)){
@@ -523,7 +520,8 @@ function process_mpd() {
             
         if ($count1 >= sizeof($period_url)) { //check if all adapatationsets is processed 
             error_log("AllAdaptDownloaded");
-            checkRepresentationsConformance();
+            if($cmaf_val == "yes")
+                checkRepresentationsConformance();
             crossRepresentationProcess();
             $missingexist = file_exists($locate . '/missinglink.txt'); //check if any broken urls is detected
             if ($missingexist) {
@@ -546,7 +544,7 @@ function process_mpd() {
                     $file_error[] = "noerror";                    
                   }
                   
-                if(file_exists($locate . '/Adapt' . $i . '_compInfo.txt')){
+                if($cmaf_val == "yes" && file_exists($locate . '/Adapt' . $i . '_compInfo.txt')){
                     $searchfiles = file_get_contents($locate . '/Adapt' . $i . '_compInfo.txt');
                     if(strpos($searchfiles, "Error") == false){
                         $ResultXML->Period[0]->Adaptation[$i]->addChild('ComparedRepresentations', 'noerror');
@@ -556,15 +554,11 @@ function process_mpd() {
                         $ResultXML->Period[0]->Adaptation[$i]->addChild('ComparedRepresentations', 'error');
                         $file_error[] = $locate.'/Adapt'.$i.'_compInfo.html'; // add error file location to array
                     }
-                }
-                else{
-                    $ResultXML->Period[0]->Adaptation[$i]->addChild('ComparedRepresentations', 'noerror');
-                    $file_error[] = "noerror";
+                    $ResultXML->Period[0]->Adaptation[$i]->ComparedRepresentations->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate.'/Adapt'.$i.'_compInfo.txt'));
                 }
                 
-                  $ResultXML->Period[0]->Adaptation[$i]->CrossRepresentation->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/Adapt' . $i . '_infofile.txt'));
-                  $ResultXML->Period[0]->Adaptation[$i]->ComparedRepresentations->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate.'/Adapt'.$i.'_compInfo.txt'));
-                  $progressXML->asXml(trim($locate.'/progress.xml'));
+                $ResultXML->Period[0]->Adaptation[$i]->CrossRepresentation->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/Adapt' . $i . '_infofile.txt'));
+                $progressXML->asXml(trim($locate.'/progress.xml'));
             }
             session_destroy();
             if ($missingexist) {
@@ -653,7 +647,7 @@ function process_mpd() {
                 if ($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true) {
                     $processArguments = $processArguments . "-dash264enc ";
                 }
-
+                    
                 $processArguments = $processArguments . "-codecs ";
                 if ($Period_arr[$count1]['codecs'] === 0) {
                     $codecs = $Period_arr[$count1]['Representation']['codecs'][$count2];
@@ -681,17 +675,7 @@ function process_mpd() {
                     $audioChValue = $Period_arr[$count1]['AudioChannelValue'];
                 }
                 $processArguments = $processArguments . $audioChValue;
-                
-//                $test= $Period_arr[$count1];
-//                $test1= $Period_arr[$count1]['Representation']['SegmentBase'];
-//                $test2= $Period_arr[$count1]['Representation']['SegmentBase']['RepresentationIndex'];
-                if ($Period_arr[$count1]['Representation']['SegmentTemplate']['RepresentationIndex'] !== null || 
-                        $Period_arr[$count1]['Representation']['SegmentBase']['RepresentationIndex'] !== null ||
-                        $Period_arr[$count1]['SegmentTemplate']['RepresentationIndex'] !== null||
-                        $Period_arr[$count1]['SegmentBase']['RepresentationIndex'] !== null){
-                    $processArguments = $processArguments . "-repIndex ";
-                }
-                
+                    
                 error_log("validatemp4");
                 // Work out which validator binary to use
                 $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
@@ -712,7 +696,7 @@ function process_mpd() {
                     
                 fclose($config_file);
                     
-                $command = $locate . '/' . $validatemp4 . " -logconsole -configfile " . $file_loc;
+                $command = $locate . '/' . $validatemp4 . " -atomxml -logconsole -configfile " . $file_loc;
                 file_put_contents("command.txt", $command);
                 exec($command); //Excute conformance software
                 rename($locate . '/' . "leafinfo.txt", $locate . '/' . $repno . "_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
@@ -731,7 +715,8 @@ function process_mpd() {
                     
                 $file_location[] = "temp" . '/' . $repno . "myfile.html";
                 $destiny[] = $locate . '/' . $repno . "myfile.txt";
-                    
+                
+                
                 $period_url[$count1][$count2] = null;
                 ob_flush();
                 $count2 = $count2 + 1;
@@ -758,16 +743,19 @@ function process_mpd() {
                     }
                     rename($locate . '/' . "atominfo.xml", $new_pathdir . '/' . $repno . ".xml");
                 
-                    $new_pathdir =  $new_pathdir . "/comparisonResults"; 
-                    if (!file_exists($new_pathdir)){
-                        $oldmask = umask(0);
-                        mkdir($new_pathdir, 0777, true); // create folder for each presentation
-                        umask($oldmask);
+                    if($cmaf_val == "yes"){
+                        $new_pathdir =  $new_pathdir . "/comparisonResults"; 
+                        if (!file_exists($new_pathdir)){
+                            $oldmask = umask(0);
+                            mkdir($new_pathdir, 0777, true); // create folder for each presentation
+                            umask($oldmask);
+                        }
                     }
                 }
                 else{
                     unlink($locate . '/' . "atominfo.xml");
                 }
+                
                 
                 $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2-1]->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/' . $repno . "log.txt"));
                 $progressXML->asXml(trim($locate.'/progress.xml'));
