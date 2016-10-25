@@ -161,7 +161,7 @@ public class Validator {
 
 			// Step 1:
 			// XLink resolving and validation
-			System.out.println("\nStart XLink 1 resolving\n=====================\n");
+			System.out.println("\nStart XLink resolving\n=====================\n");
 			
 			XLinkResolver xlinkResolver = new XLinkResolver();
 			xlinkResolver.resolveXLinks(pathToMPD);		
