@@ -66,12 +66,16 @@ while(1)
 {
     if(file_exists($path.'/'.$Newfolder.'/progress.xml')){
         //$feed = file_get_contents($path.'/'.$Newfolder.'/progress.xml');
-        $xml=simplexml_load_file($path.'/'.$Newfolder.'/progress.xml');
+        $filesize = filesize($path.'/'.$Newfolder.'/progress.xml');
+        if($filesize != 0)
+        {
+            $xml=simplexml_load_file($path.'/'.$Newfolder.'/progress.xml');
 
-        if($xml->completed=="true")
-        { 
-            rename($path.'/'.$Newfolder, $newPath.'/'.$FoldName );
-            break;
+            if($xml->completed=="true")
+            { 
+                rename($path.'/'.$Newfolder, $newPath.'/'.$FoldName );
+                break;
+            }
         }
     }
     sleep(3);
