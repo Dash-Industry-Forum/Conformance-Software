@@ -107,7 +107,7 @@
                     newtab(vectors[i-1]);  //process the current mpd file
                     document.getElementById('statusContent').innerHTML= "Running vector "+i;
                 }
-             //To check progress of Conformance Test and paste results into TestResults folder and References folder accordingly.             
+                //To check progress of Conformance Test and paste results into TestResults folder and References folder accordingly.             
                 $.post(
                     "second.php",
                     {length:vectors.length, path:'../webfe/temp'}
@@ -147,22 +147,22 @@
                     
                     });
                     
-                     i++;
+                    i++;
                     ajaxcall();
                 });
             }
-          else  // Creating Reference results.
-          {
-            if (document.getElementById('Checkbox').checked)
-                    {
-                         $.post(
-                         "CreateRef.php"
-                       ).done(function(response){
+            else  // Creating Reference results.
+            {
+                if (document.getElementById('Checkbox').checked)
+                {
+                    $.post(
+                     "CreateRef.php"
+                    ).done(function(response){
                         console.log("Referenced");
-                      });
-                        
-                    }   
-          }
+                  });
+
+                }   
+            }
                 
         }    
     }

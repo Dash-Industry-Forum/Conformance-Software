@@ -8,16 +8,23 @@ References folder is cleaned separately depending on user requirement.
 $flag = $_REQUEST['flag'];
 
 chdir("../webfe/TestResults/");
-exec("sudo find * -maxdepth 0 -name 'References' -prune -o -exec rm -rf '{}' ';' ");
+// clean all the folders and files that are not inside the "Reference" folder.
+exec("find * -maxdepth 0 -name 'References' -prune -o -exec rm -rf '{}' ';' ");
 //echo "cleaned Test Results folder";
 
-$path = "../webfe/TestResults/References";
-
-chdir("References");
-$command1="sudo find * -maxdepth 0 ";
-$output=array();
-exec($command1,$output);
-$arrlength = count($output);
+if (file_exists("References") && is_dir("References"))
+{
+    chdir("References");
+    $command1="find * -maxdepth 0 ";
+    $output=array();
+    exec($command1,$output);
+    $arrlength = count($output);
+}else
+{
+    mkdir("References", 777);
+    chdir("References");
+    $arrlength = 0;
+}
 
 if ($arrlength === 0)
 { 
@@ -33,13 +40,13 @@ else
 
 if($flag)
 {
-    //chdir("../webfe/TestResults/References");
-    exec("sudo rm -r *");
     if($presentFlag)
+    {
+        exec("rm -r *");
         echo ", but Old References are removed and New References created";
+    }
     else
         echo ".";
 }
-
 
 ?>
