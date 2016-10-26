@@ -244,6 +244,7 @@ var current = 0;
 var dirid="";
 var kidsloc=[];
 var lastloc = 0;
+var mpdprocessed = false;
 var counting =0;
 var representationid =1;
 var adaptationid = 1;
@@ -401,6 +402,7 @@ function progressupdate()
 
 function submit()
 {
+    mpdprocessed = false;
     url = document.getElementById("urlinput").value; 
  
     if (uploaded===true)
@@ -470,6 +472,31 @@ function pollingProgress()
         finishTest();            
         return false;
     }
+    
+//    console.log("dirid=");
+//    console.log(dirid);
+
+   //Get MPD Conformance results from progress.xml file.
+    var MPDtotalResultXML=xmlDoc_progress.getElementsByTagName("MPDConformance");
+    if(MPDtotalResultXML.length==0)
+        return;
+    else
+    {
+        if (!mpdprocessed)
+        {
+            mpdprocessed = true; //only process it once!
+            processmpdresults(MPDtotalResultXML);
+        }
+    }
+}
+
+function processmpdresults(MPDtotalResultXML)
+{
+    var x=2;
+    var y=1;
+    var MPDtotalResult=MPDtotalResultXML[0].childNodes[0].nodeValue; 
+
+    totarr=MPDtotalResult.split(" ");
 
     var currentpath = window.location.pathname;
     currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
@@ -493,38 +520,21 @@ function pollingProgress()
     //            return false;
         }
     }
-    else
-        return;
-    
+
     //check if SegmentList exist
     if(xmlDoc_progress.getElementsByTagName("segmentList").length !== 0)
     {
 //        console.log("SegmentList exist!");
         segmentListExist = true;
     }
-    
+
     document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
     document.getElementById('list').style.visibility='visible';
 
-//    console.log("dirid=");
-//    console.log(dirid);
-
-   //Get MPD Conformance results from progress.xml file.
-    var MPDtotalResultXML=xmlDoc_progress.getElementsByTagName("MPDConformance");
-    if(MPDtotalResultXML.length==0)
-        return;
-    else
-        var MPDtotalResult=MPDtotalResultXML[0].childNodes[0].nodeValue; 
-
-    totarr=MPDtotalResult.split(" ");
-
-//    console.log("totarr=");
-//    console.log(totarr);
+//        console.log("totarr=");
+//        console.log(totarr);
     var failed ='false';
 
-    var x=2;
-    var childno=1;
-    var y=1;
     repid =[];
     tree.loadJSONObject({
         id: 0,
@@ -585,6 +595,14 @@ function pollingProgress()
         return false;
     }
 
+    if (dynamicsegtimeline || segmentListExist)
+    {
+        clearInterval( pollingTimer);
+        finishTest();
+        return;
+    }
+
+    var childno=1;
     //For dynamic type.
     if(totarrstring!=null && totarrstring=="true"){//TODO temporarily exit before processing adaptation sets
         clearInterval( pollingTimer);
@@ -639,7 +657,6 @@ function pollingProgress()
     progressSegmentsTimer = setInterval(function(){progress()},400);
     document.getElementById('par').style.visibility='visible';
     document.getElementById('list').style.visibility='visible';
-
 }
 
 function progress()  //Progress of Segments' Conformance
@@ -760,8 +777,8 @@ function progress()  //Progress of Segments' Conformance
 }
 /////////////////////////Automation starts///////////////////////////////////////////////////
 var urlarray=[];
-var x=2;
-var y=1;
+//var x=2;
+//var y=1;
 function automate(y,x,stri)
 {
     tree.insertNewChild(y,x,stri,0,0,0,0,'SELECT');

@@ -26,190 +26,191 @@ function process_mpd() {
         $_SESSION['fileContent'] = file_get_contents($_FILES['afile']['tmp_name']);
     }
    // if (isset($_POST['urlcode'])) { // in case of client send first connection attempt
-        $sessname = 'sess' . rand(); // get a random session name
-        session_name($sessname); // set session name
-            
-        $directories = array_diff(scandir(dirname(__FILE__) . '/' . 'temp'), array('..', '.'));
-            
-        foreach ($directories as $file) { // Clean temp folder from old sessions in order to save diskspace
-            if (file_exists(dirname(__FILE__) . '/' . 'temp' . '/' . $file)) { // temp is folder contains all sessions folders
-                $tempXML = simplexml_load_file(dirname(__FILE__) . '/' . 'temp' . '/' . $file . '/progress.xml');
-                $change1 = 0; //duration after conformance test is done
-                $change2 = time() - filemtime(dirname(__FILE__) . '/' . 'temp' . '/' . $file); // duration of file implementation
-                if ((string)$tempXML->completed === "true"){
-                    $change1 = time() - (int)$tempXML->completed->attributes(); 
-                }
-                if ($change1 > 1800 || $change2 > 1800)  //clean folder after 30 mins after test completed or 30 mins after test started
-                    rrmdir(dirname(__FILE__) . '/' . 'temp' . '/' . $file); // if last time folder was modified exceed 300 second it should be removed 
+    $sessname = 'sess' . rand(); // get a random session name
+    session_name($sessname); // set session name
+
+    $directories = array_diff(scandir(dirname(__FILE__) . '/' . 'temp'), array('..', '.'));
+
+    foreach ($directories as $file) { // Clean temp folder from old sessions in order to save diskspace
+        if (file_exists(dirname(__FILE__) . '/' . 'temp' . '/' . $file)) { // temp is folder contains all sessions folders
+            $tempXML = simplexml_load_file(dirname(__FILE__) . '/' . 'temp' . '/' . $file . '/progress.xml');
+            $change1 = 0; //duration after conformance test is done
+            $change2 = time() - filemtime(dirname(__FILE__) . '/' . 'temp' . '/' . $file); // duration of file implementation
+            if ((string)$tempXML->completed === "true"){
+                $change1 = time() - (int)$tempXML->completed->attributes(); 
             }
+            if ($change1 > 1800 || $change2 > 1800)  //clean folder after 30 mins after test completed or 30 mins after test started
+                rrmdir(dirname(__FILE__) . '/' . 'temp' . '/' . $file); // if last time folder was modified exceed 300 second it should be removed 
         }
-            
-        // Work out which validator binary to use
-        $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
-        //var_dump( $path_parts  );
-        if (isset($_POST['foldername'])){
-            $foldername=$_POST['foldername'];
-            $paths = explode("/", $foldername);
-            if(count($paths)>1)
-                $foldername = end($paths);
-        }
-        else
-            $foldername = 'id' . rand(); // get random name for session folder
-         //get a name for session folder from client.
-        $_SESSION['foldername'] = $foldername;
-        // rrmdir($locate);
-        $locate = dirname(__FILE__) . '/' . 'temp' . '/' . $foldername; //session  folder location
-        $_SESSION['locate'] = $locate; // save session folder location
-            
-        $oldmask = umask(0);
-        mkdir($locate, 0777, true); // create session folder
-        umask($oldmask);
+    }
+
+    // Work out which validator binary to use
+    $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
+    //var_dump( $path_parts  );
+    if (isset($_POST['foldername'])){
+        $foldername=$_POST['foldername'];
+        $paths = explode("/", $foldername);
+        if(count($paths)>1)
+            $foldername = end($paths);
+    }
+    else
+        $foldername = 'id' . rand(); // get random name for session folder
+     //get a name for session folder from client.
+    $_SESSION['foldername'] = $foldername;
+    // rrmdir($locate);
+    $locate = dirname(__FILE__) . '/' . 'temp' . '/' . $foldername; //session  folder location
+    $_SESSION['locate'] = $locate; // save session folder location
+
+    $oldmask = umask(0);
+    mkdir($locate, 0777, true); // create session folder
+    umask($oldmask);
 //        $totarr = array(); // array contains all data to be sent to client.
-        copy(dirname(__FILE__) . "/" . $validatemp4, $locate . '/' . $validatemp4); // copy conformance tool to session folder to allow multi-session operation
-        chmod($locate . '/' . $validatemp4, 0777);
-        $url_array = json_decode($_POST['urlcode']);
-            
-        if (isset($_SESSION['fileContent'])) {  // If file is uploaded 
-            file_put_contents($locate . '/uploaded.mpd', $_SESSION['fileContent']);
-            $url_array[0] = $locate . '/uploaded.mpd';
-            $GLOBALS["url"] = $locate . '/uploaded.mpd';
-            $MPD_abs = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
-            $dom_abs = dom_import_simplexml($MPD_abs);
-            $abs = new DOMDocument('1.0');
-            $dom_abs = $abs->importNode($dom_abs, true); //create dom element to contain mpd 
-                
-            $dom_abs = $abs->appendChild($dom_abs);
-                
-            $MPD_abs = $abs->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
-            $Baseurl_abs = $MPD_abs->getElementsByTagName('BaseURL');
-                
-            if ($Baseurl_abs->length > 0) {
-                $Baseurl_abs = $Baseurl_abs->item(0);
-                $absolute = $Baseurl_abs->nodeValue;
-                if (($absolute === './') || (strpos($absolute, 'http') === false)) {
-                    $url_array[2] = 1;
-                }
-            } else
+    copy(dirname(__FILE__) . "/" . $validatemp4, $locate . '/' . $validatemp4); // copy conformance tool to session folder to allow multi-session operation
+    chmod($locate . '/' . $validatemp4, 0777);
+    $url_array = json_decode($_POST['urlcode']);
+
+    if (isset($_SESSION['fileContent'])) {  // If file is uploaded 
+        file_put_contents($locate . '/uploaded.mpd', $_SESSION['fileContent']);
+        $url_array[0] = $locate . '/uploaded.mpd';
+        $GLOBALS["url"] = $locate . '/uploaded.mpd';
+        $MPD_abs = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
+        $dom_abs = dom_import_simplexml($MPD_abs);
+        $abs = new DOMDocument('1.0');
+        $dom_abs = $abs->importNode($dom_abs, true); //create dom element to contain mpd 
+
+        $dom_abs = $abs->appendChild($dom_abs);
+
+        $MPD_abs = $abs->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
+        $Baseurl_abs = $MPD_abs->getElementsByTagName('BaseURL');
+
+        if ($Baseurl_abs->length > 0) {
+            $Baseurl_abs = $Baseurl_abs->item(0);
+            $absolute = $Baseurl_abs->nodeValue;
+            if (($absolute === './') || (strpos($absolute, 'http') === false)) {
                 $url_array[2] = 1;
-        }
-            
-        $url_array[3] = $locate; //Used for e.g. placing intermediate files etc.
-            
-        copy(dirname(__FILE__) . "/" . "featuretable.html", $locate . '/' . "featuretable.html"); // copy features list html file to session folder
-        //Create log file so that it is available if accessed
-        $progressXML = simplexml_load_string('<root><Profile></Profile><Progress><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded><CurrentAdapt>1</CurrentAdapt><CurrentRep>1</CurrentRep></Progress><completed>false</completed></root>'); // get progress bar update
-        $progressXML->asXml($locate . '/progress.xml'); //progress xml location
-        //libxml_use_internal_logors(true);
-        $MPD_O = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
-            
-        if (!$MPD_O) {
-            $progressXML->MPDError = "1"; //MPD error is updated in the progress.xml file.
-            $progressXML->asXml(trim($locate.'/progress.xml'));	
-            echo $progressXML->asXML();
-            die("Error: Failed loading XML file");
-        }
-        else
-        {   $progressXML->MPDError = "0";
-            $progressXML->asXml(trim($locate.'/progress.xml'));
-        }
-            
-        $dom_sxe = dom_import_simplexml($MPD_O);
-            
-        if (!$dom_sxe) {
-            echo $progressXML->asXML();
-            exit;
-        }
-            
-        $validate_result = mpdvalidator($url_array, $locate, $foldername);
-        $exit = $validate_result[0];
-        $totarr = $validate_result[1];
-        $schematronIssuesReport = $validate_result[2];
-        //MPD Conformance results are written into the progress.xml file.
-        $temp_mpdres=""; 
-        for( $totindex=0; $totindex<3; $totindex++){
-            if($totarr[$totindex]=="true")
-                $temp_mpdres=$temp_mpdres."true ";
-            else
-                $temp_mpdres=$temp_mpdres."false ";                              
-        }			
-        $progressXML->MPDConformance = $temp_mpdres;
-        $progressXML->MPDConformance->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/mpdreport.txt'));
-        $progressXML->asXml(trim($locate.'/progress.xml'));
-            
-        ///////////////////////////////////////Processing mpd attributes in order to get value//////////////////////////////////////////////////////////
-        $dom = new DOMDocument('1.0');
-        $dom_sxe = $dom->importNode($dom_sxe, true); //create dom element to contain mpd 
-        //$dom_sxe = $dom->appendChild($dom_sxe);
-        $dom->appendChild($dom_sxe);
-        $MPD = $dom->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
-        $mediaPresentationDuration = $MPD->getAttribute('mediaPresentationDuration'); // get mediapersentation duration from mpd level
-        $AST = $MPD->getAttribute('availabilityStartTime');
-        $bufferdepth = $MPD->getAttribute('timeShiftBufferDepth');
-        $bufferdepth = timeparsing($bufferdepth);
-        $presentationduration = timeparsing($mediaPresentationDuration);
-            
-        createMpdFeatureList($dom, $schematronIssuesReport);
-            
-        $type = $MPD->getAttribute('type'); // get mpd type
-        if ($type === 'dynamic' && $dom->getElementsByTagName('SegmentTemplate')->length == 0) {
-            $totarr[] = $foldername;
-            //This is messed up right now: dynamic conformance
-            //$totarr[]='dynamic'; // Incase of dynamic only mpd conformance.
-            //$exit =true;		 //Session destroy flag is true
-        }
-            
-        if ($exit === true) { //If session should be destroyed
-            if ($type !== 'dynamic') {
-                $totarr[] = $foldername;
             }
-            $stri = json_encode($totarr); //Send results to client
-//            echo $stri;
-            session_destroy(); //Destroy session
-            $progressXML->completed = "true"; 
-            $progressXML->completed->addAttribute('time', time());
-            $progressXML->asXml(trim($locate.'/progress.xml'));
-            echo $progressXML->asXML();
-            exit; //Exit
-        }
-            
-        $minBufferTime = $MPD->getAttribute('minBufferTime'); //get min buffer time
-        $profiles = $MPD->getAttribute('profiles'); // get profiles
-        $progressXML->Profile = $profiles;
+        } else
+            $url_array[2] = 1;
+    }
+
+    $url_array[3] = $locate; //Used for e.g. placing intermediate files etc.
+
+    copy(dirname(__FILE__) . "/" . "featuretable.html", $locate . '/' . "featuretable.html"); // copy features list html file to session folder
+    //Create log file so that it is available if accessed
+    $progressXML = simplexml_load_string('<root><Profile></Profile><Progress><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded><CurrentAdapt>1</CurrentAdapt><CurrentRep>1</CurrentRep></Progress><completed>false</completed></root>'); // get progress bar update
+    $progressXML->asXml($locate . '/progress.xml'); //progress xml location
+    //libxml_use_internal_logors(true);
+    $MPD_O = simplexml_load_file($GLOBALS["url"]); // load mpd from url 
+
+    if (!$MPD_O) {
+        $progressXML->MPDError = "1"; //MPD error is updated in the progress.xml file.
         $progressXML->asXml(trim($locate.'/progress.xml'));	
-            
-        $periodCount = 0;
-        foreach ($dom->documentElement->childNodes as $node) { // search for all nodes within mpd
-            if ($node->nodeName === 'Period') {
-                if ($periodCount === 0){ //only process the first Period
-                    $periodNode = $node;
-                }
-                $periodCount++;
+        echo $progressXML->asXML();
+        die("Error: Failed loading XML file");
+    }
+    else
+    {   $progressXML->MPDError = "0";
+        $progressXML->asXml(trim($locate.'/progress.xml'));
+    }
+
+    $dom_sxe = dom_import_simplexml($MPD_O);
+
+    if (!$dom_sxe) {
+        echo $progressXML->asXML();
+        exit;
+    }
+
+    $validate_result = mpdvalidator($url_array, $locate, $foldername);
+    $exit = $validate_result[0];
+    $totarr = $validate_result[1];
+    $schematronIssuesReport = $validate_result[2];
+    //MPD Conformance results are written into the progress.xml file.
+    $temp_mpdres=""; 
+    for( $totindex=0; $totindex<3; $totindex++){
+        if($totarr[$totindex]=="true")
+            $temp_mpdres=$temp_mpdres."true ";
+        else
+            $temp_mpdres=$temp_mpdres."false ";                              
+    }			
+    $progressXML->MPDConformance = $temp_mpdres;
+    $progressXML->MPDConformance->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/mpdreport.txt'));
+    $progressXML->asXml(trim($locate.'/progress.xml'));
+
+    // skip the rest when we should exit
+    if ($exit === true) { //If session should be destroyed
+        if ($type !== 'dynamic') {
+            $totarr[] = $foldername;
+        }
+        $stri = json_encode($totarr); //Send results to client
+//            echo $stri;
+        session_destroy(); //Destroy session
+        $progressXML->completed = "true"; 
+        $progressXML->completed->addAttribute('time', time());
+        $progressXML->asXml(trim($locate.'/progress.xml'));
+        echo $progressXML->asXML();
+        exit; //Exit
+    }
+    
+    ///////////////////////////////////////Processing mpd attributes in order to get value//////////////////////////////////////////////////////////
+    $dom = new DOMDocument('1.0');
+    $dom_sxe = $dom->importNode($dom_sxe, true); //create dom element to contain mpd 
+    //$dom_sxe = $dom->appendChild($dom_sxe);
+    $dom->appendChild($dom_sxe);
+    $MPD = $dom->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
+    $mediaPresentationDuration = $MPD->getAttribute('mediaPresentationDuration'); // get mediapersentation duration from mpd level
+    $AST = $MPD->getAttribute('availabilityStartTime');
+    $bufferdepth = $MPD->getAttribute('timeShiftBufferDepth');
+    $bufferdepth = timeparsing($bufferdepth);
+    $presentationduration = timeparsing($mediaPresentationDuration);
+
+    createMpdFeatureList($dom, $schematronIssuesReport);
+
+    $type = $MPD->getAttribute('type'); // get mpd type
+    if ($type === 'dynamic' && $dom->getElementsByTagName('SegmentTemplate')->length == 0) {
+        $totarr[] = $foldername;
+        //This is messed up right now: dynamic conformance
+        //$totarr[]='dynamic'; // Incase of dynamic only mpd conformance.
+        //$exit =true;		 //Session destroy flag is true
+    }
+
+    $minBufferTime = $MPD->getAttribute('minBufferTime'); //get min buffer time
+    $profiles = $MPD->getAttribute('profiles'); // get profiles
+    $progressXML->Profile = $profiles;
+    $progressXML->asXml(trim($locate.'/progress.xml'));	
+
+    $periodCount = 0;
+    foreach ($dom->documentElement->childNodes as $node) { // search for all nodes within mpd
+        if ($node->nodeName === 'Period') {
+            if ($periodCount === 0){ //only process the first Period
+                $periodNode = $node;
+            }
+            $periodCount++;
+        }
+    }
+
+    $val = $dom->getElementsByTagName('BaseURL'); // get BaseUrl node
+    $segflag = $dom->getElementsByTagName('SegmentTemplate'); //check if segment template exists or not
+
+    if ($segflag->length > 0)
+        $setsegflag = true; // Segment template is supported
+
+    if ($val->length > 0) { // if baseurl is used
+        $Baseurl = true; // set Baseurl flag = true
+
+        for ($i = 0; $i < sizeof($val); $i++) {
+            //check if Baseurl node exist in MPD level or lower level
+            $base = $val->item($i);
+            $par = $base->parentNode;
+            $name = $par->tagName;
+            if ($name == 'MPD') { // if exist in mpd level
+                $dir = $base->nodeValue;
+                if (!isAbsoluteURL($dir))   // if baseurl is relative URl
+                    $dir = dirname($GLOBALS["url"]) . '/' . $dir; // use location of Baseurl as location of mpd location
             }
         }
-            
-        $val = $dom->getElementsByTagName('BaseURL'); // get BaseUrl node
-        $segflag = $dom->getElementsByTagName('SegmentTemplate'); //check if segment template exists or not
-            
-        if ($segflag->length > 0)
-            $setsegflag = true; // Segment template is supported
-                
-        if ($val->length > 0) { // if baseurl is used
-            $Baseurl = true; // set Baseurl flag = true
-                
-            for ($i = 0; $i < sizeof($val); $i++) {
-                //check if Baseurl node exist in MPD level or lower level
-                $base = $val->item($i);
-                $par = $base->parentNode;
-                $name = $par->tagName;
-                if ($name == 'MPD') { // if exist in mpd level
-                    $dir = $base->nodeValue;
-                    if (!isAbsoluteURL($dir))   // if baseurl is relative URl
-                        $dir = dirname($GLOBALS["url"]) . '/' . $dir; // use location of Baseurl as location of mpd location
-                }
-            }
-                
-            if (!isset($dir))// if there is no Baseurl in mpd level 
-                $dir = dirname($GLOBALS["url"]) . '/'; // set location of segments dir as mpd location
+
+        if (!isset($dir))// if there is no Baseurl in mpd level 
+            $dir = dirname($GLOBALS["url"]) . '/'; // set location of segments dir as mpd location
         } else
             $dir = dirname($GLOBALS["url"]) . '/'; // if there is no Baseurl in mpd level,set location of segments dir as mpd location
         $start = processPeriod($periodNode, $dir); // start getting information from period level
@@ -462,13 +463,25 @@ function process_mpd() {
                 
         $_SESSION['type'] = $type;
         $_SESSION['minBufferTime'] = $minBufferTime;
-            
+        
+        if ($type === "dynamic") { 
+            $totarr[] = "dynamic";
+            $stri = json_encode($totarr); //Send results to client
+            $progressXML->dynamic = "true"; // Update progress.xml file with info on dynamic MPD.
+            $progressXML->asXml(trim($locate.'/progress.xml'));
+        }
+        else{
+            $progressXML->dynamic = "false";
+            $progressXML->asXml(trim($locate.'/progress.xml'));
+        }
+        
+        //Question: why should we tell if it's dynamic or not only when segment template is used?!
         if ($setsegflag) { // Segment template is used
             if ($type === "dynamic") { 
-                $totarr[] = "dynamic";
-                $progressXML->dynamic = "true"; // Update progress.xml file with info on dynamic MPD.
-                $progressXML->asXml(trim($locate.'/progress.xml'));
-                $stri = json_encode($totarr); //Send results to client
+//                $totarr[] = "dynamic";
+//                $progressXML->dynamic = "true"; // Update progress.xml file with info on dynamic MPD.
+//                $progressXML->asXml(trim($locate.'/progress.xml'));
+//                $stri = json_encode($totarr); //Send results to client
                 if ($dom->getElementsByTagName('SegmentTimeline')->length !== 0) {
                     $progressXML->SegmentTimeline = "true";
 //                    echo $stri;
@@ -480,10 +493,10 @@ function process_mpd() {
                     exit;
                 }
             }
-            else{
-                $progressXML->dynamic = "false";
-                $progressXML->asXml(trim($locate.'/progress.xml'));
-            }
+//            else{
+//                $progressXML->dynamic = "false";
+//                $progressXML->asXml(trim($locate.'/progress.xml'));
+//            }
         }
         
         //check if SegmentList exist

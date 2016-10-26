@@ -11,16 +11,16 @@
     <h2> Test Automation </h2>
 <script>
     var resultDivNum = 0;
-	
-	window.onload = function()
-	{	
-		 document.getElementById('vectors').value = <?php $file = file_get_contents( 'DefaultVectorList.txt' ); echo json_encode( $file ); ?>;
-	}
+    
+    window.onload = function()
+    {	
+        document.getElementById('vectors').value = <?php $file = file_get_contents( 'DefaultVectorList.txt' ); echo json_encode( $file ); ?>;
+    }
     
     function newtab(mpdfile)
     {
-        var testWin = window.open("../webfe/conformancetest.php?mpdurl="+mpdfile);
-		testWin.blur();
+        var testWin = window.open("../webfe/conformancetest.php?mpdurl="+mpdfile,"test");
+        testWin.blur();
     } 
     
     function testing()
@@ -80,11 +80,8 @@
         {
             var vectors = vectorstr.split("\n");
             console.log(vectors);
-          
         }
        
-    
-        
         function ajaxcall()
         {
             if(i<=vectors.length)
@@ -110,7 +107,7 @@
                     newtab(vectors[i-1]);  //process the current mpd file
                     document.getElementById('statusContent').innerHTML= "Running vector "+i;
                 }
-             //To check progress of Conformance Test and paste results into TestResults folder and References folder accordingly.             
+                //To check progress of Conformance Test and paste results into TestResults folder and References folder accordingly.             
                 $.post(
                     "second.php",
                     {length:vectors.length, path:'../webfe/temp'}
@@ -150,22 +147,22 @@
                     
                     });
                     
-                     i++;
+                    i++;
                     ajaxcall();
                 });
             }
-          else  // Creating Reference results.
-          {
-            if (document.getElementById('Checkbox').checked)
-                    {
-                         $.post(
-                         "CreateRef.php"
-                       ).done(function(response){
+            else  // Creating Reference results.
+            {
+                if (document.getElementById('Checkbox').checked)
+                {
+                    $.post(
+                     "CreateRef.php"
+                    ).done(function(response){
                         console.log("Referenced");
-                      });
-                        
-                    }   
-          }
+                  });
+
+                }   
+            }
                 
         }    
     }

@@ -1,0 +1,3 @@
+Note: here the vectors are only for test purpose of new functions. It won't pass the test as there's no segments provided. The purpose of them are listed below:
+
+test1_MultiRate.mpd: checking if %Number0xd% is working correctly.
