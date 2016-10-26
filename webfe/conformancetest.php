@@ -245,7 +245,6 @@ var dirid="";
 var kidsloc=[];
 var lastloc = 0;
 var mpdprocessed = false;
-var xaftermpd = 2;
 var counting =0;
 var representationid =1;
 var adaptationid = 1;
@@ -404,7 +403,6 @@ function progressupdate()
 function submit()
 {
     mpdprocessed = false;
-    xaftermpd = 2
     url = document.getElementById("urlinput").value; 
  
     if (uploaded===true)
@@ -484,129 +482,127 @@ function pollingProgress()
         return;
     else
     {
-        var x=2;
-        var y=1;
-        processmpdresults(MPDtotalResultXML, x, y);
+        if (!mpdprocessed)
+        {
+            mpdprocessed = true; //only process it once!
+            processmpdresults(MPDtotalResultXML);
+        }
     }
 }
 
-function processmpdresults(MPDtotalResultXML, x, y)
+function processmpdresults(MPDtotalResultXML)
 {
-    if (!mpdprocessed)
+    var x=2;
+    var y=1;
+    var MPDtotalResult=MPDtotalResultXML[0].childNodes[0].nodeValue; 
+
+    totarr=MPDtotalResult.split(" ");
+
+    var currentpath = window.location.pathname;
+    currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
+
+    //Check if the MPD is dynamic.
+    if(xmlDoc_progress.getElementsByTagName("dynamic").length !== 0)
     {
-        mpdprocessed = true; //only process it once!
-        var MPDtotalResult=MPDtotalResultXML[0].childNodes[0].nodeValue; 
-
-        totarr=MPDtotalResult.split(" ");
-
-        var currentpath = window.location.pathname;
-        currentpath = currentpath.substring(0, currentpath.lastIndexOf('/'));
-
-        //Check if the MPD is dynamic.
-        if(xmlDoc_progress.getElementsByTagName("dynamic").length !== 0)
+        if (xmlDoc_progress.getElementsByTagName("dynamic")[0].innerHTML === "true")
         {
-            if (xmlDoc_progress.getElementsByTagName("dynamic")[0].innerHTML === "true")
-            {
-        //        console.log("i'M DYNAMIC");
-                if (xmlDoc_progress.getElementsByTagName("SegmentTimeline").length !== 0)
-                    dynamicsegtimeline = true;
-        //            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
+    //        console.log("i'M DYNAMIC");
+            if (xmlDoc_progress.getElementsByTagName("SegmentTimeline").length !== 0)
+                dynamicsegtimeline = true;
+    //            document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
 
-                document.getElementById('dynamic').style.visibility='visible';
+            document.getElementById('dynamic').style.visibility='visible';
 
-                document.getElementById("dynamic").href='http://vm1.dashif.org/DynamicServiceValidator/?mpdurl=' +url ;
-        //            document.getElementById('list').style.visibility='visible';
+            document.getElementById("dynamic").href='http://vm1.dashif.org/DynamicServiceValidator/?mpdurl=' +url ;
+    //            document.getElementById('list').style.visibility='visible';
 
-        //            finishTest();
-        //            return false;
-            }
-        }
-
-        //check if SegmentList exist
-        if(xmlDoc_progress.getElementsByTagName("segmentList").length !== 0)
-        {
-    //        console.log("SegmentList exist!");
-            segmentListExist = true;
-        }
-
-        document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
-        document.getElementById('list').style.visibility='visible';
-
-//        console.log("totarr=");
-//        console.log(totarr);
-        var failed ='false';
-
-        repid =[];
-        tree.loadJSONObject({
-            id: 0,
-            item: [{
-                id: 1,
-                text: "Mpd"
-            }]
-            });
-        if(totarr[0]==='true')
-        {
-            automate(y,x,"XLink resolving");
-            tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
-        }
-        else {
-            automate(y,x,"XLink resolving");
-            tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
-            failed='temp/'+dirid+'/mpdreport.html';//totarr[0];
-        }
-        totarr.splice(0,1);
-        x++;
-        if(totarr[0]==='true')
-        {
-            automate(y,x,"MPD validation");
-            tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
-        }
-        else
-        {
-            automate(y,x,"MPD validation");
-            tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
-            failed='temp/'+dirid+'/mpdreport.html';//totarr[0];
-        }
-        totarr.splice(0,1);
-        x++;
-        if(totarr[0]==='true')
-        {
-            automate(y,x,"Schematron validation");
-            tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
-        }
-        else {
-            automate(y,x,"Schematron validation");
-            tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
-            failed='temp/'+dirid+'/mpdreport.html';//totarr[0];
-        }
-        totarr.splice(0,1);
-        x++;
-
-        if (failed!=='false')
-        {
-            automate(y,x,"mpd error log");
-            tree.setItemImage2(x,'log.jpg','log.jpg','log.jpg');
-            kidsloc.push(x);
-            urlarray.push(failed);
-    //        console.log(kidsloc);
-    //        console.log(urlarray[0]);
-            lastloc++;
-            clearInterval( pollingTimer);
-            finishTest();
-            return false;
-        }
-        xaftermpd = x;
-        
-        if (dynamicsegtimeline || segmentListExist)
-        {
-            clearInterval( pollingTimer);
-            finishTest();
-            return;
+    //            finishTest();
+    //            return false;
         }
     }
 
+    //check if SegmentList exist
+    if(xmlDoc_progress.getElementsByTagName("segmentList").length !== 0)
+    {
+//        console.log("SegmentList exist!");
+        segmentListExist = true;
+    }
+
+    document.getElementById("list").href=currentpath+'/temp/'+dirid+'/featuretable.html';
+    document.getElementById('list').style.visibility='visible';
+
+//        console.log("totarr=");
+//        console.log(totarr);
+    var failed ='false';
+
+    repid =[];
+    tree.loadJSONObject({
+        id: 0,
+        item: [{
+            id: 1,
+            text: "Mpd"
+        }]
+        });
+    if(totarr[0]==='true')
+    {
+        automate(y,x,"XLink resolving");
+        tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
+    }
+    else {
+        automate(y,x,"XLink resolving");
+        tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
+        failed='temp/'+dirid+'/mpdreport.html';//totarr[0];
+    }
+    totarr.splice(0,1);
+    x++;
+    if(totarr[0]==='true')
+    {
+        automate(y,x,"MPD validation");
+        tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
+    }
+    else
+    {
+        automate(y,x,"MPD validation");
+        tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
+        failed='temp/'+dirid+'/mpdreport.html';//totarr[0];
+    }
+    totarr.splice(0,1);
+    x++;
+    if(totarr[0]==='true')
+    {
+        automate(y,x,"Schematron validation");
+        tree.setItemImage2( x,'right.jpg','right.jpg','right.jpg');
+    }
+    else {
+        automate(y,x,"Schematron validation");
+        tree.setItemImage2( x,'button_cancel.png','button_cancel.png','button_cancel.png');
+        failed='temp/'+dirid+'/mpdreport.html';//totarr[0];
+    }
+    totarr.splice(0,1);
+    x++;
+
+    if (failed!=='false')
+    {
+        automate(y,x,"mpd error log");
+        tree.setItemImage2(x,'log.jpg','log.jpg','log.jpg');
+        kidsloc.push(x);
+        urlarray.push(failed);
+//        console.log(kidsloc);
+//        console.log(urlarray[0]);
+        lastloc++;
+        clearInterval( pollingTimer);
+        finishTest();
+        return false;
+    }
+
+    if (dynamicsegtimeline || segmentListExist)
+    {
+        clearInterval( pollingTimer);
+        finishTest();
+        return;
+    }
+
     var childno=1;
-    x = xaftermpd; //restore the current position
     //For dynamic type.
     if(totarrstring!=null && totarrstring=="true"){//TODO temporarily exit before processing adaptation sets
         clearInterval( pollingTimer);
@@ -662,8 +658,6 @@ function processmpdresults(MPDtotalResultXML, x, y)
     document.getElementById('par').style.visibility='visible';
     document.getElementById('list').style.visibility='visible';
 }
-
-
 
 function progress()  //Progress of Segments' Conformance
 {

@@ -7,6 +7,12 @@ The reference should be stored under ../webfe/TestResults/References. If you wan
 
 Besides this tool, the following things should be done manually:
 
-1. test with "MPD conformance only" checked
+1. test with "MPD conformance only" checked.
 
-2. test with uploaded MPD file
+2. test with uploaded MPD file.
+
+3. test with multiple tabs or browsers.
+
+4. test with "?mpdurl=...".
+
+5. test with local server and remote server.
