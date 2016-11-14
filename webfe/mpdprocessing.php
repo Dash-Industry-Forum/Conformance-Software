@@ -211,8 +211,9 @@ function process_mpd() {
 
         if (!isset($dir))// if there is no Baseurl in mpd level 
             $dir = dirname($GLOBALS["url"]) . '/'; // set location of segments dir as mpd location
-        } else
-            $dir = dirname($GLOBALS["url"]) . '/'; // if there is no Baseurl in mpd level,set location of segments dir as mpd location
+        }
+//        else
+//            $dir = dirname($GLOBALS["url"]) . '/'; // if there is no Baseurl in mpd level,set location of segments dir as mpd location
         $start = processPeriod($periodNode, $dir); // start getting information from period level
         $start = timeparsing($start); //Get start time in seconds
         $segm_url = array(); // contains segments url within one 
@@ -437,7 +438,9 @@ function process_mpd() {
                             
                     for ($lo = 0; $lo < sizeof($period_baseurl[$i][$j]); $lo++) { // loop on baseurl in period level
                         if (!isAbsoluteURL($period_baseurl[$i][$j][$lo]))
-                            $period_baseurl[$i][$j][$lo] = removeabunchofslashes($dir . $perioddepth[0] . '/' . $adaptsetdepth[$i] . '/' . $period_baseurl[$i][$j][$lo]); //combine all baseurls                       
+                        {
+                            $period_baseurl[$i][$j][$lo] = removeabunchofslashes($dir . $perioddepth[0] . '/' . $adaptsetdepth[$i] . '/' . $period_baseurl[$i][$j][$lo]); //combine all baseurls    
+                        }
                     }
                 }
             }
@@ -694,9 +697,6 @@ function process_mpd() {
                 }
                 $processArguments = $processArguments . $audioChValue;
                 
-//                $test= $Period_arr[$count1];
-//                $test1= $Period_arr[$count1]['Representation']['SegmentBase'];
-//                $test2= $Period_arr[$count1]['Representation']['SegmentBase']['RepresentationIndex'];
                 if ($Period_arr[$count1]['Representation']['SegmentTemplate']['RepresentationIndex'] !== null || 
                         $Period_arr[$count1]['Representation']['SegmentBase']['RepresentationIndex'] !== null ||
                         $Period_arr[$count1]['SegmentTemplate']['RepresentationIndex'] !== null||
@@ -729,10 +729,11 @@ function process_mpd() {
                 $output = [];
                 $returncode = 0; //the return code should stay 0 when there is no error!
                 exec($command, $output, $returncode); //Excute conformance software
+                $test = $returncode;
                 if ($returncode !== 0)
                 {
                     error_log("Processing " . $repno . " returns: " . $returncode);
-                    if ( filesize( $locate . '/' . "stderr.txt" ) == 0)
+                    if ( filesize( $locate . '/' . "stderr.txt" ) == 0 )
                     {
                         // file is empty, add error information
                         $pos = strlen('Adapt'); 

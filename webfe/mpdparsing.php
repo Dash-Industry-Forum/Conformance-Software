@@ -68,7 +68,7 @@ function processPeriod($period,&$dir)
             if (isAbsoluteURL($baseurl))   // if baseurl is absolute URL, do not use the location of MPD as base URL:
             {    
                 $dir = "";
-            } 
+            }
         }
     }
     
@@ -150,7 +150,7 @@ function processAdaptationset ($Adapt, $periodProfiles, $periodBitstreamSwitchin
         if ($Adapt_Timeoffset === 0) // if timeoffset exist then It has to replace the one existed on higher nodes
             $Adapt_Timeoffset = $Timeoffset;
         $baseurl = $Adapt->getElementsByTagName("BaseURL"); // check and process baseurl node if it exist in adapationset level
-        $adaptsetdepth = array();
+//        $adaptsetdepth = array();
 
         for ($i = 0; $i < $baseurl->length; $i++) {
             $base = $baseurl->item($i);
