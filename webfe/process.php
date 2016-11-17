@@ -16,6 +16,7 @@
 
 ini_set('memory_limit', '-1'); //remove memory limit
 error_reporting(E_ERROR | E_PARSE);
+include 'visitorcounter.php';
 include 'featurlist.php';
 //include 'globalvariables.php';
 include 'crossvalidation.php';
