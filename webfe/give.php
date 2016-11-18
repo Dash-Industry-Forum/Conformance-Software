@@ -14,7 +14,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-if (isset($_POST['val'])) {
+if (isset($_POST['val']))
+{
     $filename = $_POST['val'];
 //$string = file_get_contents ('./temp/'.$filename.'.txt',true);
     $stringarr = file('./temp/' . $filename . '.txt', FILE_IGNORE_NEW_LINES);
@@ -22,13 +23,18 @@ if (isset($_POST['val'])) {
     echo $string;
 }
 
-function safe_json_encode($value){
-    if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
+function safe_json_encode($value)
+{
+    if (version_compare(PHP_VERSION, '5.4.0') >= 0)
+    {
         $encoded = json_encode($value, JSON_PRETTY_PRINT);
-    } else {
+    }
+    else
+    {
         $encoded = json_encode($value);
     }
-    switch (json_last_error()) {
+    switch (json_last_error())
+    {
         case JSON_ERROR_NONE:
             return $encoded;
         case JSON_ERROR_DEPTH:
@@ -44,16 +50,20 @@ function safe_json_encode($value){
             return safe_json_encode($clean);
         default:
             return 'Unknown error'; // or trigger_error() or throw new Exception()
-
     }
 }
 
-function utf8ize($mixed) {
-    if (is_array($mixed)) {
-        foreach ($mixed as $key => $value) {
+function utf8ize($mixed)
+{
+    if (is_array($mixed))
+    {
+        foreach ($mixed as $key => $value)
+        {
             $mixed[$key] = utf8ize($value);
         }
-    } else if (is_string ($mixed)) {
+    }
+    else if (is_string($mixed))
+    {
         return utf8_encode($mixed);
     }
     return $mixed;

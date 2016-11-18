@@ -64,7 +64,8 @@ $mediaPresentationDuration = "";
 $count1 = 0; // Count number of adaptationsets processed
 $count2 = 0; //count number of presentations proceessed
 
-if (isset($_POST['urlcode'])) {// if client initiate first connection
+if (isset($_POST['urlcode']))
+{// if client initiate first connection
     $url_array = json_decode($_POST['urlcode']); // parse recieved data
     $url = $url_array[0]; // get mpd url from HTTP request
     $_SESSION['url'] = $url; // save mpd url to session variable
@@ -151,7 +152,8 @@ $( "p" ).html( end);
 </body>
 </html>';
 
-function print_r2($val) { //Print output line by line (for testing)
+function print_r2($val)
+{ //Print output line by line (for testing)
     echo '<pre>';
     print_r($val);
     echo '</pre>';
