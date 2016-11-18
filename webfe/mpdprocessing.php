@@ -211,9 +211,11 @@ function process_mpd() {
 
         if (!isset($dir))// if there is no Baseurl in mpd level 
             $dir = dirname($GLOBALS["url"]) . '/'; // set location of segments dir as mpd location
-        }
-//        else
-//            $dir = dirname($GLOBALS["url"]) . '/'; // if there is no Baseurl in mpd level,set location of segments dir as mpd location
+    }
+    else
+    {
+        $dir = dirname($GLOBALS["url"]) . '/'; // if there is no Baseurl in mpd level,set location of segments dir as mpd location
+    }
         $start = processPeriod($periodNode, $dir); // start getting information from period level
         $start = timeparsing($start); //Get start time in seconds
         $segm_url = array(); // contains segments url within one 
@@ -729,7 +731,6 @@ function process_mpd() {
                 $output = [];
                 $returncode = 0; //the return code should stay 0 when there is no error!
                 exec($command, $output, $returncode); //Excute conformance software
-                $test = $returncode;
                 if ($returncode !== 0)
                 {
                     error_log("Processing " . $repno . " returns: " . $returncode);
