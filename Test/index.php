@@ -21,6 +21,7 @@
     {
         var testWin = window.open("../webfe/conformancetest.php?mpdurl="+mpdfile,"test");
         testWin.blur();
+        return testWin;
     } 
     
     function testing()
@@ -86,6 +87,7 @@
         {
             if(i<=vectors.length)
             {
+                var currentWin; // store the current Window
                 if(!(document.getElementById('Checkbox').checked))
                 {  
                    $.post(
@@ -95,7 +97,7 @@
                        console.log("Folders in References="+countRef);
                                       
                         if(i<= (countRef)){
-                            newtab(vectors[i-1]);  //process the current mpd file
+                            currentWin = newtab(vectors[i-1]);  //process the current mpd file
                             document.getElementById('statusContent').innerHTML= "Running vector "+i;
                         }
                        else
@@ -104,9 +106,10 @@
                    
                 }
                 else{
-                    newtab(vectors[i-1]);  //process the current mpd file
+                    currentWin = newtab(vectors[i-1]);  //process the current mpd file
                     document.getElementById('statusContent').innerHTML= "Running vector "+i;
                 }
+                
                 //To check progress of Conformance Test and paste results into TestResults folder and References folder accordingly.             
                 $.post(
                     "second.php",
@@ -120,35 +123,49 @@
                           {folder: folder}
                     ).done(function(response){
                         console.log(response);
-                      // Success or failure is shown with 'right' or 'wrong' icons with links to errors.  
-                      var id='resultDiv'+i; console.log(id);
-                      var topn=120+15*i;
-                      var top=topn + 'px';
-                      var div = '<div id= '+ id +' style="position: absolute;left:940px; top:'+top+';"></div>';
-                      document.body.insertAdjacentHTML('beforeend', div);
-                      var y = document.getElementById(id); 
-                      if(response== "wrong"){
-                      y.innerHTML ='<a href="../webfe/TestResults/'+folder+'_diff.txt" target="_blank"> Check differences</a>';
-                      $('#'+id).prepend('<img id="theImg" src="button_cancel.png" />');
-                      document.getElementById('statusContent').innerHTML= "Completed vector "+j;
-                      if(vectors.length>j)
-                          document.getElementById('statusContent').innerHTML= "Running vector "+(j+1);
-                      j++;
-                      resultDivNum=j;
-                      }
-                      else{
-                          $('#'+id).prepend('<img id="theImg" src="right.jpg" />');
-                          document.getElementById('statusContent').innerHTML= "Completed vector "+j;
-                          if(vectors.length>j)
-                             document.getElementById('statusContent').innerHTML= "Running vector "+(j+1);
-                          j++;
-                          resultDivNum=j;
-                      }
-                    
+                        // Success or failure is shown with 'right' or 'wrong' icons with links to errors.  
+                        var id='resultDiv'+i; console.log(id);
+                        var topn=135+15*i;
+                        var top=topn + 'px';
+                        var div = '<div id= '+ id +' style="position: absolute;left:940px; top:'+top+';"></div>';
+                        document.body.insertAdjacentHTML('beforeend', div);
+                        var y = document.getElementById(id); 
+                        if(response== "wrong"){
+                            y.innerHTML ='<a href="../webfe/TestResults/'+folder+'_diff.txt" target="_blank"> Check differences</a>';
+                            $('#'+id).prepend('<img id="theImg" src="button_cancel.png" />');
+                            document.getElementById('statusContent').innerHTML= "Completed vector "+j;
+                        }
+                        else{
+                            $('#'+id).prepend('<img id="theImg" src="right.jpg" />');
+                            document.getElementById('statusContent').innerHTML= "Completed vector "+j;
+                        }
+                        
+                        // decide if we should process the next test vector immediately
+                        if(document.getElementById('Pause').checked === false)
+                        {
+                            if(vectors.length>j)
+                                document.getElementById('statusContent').innerHTML= "Running vector "+(j+1);
+                            j++;
+                            resultDivNum=j;
+                            i++;
+                            ajaxcall();
+                        }
+                        else  // wait until user close the new tab
+                        {
+                            var _flagCheck = setInterval(function() {
+                                if (currentWin.closed) {
+                                    clearInterval(_flagCheck);
+                                    if(vectors.length>j)
+                                        document.getElementById('statusContent').innerHTML= "Running vector "+(j+1);
+                                    j++;
+                                    resultDivNum=j;
+                                    i++;
+                                    ajaxcall();
+                                }
+                            }, 100); // interval set at 100 milliseconds
+                        }
                     });
                     
-                    i++;
-                    ajaxcall();
                 });
             }
             else  // Creating Reference results.
@@ -161,10 +178,9 @@
                         console.log("Referenced");
                   });
 
-                }   
+                }
             }
-                
-        }    
+        }
     }
 </script>
 
@@ -180,6 +196,8 @@
 <p id="results">Results :</p>
 <input type="checkbox" id="Checkbox">
 <p id="ChecboxTitle">Create Reference</p>
+<input type="checkbox" id="Pause">
+<p id="PauseTitle">Continue only when the current test is closed by user</p>
 <p id="RefMsg"></p>
 </body>
 

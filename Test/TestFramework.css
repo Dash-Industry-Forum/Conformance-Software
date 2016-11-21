@@ -55,19 +55,31 @@ and open the template in the editor.
         #Checkbox{
             position: absolute;
             left: 7px;
-            top: 90px;
+            top: 75px;
             transform: scale(1.2);
         }
         #ChecboxTitle{
             position: absolute;
             left: 30px;
-            top: 70px;
+            top: 55px;
+            font-size: 120%;
+        }
+        #Pause{
+            position: absolute;
+            left: 7px;
+            top: 95px;
+            transform: scale(1.2);
+        }
+        #PauseTitle{
+            position: absolute;
+            left: 30px;
+            top: 75px;
             font-size: 120%;
         }
         #RefMsg{
             position: absolute;
             left: 260px;
-            top: 77px;
+            top: 62px;
             color: green;
         }
         #Start{
