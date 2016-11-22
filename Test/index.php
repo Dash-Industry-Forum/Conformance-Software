@@ -54,17 +54,18 @@
                      "cleanResults.php",
                      {flag: ClearRef}
                     ).done(function(response){
-                       console.log(response);
-                       console.log("TestResults cleaned");
+                        console.log(response);
+                        console.log("TestResults cleaned");
                     if(response !== "References present")
                     {
-                     document.getElementById('RefMsg').innerHTML=response;
-                     document.getElementById('Checkbox').checked=true;
-                       ajaxcall();   
+                        document.getElementById('RefMsg').innerHTML=response;
+                        document.getElementById('Checkbox').checked=true;
+                        ajaxcall();   
                     }
-                   else{
-                       document.getElementById('RefMsg').innerHTML=response;
-                       ajaxcall();
+                    else
+                    {
+                        document.getElementById('RefMsg').innerHTML=response;
+                        ajaxcall();
                     }
                  });
                  
@@ -110,63 +111,93 @@
                     document.getElementById('statusContent').innerHTML= "Running vector "+i;
                 }
                 
-                //To check progress of Conformance Test and paste results into TestResults folder and References folder accordingly.             
-                $.post(
-                    "second.php",
-                    {length:vectors.length, path:'../webfe/temp'}
-                ).done(function(response){
-                    var folder=response;
-                    console.log(folder);
-                    console.log("Successfully tested vector "+i); 
+                // decide if we should rename and process the next test vector immediately
+                if(document.getElementById('Pause').checked === false)
+                {
+                    //To check progress of Conformance Test and paste results into TestResults folder and References folder accordingly.             
                     $.post(
-                         "CheckDiff.php",
-                          {folder: folder}
+                        "second.php",
+                        {length:vectors.length, path:'../webfe/temp'}
                     ).done(function(response){
-                        console.log(response);
-                        // Success or failure is shown with 'right' or 'wrong' icons with links to errors.  
-                        var id='resultDiv'+i; console.log(id);
-                        var topn=135+15*i;
-                        var top=topn + 'px';
-                        var div = '<div id= '+ id +' style="position: absolute;left:940px; top:'+top+';"></div>';
-                        document.body.insertAdjacentHTML('beforeend', div);
-                        var y = document.getElementById(id); 
-                        if(response== "wrong"){
-                            y.innerHTML ='<a href="../webfe/TestResults/'+folder+'_diff.txt" target="_blank"> Check differences</a>';
-                            $('#'+id).prepend('<img id="theImg" src="button_cancel.png" />');
-                            document.getElementById('statusContent').innerHTML= "Completed vector "+j;
-                        }
-                        else{
-                            $('#'+id).prepend('<img id="theImg" src="right.jpg" />');
-                            document.getElementById('statusContent').innerHTML= "Completed vector "+j;
-                        }
-                        
-                        // decide if we should process the next test vector immediately
-                        if(document.getElementById('Pause').checked === false)
-                        {
+                        var folder=response;
+                        console.log(folder);
+                        console.log("Successfully tested vector "+i); 
+                        $.post(
+                             "CheckDiff.php",
+                              {folder: folder}
+                        ).done(function(response){
+                            console.log(response);
+                            // Success or failure is shown with 'right' or 'wrong' icons with links to errors.  
+                            var id='resultDiv'+i; console.log(id);
+                            var topn=135+15*i;
+                            var top=topn + 'px';
+                            var div = '<div id= '+ id +' style="position: absolute;left:940px; top:'+top+';"></div>';
+                            document.body.insertAdjacentHTML('beforeend', div);
+                            var y = document.getElementById(id); 
+                            if(response== "wrong"){
+                                y.innerHTML ='<a href="../webfe/TestResults/'+folder+'_diff.txt" target="_blank"> Check differences</a>';
+                                $('#'+id).prepend('<img id="theImg" src="button_cancel.png" />');
+                                document.getElementById('statusContent').innerHTML= "Completed vector "+j;
+                            }
+                            else{
+                                $('#'+id).prepend('<img id="theImg" src="right.jpg" />');
+                                document.getElementById('statusContent').innerHTML= "Completed vector "+j;
+                            }
                             if(vectors.length>j)
                                 document.getElementById('statusContent').innerHTML= "Running vector "+(j+1);
                             j++;
                             resultDivNum=j;
                             i++;
                             ajaxcall();
-                        }
-                        else  // wait until user close the new tab
+                        });
+                    });
+                }
+                else  // wait until user close the new tab
+                {
+                    var _flagCheck = setInterval(function() {
+                        if (currentWin.closed) 
                         {
-                            var _flagCheck = setInterval(function() {
-                                if (currentWin.closed) {
-                                    clearInterval(_flagCheck);
+                            clearInterval(_flagCheck);
+                            //To check progress of Conformance Test and paste results into TestResults folder and References folder accordingly.             
+                            $.post(
+                                "second.php",
+                                {length:vectors.length, path:'../webfe/temp'}
+                            ).done(function(response){
+                                var folder=response;
+                                console.log(folder);
+                                console.log("Successfully tested vector "+i); 
+                                $.post(
+                                     "CheckDiff.php",
+                                      {folder: folder}
+                                ).done(function(response){
+                                    console.log(response);
+                                    // Success or failure is shown with 'right' or 'wrong' icons with links to errors.  
+                                    var id='resultDiv'+i; console.log(id);
+                                    var topn=135+15*i;
+                                    var top=topn + 'px';
+                                    var div = '<div id= '+ id +' style="position: absolute;left:940px; top:'+top+';"></div>';
+                                    document.body.insertAdjacentHTML('beforeend', div);
+                                    var y = document.getElementById(id); 
+                                    if(response== "wrong"){
+                                        y.innerHTML ='<a href="../webfe/TestResults/'+folder+'_diff.txt" target="_blank"> Check differences</a>';
+                                        $('#'+id).prepend('<img id="theImg" src="button_cancel.png" />');
+                                        document.getElementById('statusContent').innerHTML= "Completed vector "+j;
+                                    }
+                                    else{
+                                        $('#'+id).prepend('<img id="theImg" src="right.jpg" />');
+                                        document.getElementById('statusContent').innerHTML= "Completed vector "+j;
+                                    }
                                     if(vectors.length>j)
                                         document.getElementById('statusContent').innerHTML= "Running vector "+(j+1);
                                     j++;
                                     resultDivNum=j;
                                     i++;
                                     ajaxcall();
-                                }
-                            }, 100); // interval set at 100 milliseconds
+                                });
+                            });
                         }
-                    });
-                    
-                });
+                    }, 10); // interval set at 10 milliseconds
+                }
             }
             else  // Creating Reference results.
             {
