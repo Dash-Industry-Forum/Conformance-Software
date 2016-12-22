@@ -32,18 +32,19 @@ while($j<=$i)
     if (is_dir($path)) 
     {
         $foldernamesNew = scandir($path, 0);
-        $k=0;
+        //$k=0;
         $foldersNew=array();
         foreach ($foldernamesNew as $result) {
             if ($result === '.' or $result === '..') continue;
 
             if (is_dir($path . '/' . $result)) {
-                $foldersNew[$k]=$result;
-                $k=$k+1;
+                $foldersNew[$j]=$result;
+                //$k=$k+1;
+                $j=$j+2;//To end the while loop in the next check.+1 not enough.
             }
         }
     }
-    $j=$k;
+    
 }
 
 $Newfolder=$foldersNew[0];
