@@ -123,7 +123,28 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
             $bitstreamSwitching = $periodBitstreamSwitching;
 
         $ContentProtection = $dom->getElementsByTagName("ContentProtection"); // Search for Content Protection element
-
+       
+        //To extract default_KID and pssh information from ContentProtection
+        $psshBox=array();
+        if($ContentProtection->length >0)
+        {
+            for($i=0; $i < $ContentProtection->length; $i++ )
+            {
+             //   $tempContentProtection[$i]=processContentProtection($ContentProtection->item($i));
+               // function processContentProtection($contentprotect)
+                   $tempContentProtect=$ContentProtection->item($i);
+                   $KID= $tempContentProtect->getAttribute('cenc:default_KID');
+                if (!empty($KID))
+                {    $default_KID = $KID;//$contentprotect->getAttribute('cenc:default_KID');
+                }
+                $cenc_pssh=$tempContentProtect->textContent;
+                if(!empty($cenc_pssh))
+                {
+                    $psshBox[]=$cenc_pssh;
+                }  
+            }
+            $ContentProtect_arr = array('default_KID' => $default_KID, 'psshBox' => $psshBox);
+        }
         $Contentcomponent = $dom->getElementsByTagName("ContentComponent"); //Search for content component attribute
         $tr = $dom->childNodes->item(0)->nodeName;
 
@@ -357,7 +378,7 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
     // Array of all adapationsets containing all attributes and nodes including Presentations 
 
     $Adapt_arr = array('startWithSAP' => $startWithSAP, 'segmentAlignment' => $segmentAlignment, 'subsegmentAlignment' => $subsegmentAlignment, 'bitstreamSwitching' => $bitstreamSwitching,
-        'id' => $idadapt, 'scanType' => $scanType, 'mimeType' => $mimeType, 'SegmentTemplate' => $Adapt_seg_temp, 'SegmentBase' => $basearray, 'codecs' => $codecs_AdaptSet, 'width' => $width_AdaptSet, 'height' => $height_AdaptSet, 'Representation' => $Rep_arr, 'AudioChannelValue' => $audioCh_Adapt_value, 'indexRange' => $indexRange_AdaptSet);
+        'id' => $idadapt, 'scanType' => $scanType, 'mimeType' => $mimeType, 'SegmentTemplate' => $Adapt_seg_temp, 'SegmentBase' => $basearray, 'codecs' => $codecs_AdaptSet, 'width' => $width_AdaptSet, 'height' => $height_AdaptSet, 'Representation' => $Rep_arr, 'AudioChannelValue' => $audioCh_Adapt_value, 'indexRange' => $indexRange_AdaptSet, 'ContentProtection' => $ContentProtect_arr);
 
 
     /* $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
