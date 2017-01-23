@@ -137,7 +137,9 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
                 if (!empty($KID))
                 {    $default_KID = $KID;//$contentprotect->getAttribute('cenc:default_KID');
                 }
-                $cenc_pssh=$tempContentProtect->textContent;
+                //$cenc_pssh=$tempContentProtect->textContent;
+                $cencNS="urn:mpeg:cenc:2013";
+                $cenc_pssh=$tempContentProtect->getElementsByTagNameNS($cencNS,'pssh')->item(0)->nodeValue;
                 if(!empty($cenc_pssh))
                 {
                     $psshBox[]=$cenc_pssh;
