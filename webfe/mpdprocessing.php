@@ -802,6 +802,33 @@ function process_mpd()
                 {
                     $processArguments = $processArguments . "-repIndex ";
                 }
+                
+                if($Period_arr[$count1]['ContentProtection']!== null)
+                {
+                    if($Period_arr[$count1]['ContentProtection']['default_KID']!==null)
+                    {
+                        $default_KID=$Period_arr[$count1]['ContentProtection']['default_KID'];
+                        $processArguments = $processArguments . " -default_kid ";
+                        $processArguments = $processArguments . $default_KID;
+                    }
+                    $psshCount=sizeof($Period_arr[$count1]['ContentProtection']['psshBox']);
+                    if($psshCount>0)
+                    { 
+                        $processArguments = $processArguments . " -pssh_count ";
+                        $processArguments = $processArguments . $psshCount;                   
+                        for($i=0; $i< $psshCount ; $i++)
+                        {
+                            $psshBox= $Period_arr[$count1]['ContentProtection']['psshBox'][$i];
+                            $processArguments = $processArguments . " -psshbox ";
+                            $pssh_file_loc=$locate."/psshBox".$i.".txt";
+                            $pssh_file=fopen($pssh_file_loc, "w");
+                            fwrite($pssh_file, $psshBox);
+                            fclose($pssh_file);
+                            $processArguments = $processArguments . $pssh_file_loc;
+                        }
+                    }
+                }
+                 
 
                 error_log("validatemp4");
                 // Work out which validator binary to use
