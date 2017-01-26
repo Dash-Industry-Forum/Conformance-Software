@@ -262,6 +262,7 @@ var totarrstring=[];
 var xmlDoc_progress;
 var progressSegmentsTimer;
 var pollingTimer;
+var ChainedToUrl;
 
 /////////////////////////////////////////////////////////////
 document.querySelector('#afile').addEventListener('change', function(e) {
@@ -829,6 +830,17 @@ function finishTest()
 
     clearInterval( progressTimer);
     clearInterval( progressSegmentsTimer);
+    
+    
+    //Open a new window for checking Conformance of Chained-to MPD (if present).
+    xmlDoc_progress=loadXMLDoc("temp/"+dirid+"/progress.xml");
+    if (xmlDoc_progress !== null)
+        var MPDChainingUrl=xmlDoc_progress.getElementsByTagName("MPDChainingURL");
+
+    if(MPDChainingUrl.length !== 0){   
+        ChainedToUrl=MPDChainingUrl[0].childNodes[0].nodeValue;
+        window.open("conformancetest.php?mpdurl="+ChainedToUrl);
+    }
     setStatusTextlabel("Conformance test completed");
 }
 
@@ -886,6 +898,11 @@ function setStatusTextlabel(textToSet)
     if(segmentListExist)
     {
         status = status + "<br><font color='red'> SegmentList is not supported, only MPD will be tested. </font>"
+    }
+    
+    if(ChainedToUrl)
+    {
+        status = status + "<br><font color='red'> Chained-to MPD conformance is opened in new window. </font>"
     }
 
     document.getElementById("par").innerHTML=status;
