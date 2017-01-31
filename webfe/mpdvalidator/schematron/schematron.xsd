@@ -264,4 +264,15 @@
 		</rule>
 	</pattern>			
 		
+	<pattern name="SupplementalProperty element">
+		<!-- R19.*: Check the conformance of SupplementalProperty -->
+		<rule context="dash:SupplementalProperty">
+            <!-- R19.1 -->
+			<assert test="if((@schemeIdUri= 'urn:mpeg:dash:chaining:2016') and not((count(tokenize(@value, ','))=1) or (count(tokenize(@value, ','))>1)) )then false() else true()">If schemeIdUri urn:mpeg:dash:chaining:2016 is used, then value attribute shall be composed of the comma separated parameters (no comma needed if only first parameter is present). </assert>
+	    <!-- R19.2 -->
+			<assert test="if(not(parent::dash:MPD) and (@schemeIdUri= 'urn:mpeg:dash:fallback:2016') )then false() else true()">MPD fallback chaining shall be signaled by Supplemental Descriptor on MPD level with schemeIdUri urn:mpeg:dash:fallback:2016. </assert>	
+	    <!-- R19.3 -->
+			<assert test="if((@schemeIdUri= 'urn:mpeg:dash:fallback:2016') and not((count(tokenize(@value, ' '))=1) or (count(tokenize(@value, ' '))>1)) )then false() else true()">If schemeIdUri urn:mpeg:dash:fallback:2016 is used, then value attribute shall be composed of one URL or whitespace separated URLs. </assert>		
+		</rule>
+	</pattern>
 </schema>

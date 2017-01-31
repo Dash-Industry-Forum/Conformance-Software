@@ -239,6 +239,18 @@ function process_mpd()
     {
         $dir = dirname($GLOBALS["url"]) . '/'; // if there is no Baseurl in mpd level,set location of segments dir as mpd location
     }
+    //Process SupplementalProperty for MPD Chaining, if present.
+    $supplemental=$dom->getElementsByTagName('SupplementalProperty');
+    if($supplemental->length >0)
+    {
+      $supplementalScheme=$supplemental->item(0)->getAttribute('schemeIdUri');
+      if(($supplementalScheme === 'urn:mpeg:dash:chaining:2016') || ($supplementalScheme ==='urn:mpeg:dash:fallback:2016')){
+	  $MPDChainingURL=$supplemental->item(0)->getAttribute('value');
+      }
+
+      $progressXML->MPDChainingURL=$MPDChainingURL;
+      $progressXML->asXml(trim($locate . '/progress.xml'));
+    }
     $start = processPeriod($periodNode, $dir); // start getting information from period level
     $start = timeparsing($start); //Get start time in seconds
     $segm_url = array(); // contains segments url within one 
