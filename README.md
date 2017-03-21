@@ -1,7 +1,7 @@
 Conformance-Software
 ====================
 
-This package, for now, only provides the Web-FE of MPEG-DASH/DASH-IF ISO-Segment Validator for Windows platforms.
+This package provides the Web-FE of MPEG-DASH/DASH-IF ISO-Segment Validator; the latter works for Windows/Linux platforms.
 
 Tested for:
 
@@ -21,9 +21,9 @@ Sub-representations.
 
 
 
-Notes for testing:
+Notes for testing of the framework:
 
-Find the Conformance-Software folder in your localhost and open the Test folder. Put the test vector mpd URLs in the "Test vector" field (up to 10 mpds).
+Find the Conformance-Software folder in your localhost and open the Test folder. Put the test vector mpd URLs in the "Test vector" field.
 Click on "Start Testing" button, then all the test vectors will be tested one by one.
 Please make sure that user www-data has write permission in the Conformance-Software folder
 
