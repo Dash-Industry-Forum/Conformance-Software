@@ -164,6 +164,7 @@ function process_mpd()
         $progressXML->completed->addAttribute('time', time());
         $progressXML->asXml(trim($locate . '/progress.xml'));
         echo $progressXML->asXML();
+        writeEndTime((int)$progressXML->completed->attributes());
         exit; //Exit
     }
 
@@ -570,6 +571,7 @@ function process_mpd()
                 $progressXML->completed->addAttribute('time', time());
                 $progressXML->asXml(trim($locate . '/progress.xml'));
                 echo $progressXML->asXML();
+                writeEndTime((int)$progressXML->completed->attributes());
                 exit;
             }
         }
@@ -591,6 +593,7 @@ function process_mpd()
         $progressXML->completed->addAttribute('time', time());
         $progressXML->asXml(trim($locate . '/progress.xml'));
         echo $progressXML->asXML();
+        writeEndTime((int)$progressXML->completed->attributes());
         exit;
     }
 
@@ -689,6 +692,7 @@ function process_mpd()
             $progressXML->completed->addAttribute('time', time());
             $progressXML->asXml(trim($locate . '/progress.xml'));
             echo $progressXML->asXML();
+            writeEndTime((int) $progressXML->completed->attributes());
             exit;
         }
         else
