@@ -106,7 +106,7 @@ function writeEndTime($end_time_sec)
     foreach ($lines as $key => &$value) {
         $pos_ID=strpos($value,$ID);
         if($pos_ID!=FALSE){
-            $value = $value.$end_time."\n";
+            $value = $value.$end_time;
             break;
         }
     }
@@ -126,6 +126,8 @@ function writeMPDStatus($mpd)
     $f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
     if($pos!=FALSE)
         fwrite($f, "200 OK, ");
+    else if(strpos($output[0], "404 Not Found"))
+        fwrite($f, "404 Not Found- ".$mpd);
     else
         fwrite($f, "not OK, ");
     
