@@ -112,7 +112,7 @@ function writeEndTime($end_time_sec)
     }
     file_put_contents(dirname(__FILE__) . '/'.$counter_name, implode("\n", $lines));
     //fwrite($f,$end_time. "\n"); 
-    fclose($f);
+    //fclose($f);
 }
 
 function writeMPDStatus($mpd)
