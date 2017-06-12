@@ -23,7 +23,7 @@ if (!file_exists($counter_name))
     $timezone = date_default_timezone_get();
     $date = date('m/d/Y h:i:s a', time());
     fwrite($f, "The current server timezone is: " . $timezone . ", file created at: " . $date . "\n" ."No. of visitors"."\n". "0"."\n");
-    fwrite($f, "IP hash----------------------------------Start-time----------------------End-time-----------------\n");
+    fwrite($f, "----IP hash, ID, Start-time, %CPU, Memory(total, used, free, shared,buffers,cached), MPD-Status, End-time----\n");
     fclose($f);
 }
 // Read the current value of visitor counter from the file.
@@ -50,7 +50,23 @@ if (!isset($_SESSION['hasVisited']))
     foreach($contents_new as $value){ // write file contents as it is with incremented counter value.
      fwrite($f, $value.PHP_EOL);
     }
-    fwrite($f, $user_IP_hash ."    ".$start_time."        ");
+    fwrite($f, $user_IP_hash .", ".$_POST['foldername'].", ".$start_time.", ");
+    
+    //This returns three samples representing the average system load (the number
+    // of processes in the system run queue) over the last 1, 5 and 15 minutes, respectively.
+    $cpu_avg_load = sys_getloadavg(); 
+    fwrite($f, $cpu_avg_load[0].", ");
+    
+    $output_mem=null;
+    exec('free',$output_mem);
+     //$output_mem = (string)trim($output_mem);
+    //$free_arr = explode("\n", $output_mem);
+    $mem = explode(" ", $output_mem[1]);
+    $mem = array_filter($mem);
+    $mem = array_merge($mem);
+    //var_dump($output_mem);
+    fwrite($f, $mem[1].",".$mem[2].",".$mem[3].",".$mem[4].",".$mem[5].",".$mem[6].", ");
+    
     fclose($f);
     
 }
@@ -83,9 +99,38 @@ function writeEndTime($end_time_sec)
 
     $counter_name = "counter.txt";
     $end_time=date('m/d/Y h:i:s a', $end_time_sec);
-    $f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
-    
-    fwrite($f,$end_time. "\n"); 
+   // $f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
+    $file = file_get_contents(dirname(__FILE__) . '/'.$counter_name);
+    $lines = explode("\n", $file);
+    $ID=$_POST['foldername'];
+    foreach ($lines as $key => &$value) {
+        $pos_ID=strpos($value,$ID);
+        if($pos_ID!=FALSE){
+            $value = $value.$end_time."\n";
+            break;
+        }
+    }
+    file_put_contents(dirname(__FILE__) . '/'.$counter_name, implode("\n", $lines));
+    //fwrite($f,$end_time. "\n"); 
     fclose($f);
 }
+
+function writeMPDStatus($mpd)
+{
+
+    $counter_name = "counter.txt";
+  
+    $output= get_headers($mpd);
+    $pos=strpos($output[0], "200 OK");
+
+    $f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
+    if($pos!=FALSE)
+        fwrite($f, "200 OK, ");
+    else
+        fwrite($f, "not OK, ");
+    
+    fclose($f);
+}
+
+
 ?>
