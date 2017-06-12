@@ -466,7 +466,7 @@ function pollingProgress()
 
 //    console.log("process_returned:");
 //    console.log(totarrstring);
-    if (totarrstring === 1)//Check for the error in MPD loading.
+    if (totarrstring == 1)//Check for the error in MPD loading.
     {
         window.alert("Error loading the MPD, please check the URL.");
         clearInterval( pollingTimer);	
