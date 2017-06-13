@@ -14,61 +14,65 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-$counter_name = "counter.txt"; // Do not change this name, same name is used in other function.
+$counter_name = "counter.txt"; // Do not change this name, same name is used in other functions.
 
-// Check if a text file exists. If not create one and initialize it to zero.
-if (!file_exists($counter_name))
+function visitor_counter()
 {
-    $f = fopen($counter_name, "w");
-    $timezone = date_default_timezone_get();
-    $date = date('m/d/Y h:i:s a', time());
-    fwrite($f, "The current server timezone is: " . $timezone . ", file created at: " . $date . "\n" ."No. of visitors"."\n". "0"."\n");
-    fwrite($f, "----IP hash, ID, Start-time, %CPU, Memory(total, used, free, shared,buffers,cached), MPD-Status, End-time----\n");
-    fclose($f);
-}
-// Read the current value of visitor counter from the file.
-$f = fopen($counter_name, "r");
-$content = fread($f, filesize($counter_name)); //the whole file including the header info
-$contents = explode("\n", $content);
-//$info = $contents[0];
-//$counterVal = $contents[1];
-$contents_new=$contents;
-$counterVal=$contents[2];
-fclose($f);
-
-// Has visitor been counted in this session?
-// If not, increase counter value by one
-if (!isset($_SESSION['hasVisited']))
-{
-    $_SESSION['hasVisited'] = "yes";
-    $counterVal++;
-    $contents_new[2]=$counterVal;
-    $user_IP = getUserIPAddr(); // get the IP address of the visitor.
-    $user_IP_hash=md5($user_IP); // convert IP to MD5 hash.
-    $start_time = date('m/d/Y h:i:s a', time());
-    $f = fopen($counter_name, "w");
-    foreach($contents_new as $value){ // write file contents as it is with incremented counter value.
-     fwrite($f, $value.PHP_EOL);
+    global $counter_name; //= "counter.txt"; // Do not change this name, same name is used in other functions.
+    // Check if a text file exists. If not create one and initialize it to zero.
+    if (!file_exists($counter_name))
+    {
+        $f = fopen($counter_name, "w");
+        $timezone = date_default_timezone_get();
+        $date = date('m/d/Y h:i:s a', time());
+        fwrite($f, "The current server timezone is: " . $timezone . ", file created at: " . $date . "\n" ."No. of visitors"."\n". "0"."\n");
+        fwrite($f, "----IP hash, ID, Start-time, %CPU, Memory(total, used, free, shared,buffers,cached), MPD-Status, End-time----\n");
+        fclose($f);
     }
-    fwrite($f, $user_IP_hash .", ".$_POST['foldername'].", ".$start_time.", ");
-    
-    //This returns three samples representing the average system load (the number
-    // of processes in the system run queue) over the last 1, 5 and 15 minutes, respectively.
-    $cpu_avg_load = sys_getloadavg(); 
-    fwrite($f, $cpu_avg_load[0].", ");
-    
-    $output_mem=null;
-    exec('free',$output_mem);
-     //$output_mem = (string)trim($output_mem);
-    //$free_arr = explode("\n", $output_mem);
-    $mem = explode(" ", $output_mem[1]);
-    $mem = array_filter($mem);
-    $mem = array_merge($mem);
-    //var_dump($output_mem);
-    fwrite($f, $mem[1].",".$mem[2].",".$mem[3].",".$mem[4].",".$mem[5].",".$mem[6].", ");
-    
+    // Read the current value of visitor counter from the file.
+    $f = fopen($counter_name, "r");
+    $content = fread($f, filesize($counter_name)); //the whole file including the header info
+    $contents = explode("\n", $content);
+    //$info = $contents[0];
+    //$counterVal = $contents[1];
+    $contents_new=$contents;
+    $counterVal=$contents[2];
     fclose($f);
-    
+
+    // Has visitor been counted in this session?
+    // If not, increase counter value by one
+    //if (!isset($_SESSION['hasVisited']))
+    //{
+        //$_SESSION['hasVisited'] = "yes";
+        $counterVal++;
+        $contents_new[2]=$counterVal;
+        $user_IP = getUserIPAddr(); // get the IP address of the visitor.
+        $user_IP_hash=md5($user_IP); // convert IP to MD5 hash.
+        $start_time = date('m/d/Y h:i:s a', time());
+        $f = fopen($counter_name, "w");
+        foreach($contents_new as $value){ // write file contents as it is with incremented counter value.
+         fwrite($f, $value.PHP_EOL);
+        }
+        fwrite($f, $user_IP_hash .", ".$_POST['foldername'].", ".$start_time.", ");
+
+        //This returns three samples representing the average system load (the number
+        // of processes in the system run queue) over the last 1, 5 and 15 minutes, respectively.
+        $cpu_avg_load = sys_getloadavg(); 
+        fwrite($f, $cpu_avg_load[0].", ");
+
+        $output_mem=null;
+        exec('free',$output_mem);
+         //$output_mem = (string)trim($output_mem);
+        //$free_arr = explode("\n", $output_mem);
+        $mem = explode(" ", $output_mem[1]);
+        $mem = array_filter($mem);
+        $mem = array_merge($mem);
+        //var_dump($output_mem);
+        fwrite($f, $mem[1].",".$mem[2].",".$mem[3].",".$mem[4].",".$mem[5].",".$mem[6].", ");
+
+        fclose($f);
+
+    //}
 }
 
 
@@ -97,7 +101,7 @@ function getUserIPAddr()
 function writeEndTime($end_time_sec)
 {
 
-    $counter_name = "counter.txt";
+    global $counter_name;// = "counter.txt";
     $end_time=date('m/d/Y h:i:s a', $end_time_sec);
    // $f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
     $file = file_get_contents(dirname(__FILE__) . '/'.$counter_name);
@@ -118,7 +122,7 @@ function writeEndTime($end_time_sec)
 function writeMPDStatus($mpd)
 {
 
-    $counter_name = "counter.txt";
+    global $counter_name;// = "counter.txt";
   
     $output= get_headers($mpd);
     $pos=strpos($output[0], "200 OK");
@@ -129,7 +133,7 @@ function writeMPDStatus($mpd)
     else if(strpos($output[0], "404 Not Found"))
         fwrite($f, "404 Not Found- ".$mpd);
     else
-        fwrite($f, "not OK, ");
+        fwrite($f, $output[0].", ");
     
     fclose($f);
 }

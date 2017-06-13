@@ -35,6 +35,7 @@ $session_id = json_decode($_POST['sessionid']); // parse recieved data
 session_name($session_id);
 session_start(); // initiate session for connected client
 error_log("session_start:" . session_name());
+visitor_counter();
 
 $adaptsetdepth = array(); // array for Baseurl 
 $depth = array(); //array contains all relative URLs exist in all mpd levels 
