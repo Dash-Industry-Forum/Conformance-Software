@@ -442,7 +442,18 @@ function submit()
             processData: false
         });
     }else{  // Pass to server only, no JS response model.
-        $.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
+        UrlExists(stringurl[0], function(urlStatus){
+             //console.log(urlStatus);
+            if(urlStatus === 200){
+                $.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
+            }
+            else{ //if(urlStatus === 404){
+               window.alert("Error loading the MPD, please check the URL.");
+               clearInterval( pollingTimer);	
+               finishTest(); 
+            }
+        });
+        //$.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
     }
     
      //Start polling of progress.xml for the progress percentage results.
@@ -907,6 +918,18 @@ function setStatusTextlabel(textToSet)
 
     document.getElementById("par").innerHTML=status;
     document.getElementById('par').style.visibility='visible';
+}
+
+function UrlExists(url, cb){
+    jQuery.ajax({
+        url:      url,
+        dataType: 'text',
+        type:     'GET',
+        complete:  function(xhr){
+            if(typeof cb === 'function')
+               cb.apply(this, [xhr.status]);
+        }
+    });
 }
 </script>
 
