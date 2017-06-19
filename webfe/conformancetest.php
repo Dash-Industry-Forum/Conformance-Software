@@ -442,17 +442,18 @@ function submit()
             processData: false
         });
     }else{  // Pass to server only, no JS response model.
-        UrlExists(stringurl[0], function(urlStatus){
-             //console.log(urlStatus);
-            if(urlStatus === 200){
-                $.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
-            }
-            else{ //if(urlStatus === 404){
-               window.alert("Error loading the MPD, please check the URL.");
-               clearInterval( pollingTimer);	
-               finishTest(); 
-            }
-        });
+           UrlExists(stringurl[0], function(urlStatus){
+                 //console.log(urlStatus);
+                if(urlStatus === 200 && stringurl[0]!=""){
+                    $.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
+                }
+                else{ //if(urlStatus === 404){
+                   window.alert("Error loading the MPD, please check the URL.");
+                   clearInterval( pollingTimer);	
+                   finishTest(); 
+                }
+            });
+      
         //$.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
     }
     
@@ -845,12 +846,13 @@ function finishTest()
     
     //Open a new window for checking Conformance of Chained-to MPD (if present).
     xmlDoc_progress=loadXMLDoc("temp/"+dirid+"/progress.xml");
-    if (xmlDoc_progress !== null)
+    if (xmlDoc_progress !== null){
         var MPDChainingUrl=xmlDoc_progress.getElementsByTagName("MPDChainingURL");
 
-    if(MPDChainingUrl.length !== 0){   
-        ChainedToUrl=MPDChainingUrl[0].childNodes[0].nodeValue;
-        window.open("conformancetest.php?mpdurl="+ChainedToUrl);
+        if(MPDChainingUrl.length !== 0){   
+            ChainedToUrl=MPDChainingUrl[0].childNodes[0].nodeValue;
+            window.open("conformancetest.php?mpdurl="+ChainedToUrl);
+        }
     }
     setStatusTextlabel("Conformance test completed");
 }
