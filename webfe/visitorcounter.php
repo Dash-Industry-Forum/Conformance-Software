@@ -123,17 +123,25 @@ function writeMPDStatus($mpd)
 {
 
     global $counter_name;// = "counter.txt";
-  
-    $output= get_headers($mpd);
-    $pos=strpos($output[0], "200 OK");
-
     $f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
-    if($pos!=FALSE)
-        fwrite($f, "200 OK, ");
-    else if(strpos($output[0], "404 Not Found"))
-        fwrite($f, "404 Not Found- ".$mpd);
+    //Check if the mpd is an uploaded file.
+    $uploaded=(strpos($mpd, "uploaded.mpd")!=FALSE && strpos($mpd, "var/www")!=FALSE);
+    if ($uploaded==FALSE){
+        $output= get_headers($mpd);
+        $pos=strpos($output[0], "200 OK");
+
+        
+        if($pos!=FALSE)
+            fwrite($f, "200 OK, ");
+        else if(strpos($output[0], "404 Not Found"))
+            fwrite($f, "404 Not Found- ".$mpd);
+        else
+            fwrite($f, $output[0].", ");
+
+        
+    }
     else
-        fwrite($f, $output[0].", ");
+        fwrite($f, "uploaded, ");
     
     fclose($f);
 }
