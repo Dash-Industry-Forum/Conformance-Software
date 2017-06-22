@@ -136,6 +136,7 @@ function process_mpd()
     }
 
     $validate_result = mpdvalidator($url_array, $locate, $foldername);
+    writeMPDEndTime();
     $exit = $validate_result[0];
     $totarr = $validate_result[1];
     $schematronIssuesReport = $validate_result[2];
@@ -151,7 +152,7 @@ function process_mpd()
     $progressXML->MPDConformance = $temp_mpdres;
     $progressXML->MPDConformance->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/mpdreport.txt'));
     $progressXML->asXml(trim($locate . '/progress.xml'));
-
+        
     // skip the rest when we should exit
     if ($exit === true)
     { //If session should be destroyed

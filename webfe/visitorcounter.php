@@ -26,7 +26,7 @@ function visitor_counter()
         $timezone = date_default_timezone_get();
         $date = date('m/d/Y h:i:s a', time());
         fwrite($f, "The current server timezone is: " . $timezone . ", file created at: " . $date . "\n" ."No. of visitors"."\n". "0"."\n");
-        fwrite($f, "----IP hash, ID, Start-time, %CPU, Memory(total, used, free, shared,buffers,cached), MPD-Status, End-time----\n");
+        fwrite($f, "----IP hash, ID, Start-time, %CPU, Memory(total, used, free, shared,buffers,cached), MPD-Status, MPD-End-time, End-time----\n");
         fclose($f);
     }
     // Read the current value of visitor counter from the file.
@@ -143,6 +143,15 @@ function writeMPDStatus($mpd)
     else
         fwrite($f, "uploaded, ");
     
+    fclose($f);
+}
+
+function writeMPDEndTime()
+{
+    global $counter_name;
+    $f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
+    $mpd_end_time = date('m/d/Y h:i:s a', time());
+    fwrite($f, $mpd_end_time.", ");
     fclose($f);
 }
 
