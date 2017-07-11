@@ -15,10 +15,30 @@
  */
 
 $counter_name = "counter.txt"; // Do not change this name, same name is used in other functions.
+global $start_time, $mem, $cpu_avg_load;
 
-function visitor_counter()
+function start_visitor_counter()
 {
-    global $counter_name; //= "counter.txt"; // Do not change this name, same name is used in other functions.
+    global $start_time, $mem, $cpu_avg_load;
+    $start_time = date('m/d/Y h:i:s a', time());
+    //This returns three samples representing the average system load (the number
+    // of processes in the system run queue) over the last 1, 5 and 15 minutes, respectively.
+    $cpu_avg_load = sys_getloadavg(); 
+    
+
+    $output_mem=null;
+    exec('free',$output_mem);
+     //$output_mem = (string)trim($output_mem);
+    //$free_arr = explode("\n", $output_mem);
+    $mem = explode(" ", $output_mem[1]);
+    $mem = array_filter($mem);
+    $mem = array_merge($mem);
+    //var_dump($output_mem);
+}
+
+function update_visitor_counter()
+{
+    global $counter_name, $start_time, $mem, $cpu_avg_load; //= "counter.txt"; // Do not change this name, same name is used in other functions.
     // Check if a text file exists. If not create one and initialize it to zero.
     if (!file_exists($counter_name))
     {
@@ -48,33 +68,21 @@ function visitor_counter()
         $contents_new[2]=$counterVal;
         $user_IP = getUserIPAddr(); // get the IP address of the visitor.
         $user_IP_hash=md5($user_IP); // convert IP to MD5 hash.
-        $start_time = date('m/d/Y h:i:s a', time());
+        //$start_time = date('m/d/Y h:i:s a', time());
         $f = fopen($counter_name, "w");
         foreach($contents_new as $value){ // write file contents as it is with incremented counter value.
          fwrite($f, $value.PHP_EOL);
         }
-        fwrite($f, $user_IP_hash .", ".$_POST['foldername'].", ".$start_time.", ");
+        fwrite($f, $user_IP_hash .", ".$_SESSION['foldername'].", ".$start_time.", ");
 
-        //This returns three samples representing the average system load (the number
-        // of processes in the system run queue) over the last 1, 5 and 15 minutes, respectively.
-        $cpu_avg_load = sys_getloadavg(); 
         fwrite($f, $cpu_avg_load[0].", ");
 
-        $output_mem=null;
-        exec('free',$output_mem);
-         //$output_mem = (string)trim($output_mem);
-        //$free_arr = explode("\n", $output_mem);
-        $mem = explode(" ", $output_mem[1]);
-        $mem = array_filter($mem);
-        $mem = array_merge($mem);
-        //var_dump($output_mem);
         fwrite($f, $mem[1].",".$mem[2].",".$mem[3].",".$mem[4].",".$mem[5].",".$mem[6].", ");
 
         fclose($f);
 
     //}
 }
-
 
 function getUserIPAddr()
 {
@@ -106,7 +114,8 @@ function writeEndTime($end_time_sec)
    // $f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
     $file = file_get_contents(dirname(__FILE__) . '/'.$counter_name);
     $lines = explode("\n", $file);
-    $ID=$_POST['foldername'];
+    $ID=$_SESSION['foldername'];
+    //Read each line and search for correct ID, then append end time to that line.
     foreach ($lines as $key => &$value) {
         $pos_ID=strpos($value,$ID);
         if($pos_ID!=FALSE){
@@ -123,36 +132,59 @@ function writeMPDStatus($mpd)
 {
 
     global $counter_name;// = "counter.txt";
-    $f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
+    //$f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
+    $file = file_get_contents(dirname(__FILE__) . '/'.$counter_name);
+    $lines = explode("\n", $file);
+    $ID=$_SESSION['foldername'];
     //Check if the mpd is an uploaded file.
     $uploaded=(strpos($mpd, "uploaded.mpd")!=FALSE && strpos($mpd, "var/www")!=FALSE);
-    if ($uploaded==FALSE){
-        $output= get_headers($mpd);
-        $pos=strpos($output[0], "200 OK");
+    //Read each line and search for correct ID, then append end time to that line.
+    foreach ($lines as $key => &$value) {
+        $pos_ID=strpos($value,$ID);
+        if($pos_ID!=FALSE){
+            if ($uploaded==FALSE){
+                $output= get_headers($mpd);
+                $pos=strpos($output[0], "200 OK");
 
-        
-        if($pos!=FALSE)
-            fwrite($f, "200 OK, ");
-        else if(strpos($output[0], "404 Not Found"))
-            fwrite($f, "404 Not Found- ".$mpd);
-        else
-            fwrite($f, $output[0].", ");
 
-        
+                if($pos!=FALSE)
+                    $value = $value."200 OK, ";
+                else if(strpos($output[0], "404 Not Found"))
+                    $value = $value."404 Not Found- ".$mpd;
+                else
+                    $value = $value.$output[0].", ";
+
+            }
+            else
+                $value = $value."uploaded, ";
+            
+            break;
+        }
     }
-    else
-        fwrite($f, "uploaded, ");
+    file_put_contents(dirname(__FILE__) . '/'.$counter_name, implode("\n", $lines));
     
-    fclose($f);
+    //fclose($f);
 }
 
 function writeMPDEndTime()
 {
     global $counter_name;
-    $f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
+    //$f = fopen(dirname(__FILE__) . '/'.$counter_name, "a+");
     $mpd_end_time = date('m/d/Y h:i:s a', time());
-    fwrite($f, $mpd_end_time.", ");
-    fclose($f);
+    $file = file_get_contents(dirname(__FILE__) . '/'.$counter_name);
+    $lines = explode("\n", $file);
+    $ID=$_SESSION['foldername'];
+    //Read each line and search for correct ID, then append end time to that line.
+    foreach ($lines as $key => &$value) {
+        $pos_ID=strpos($value,$ID);
+        if($pos_ID!=FALSE){
+            $value = $value.$mpd_end_time.", ";
+            break;
+        }
+    }
+    file_put_contents(dirname(__FILE__) . '/'.$counter_name, implode("\n", $lines));
+    //fwrite($f, $mpd_end_time.", ");
+    //fclose($f);
 }
 
 
