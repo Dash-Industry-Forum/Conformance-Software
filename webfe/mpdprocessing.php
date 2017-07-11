@@ -63,6 +63,7 @@ function process_mpd()
         
 //get a name for session folder from client.
     $_SESSION['foldername'] = $foldername;
+    update_visitor_counter();
     // rrmdir($locate);
     $locate = dirname(__FILE__) . '/' . 'temp' . '/' . $foldername; //session  folder location
     $_SESSION['locate'] = $locate; // save session folder location
