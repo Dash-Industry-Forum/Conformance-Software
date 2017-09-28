@@ -11,7 +11,7 @@ Tested for:
 4) Safari for Windows
 
 
-
+________
 Features
 
 The web front-end exposes all features supported by MPEG-DASH/DASH-IF ISO Segment Validator, except:
@@ -20,13 +20,14 @@ Dynamic MPDs.
 Sub-representations.
 
 
-
+___________________________________
 Notes for testing of the framework:
 
 Find the Conformance-Software folder in your localhost and open the Test folder. Put the test vector mpd URLs in the "Test vector" field.
 Click on "Start Testing" button, then all the test vectors will be tested one by one.
 Please make sure that user www-data has write permission in the Conformance-Software folder
 
+____________
 CMAF Branch:
 
 This branch also contains extension that include validation according to new CMAF rules. 
