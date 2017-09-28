@@ -1,5 +1,5 @@
-ISO Segment Validator: Apple Public Source License Version 2.0
-Details- https://github.com/Dash-Industry-Forum/Conformance-and-reference-source/blob/master/conformance/ISOSegmentValidator/public/src/ValidateMP4.r
+ISO Segment Validator: Apple Public Source License Version 2.0,
+details in source files under https://github.com/Dash-Industry-Forum/Conformance-and-reference-source/blob/master/conformance/ISOSegmentValidator/public/src/
 
-MPD Validator: Mozilla  Public License Version 1.1
-Details- webfe/mpdvalidator/src/Definitions.java
+MPD Validator: Mozilla  Public License Version 1.1,
+details in source files under webfe/mpdvalidator/src/
