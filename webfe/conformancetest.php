@@ -39,6 +39,13 @@
     }
     else
         $url = "";
+    
+    if(isset($_REQUEST['cmaf']))
+    {
+        $cmaf = $_REQUEST['cmaf'];
+    }
+    else
+        $cmaf = "";
 ?>
 
 <script type="text/javascript">
@@ -419,6 +426,7 @@ function submit()
         stringurl[2] = 1;
     else
    	stringurl[2] = 0 ;
+    stringurl[4] = "<?php echo $cmaf; ?>";
     initVariables();
     setUpTreeView();
     setStatusTextlabel("Processing...");
@@ -442,19 +450,7 @@ function submit()
             processData: false
         });
     }else{  // Pass to server only, no JS response model.
-           UrlExists(stringurl[0], function(urlStatus){
-                 //console.log(urlStatus);
-                if(urlStatus === 200 && stringurl[0]!=""){
-                    $.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
-                }
-                else{ //if(urlStatus === 404){
-                   window.alert("Error loading the MPD, please check the URL.");
-                   clearInterval( pollingTimer);	
-                   finishTest(); 
-                }
-            });
-      
-        //$.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
+        $.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
     }
     
      //Start polling of progress.xml for the progress percentage results.
@@ -466,19 +462,19 @@ function pollingProgress()
 {
     xmlDoc_progress=loadXMLDoc("temp/"+dirid+"/progress.xml");
 
-    if (xmlDoc_progress === null)
+    if (xmlDoc_progress == null)
         return;
     else
         var MPDError=xmlDoc_progress.getElementsByTagName("MPDError");
 
-    if(MPDError.length === 0)
+    if(MPDError.length== 0)
         return;
     else    
         totarrstring=MPDError[0].childNodes[0].nodeValue;
 
 //    console.log("process_returned:");
 //    console.log(totarrstring);
-    if (totarrstring == 1)//Check for the error in MPD loading.
+    if (totarrstring==1)//Check for the error in MPD loading.
     {
         window.alert("Error loading the MPD, please check the URL.");
         clearInterval( pollingTimer);	
@@ -548,6 +544,9 @@ function processmpdresults(MPDtotalResultXML)
 //        console.log(totarr);
     var failed ='false';
 
+    var x=2;
+    var childno=1;
+    var y=1;
     repid =[];
     tree.loadJSONObject({
         id: 0,
@@ -637,7 +636,7 @@ function processmpdresults(MPDtotalResultXML)
         var AdaptRepPeriod_count=Adapt_count;
         var Adaptxml=xmlDoc_progress.getElementsByTagName("Adaptation");
         for (var v=0; v<Adapt_count; v++){
-            AdaptRepPeriod_count=AdaptRepPeriod_count+" "+Adaptxml[v].childNodes.length;
+            AdaptRepPeriod_count=AdaptRepPeriod_count+" "+Adaptxml[v].getElementsByTagName("Representation").length;//Adaptxml[v].childNodes.length;
         }
         AdaptRepPeriod_count=AdaptRepPeriod_count+" "+Periodxml.length;
     }
@@ -670,6 +669,7 @@ function processmpdresults(MPDtotalResultXML)
     progressSegmentsTimer = setInterval(function(){progress()},400);
     document.getElementById('par').style.visibility='visible';
     document.getElementById('list').style.visibility='visible';
+
 }
 
 function progress()  //Progress of Segments' Conformance
@@ -694,41 +694,116 @@ function progress()  //Progress of Segments' Conformance
 //    console.log("progress(): representationid=",representationid,",hinindex=",hinindex,",adaptationid=",adaptationid  );
 //    console.log("downloading, response:");
     var CrossRepValidation=xmlDoc_progress.getElementsByTagName("CrossRepresentation");
-    if (CrossRepValidation.length!=0 && adaptationid>totarr[0])
+    var ComparedRepresentations = xmlDoc_progress.getElementsByTagName("ComparedRepresentations");
+    if ((CrossRepValidation.length!=0 && adaptationid>totarr[0]) || ComparedRepresentations.length !=0 && adaptationid>totarr[0])
     {
 //        console.log("Inside locations");
-        for(var i =1; i<=CrossRepValidation.length;i++)
-        {
-            if(CrossRepValidation[i-1].textContent=="noerror"){
+        if(CrossRepValidation.length!=0 && adaptationid>totarr[0]){
+            for(var i =1; i<=CrossRepValidation.length;i++)
+            {
+                if(CrossRepValidation[i-1].textContent=="noerror"){
 
-                tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
-                automate(adaptid[i-1],lastloc,"Cross-representation validation success");
+                    tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
+                    automate(adaptid[i-1],lastloc,"Cross-representation validation success");
 
-                tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
-                lastloc++;
-            // 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
+                    tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
+                    lastloc++;
+                // 			 tree.updateItem(adaptid[i-1],"Adaptationset " + i + " -cross validation success",'right.jpg','right.jpg','right.jpg',false);
 
-            }
-            else{
+                }
+                else{
 
-                tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
-//                kidsloc.push(lastloc);
-                //urlarray.push(locations[i]);
+                    tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
+//                  kidsloc.push(lastloc);
+                    //urlarray.push(locations[i]);
 
-                automate(adaptid[i-1],lastloc,"Cross-representation validation error");
+                    automate(adaptid[i-1],lastloc,"Cross-representation validation error");
 
-                tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
-                lastloc++;
+                    tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
+                    lastloc++;
 
 //                console.log("errors");
 
-                automate(adaptid[i-1],lastloc,"log");
-                tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
-                kidsloc.push(lastloc);
-                urlarray.push("temp/"+dirid+"/"+ "Adapt"+(i-1)+ "_infofile.html");
-                lastloc++;
+                    automate(adaptid[i-1],lastloc,"log");
+                    tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
+                    kidsloc.push(lastloc);
+                    urlarray.push("temp/"+dirid+"/"+ "Adapt"+(i-1)+ "_infofile.html");
+                    lastloc++;
+                }
             }
         }
+        
+        if(ComparedRepresentations.length !=0 && adaptationid>totarr[0]){
+            for(var i =1; i<=ComparedRepresentations.length;i++){
+            
+                if(ComparedRepresentations[i-1].textContent=="noerror"){
+                    tree.setItemImage2(adaptid[i-1],'right.jpg','right.jpg','right.jpg');
+                    automate(adaptid[i-1],lastloc,"CMAF Compared representations validation success");
+
+                    tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
+                    lastloc++;
+                }
+                else{
+                    tree.setItemImage2(adaptid[i-1],'button_cancel.png','button_cancel.png','button_cancel.png');
+                    automate(adaptid[i-1],lastloc,"CMAF Compared representations validation error");
+
+                    tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
+                    lastloc++;
+                
+                    automate(lastloc-1,lastloc,"log");//adaptid[i-1]
+                    tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
+                    kidsloc.push(lastloc);
+                    urlarray.push("temp/"+dirid+"/"+ "Adapt"+(i-1)+ "_compInfo.html");
+                    lastloc++;
+                }
+            }
+        }
+        //Additions for CMAF Selection Set and Presentation profile.
+        var SelectionSet=xmlDoc_progress.getElementsByTagName("SelectionSet");
+        var CmafProfile=xmlDoc_progress.getElementsByTagName("CMAFProfile");
+        if(SelectionSet.length!=0)
+        {
+            if(SelectionSet[0].textContent=="noerror"){
+                    automate(1,lastloc,"CMAF Selection Set");
+
+                    tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
+                    lastloc++;
+            }
+            else{
+                    automate(1,lastloc,"CMAF Selection Set");
+
+                    tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
+                    lastloc++;
+                
+                    automate(lastloc-1,lastloc,"log");//adaptid[i-1]
+                    tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
+                    kidsloc.push(lastloc);
+                    urlarray.push("temp/"+dirid+"/"+ "SelectionSet_infofile.html");
+                    lastloc++;
+                }
+        }
+        if(CmafProfile.length!=0)
+        {
+            if(CmafProfile[0].textContent=="noerror"){
+                    automate(1,lastloc,"CMAF Presentation Profile");
+
+                    tree.setItemImage2(lastloc,'right.jpg','right.jpg','right.jpg');
+                    lastloc++;
+            }
+            else{
+                    automate(1,lastloc,"CMAF Presentation Profile");
+
+                    tree.setItemImage2(lastloc,'button_cancel.png','button_cancel.png','button_cancel.png');
+                    lastloc++;
+                
+                    automate(lastloc-1,lastloc,"log");//adaptid[i-1]
+                    tree.setItemImage2( lastloc,'log.jpg','log.jpg','log.jpg');
+                    kidsloc.push(lastloc);
+                    urlarray.push("temp/"+dirid+"/"+ "Presentation_infofile.html");
+                    lastloc++;
+                }
+        }
+        
         kidsloc.push(lastloc);
         var BrokenURL=xmlDoc_progress.getElementsByTagName("BrokenURL");
         if( BrokenURL != null && BrokenURL[0].textContent == "error")//if(locations[locations.length-1]!="noerror")
@@ -796,6 +871,7 @@ function automate(y,x,stri)
 {
     tree.insertNewChild(y,x,stri,0,0,0,0,'SELECT');
     fixImage(x.valueOf());
+    //console.log("X="+x, "Y="+y);
     x++;
     y++;
 }
@@ -846,13 +922,12 @@ function finishTest()
     
     //Open a new window for checking Conformance of Chained-to MPD (if present).
     xmlDoc_progress=loadXMLDoc("temp/"+dirid+"/progress.xml");
-    if (xmlDoc_progress !== null){
+    if (xmlDoc_progress !== null)
         var MPDChainingUrl=xmlDoc_progress.getElementsByTagName("MPDChainingURL");
 
-        if(MPDChainingUrl.length !== 0){   
-            ChainedToUrl=MPDChainingUrl[0].childNodes[0].nodeValue;
-            window.open("conformancetest.php?mpdurl="+ChainedToUrl);
-        }
+    if(MPDChainingUrl.length !== 0){   
+        ChainedToUrl=MPDChainingUrl[0].childNodes[0].nodeValue;
+        window.open("conformancetest.php?mpdurl="+ChainedToUrl);
     }
     setStatusTextlabel("Conformance test completed");
 }
@@ -920,18 +995,6 @@ function setStatusTextlabel(textToSet)
 
     document.getElementById("par").innerHTML=status;
     document.getElementById('par').style.visibility='visible';
-}
-
-function UrlExists(url, cb){
-    jQuery.ajax({
-        url:      url,
-        dataType: 'text',
-        type:     'GET',
-        complete:  function(xhr){
-            if(typeof cb === 'function')
-               cb.apply(this, [xhr.status]);
-        }
-    });
 }
 </script>
 

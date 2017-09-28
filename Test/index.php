@@ -19,7 +19,7 @@
     
     function newtab(mpdfile)
     {
-        var testWin = window.open("../webfe/conformancetest.php?mpdurl="+mpdfile,"test");
+        var testWin = window.open("../webfe/conformancetest.php?cmaf=yes&&mpdurl="+mpdfile,"test");
         testWin.blur();
         return testWin;
     } 

@@ -26,6 +26,7 @@ include 'mpdparsing.php';
 include 'datadownload.php';
 include 'assemble.php';
 include 'schematronIssuesAnalyzer.php';
+include 'compare.php';
 
 set_time_limit(0); // php run without time limit
 ini_set("log_errors", 1);
@@ -35,7 +36,6 @@ $session_id = json_decode($_POST['sessionid']); // parse recieved data
 session_name($session_id);
 session_start(); // initiate session for connected client
 error_log("session_start:" . session_name());
-start_visitor_counter();
 
 $adaptsetdepth = array(); // array for Baseurl 
 $depth = array(); //array contains all relative URLs exist in all mpd levels 
@@ -65,8 +65,7 @@ $mediaPresentationDuration = "";
 $count1 = 0; // Count number of adaptationsets processed
 $count2 = 0; //count number of presentations proceessed
 
-if (isset($_POST['urlcode']))
-{// if client initiate first connection
+if (isset($_POST['urlcode'])) {// if client initiate first connection
     $url_array = json_decode($_POST['urlcode']); // parse recieved data
     $url = $url_array[0]; // get mpd url from HTTP request
     $_SESSION['url'] = $url; // save mpd url to session variable
@@ -153,8 +152,7 @@ $( "p" ).html( end);
 </body>
 </html>';
 
-function print_r2($val)
-{ //Print output line by line (for testing)
+function print_r2($val) { //Print output line by line (for testing)
     echo '<pre>';
     print_r($val);
     echo '</pre>';
