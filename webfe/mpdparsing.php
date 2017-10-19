@@ -113,6 +113,10 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
         if (empty($width_AdaptSet))
             $width_AdaptSet = 0;
 
+        $lang_AdaptSet = $Adapt->getAttribute ('lang'); // Get language, if present in Adaptation Set level
+        if(empty($lang_AdaptSet))
+            $lang_AdaptSet=0;
+            
         $adapsetProfiles = $Adapt->getAttribute('profiles');
         if ($adapsetProfiles === "")
             $adapsetProfiles = $periodProfiles;
@@ -254,6 +258,34 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
             $audioCh_Adapt_value = 0;
         }
 
+	//Check if SupplementalProperty for Aligned Switching Set is present
+	$Supplemental_Adapt=$Adapt->getElementsByTagName("SupplementalProperty");
+	//ToDo- Check if schemeIdUri is adaptation-set-switching:2016
+	if($Supplemental_Adapt->length>0)
+	{
+	    $AlignedSet_Adapt_value = $Supplemental_Adapt->item(0)->getAttribute ('value');
+	}
+	else
+	{
+	    $AlignedSet_Adapt_value=0;
+	}
+	//
+	
+	//Check if Role is present at Adapt Set level- With respect to subtitle conformance- CMAF.
+	$Role_Adapt=$Adapt->getElementsByTagName("Role");
+	if($Role_Adapt->length>0)
+	{
+	    $Role_schemeId=$Role_Adapt->item(0)->getAttribute('schemeIdUri');
+	    $Role_value=$Role_Adapt->item(0)->getAttribute('value');
+	}
+	else
+	{
+	    $Role_schemeId=0;
+	    $Role_value=0;
+	}
+	$Role_AdaptSet=array('schemeIdUri'=> $Role_schemeId, 'value' => $Role_value);
+	//
+
         $Representation = $dom->getElementsByTagName("Representation"); //Get representations node within Adapatationset
         if ($Representation->length > 0)
         {
@@ -380,7 +412,7 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
     // Array of all adapationsets containing all attributes and nodes including Presentations 
 
     $Adapt_arr = array('startWithSAP' => $startWithSAP, 'segmentAlignment' => $segmentAlignment, 'subsegmentAlignment' => $subsegmentAlignment, 'bitstreamSwitching' => $bitstreamSwitching,
-        'id' => $idadapt, 'scanType' => $scanType, 'mimeType' => $mimeType, 'SegmentTemplate' => $Adapt_seg_temp, 'SegmentBase' => $basearray, 'codecs' => $codecs_AdaptSet, 'width' => $width_AdaptSet, 'height' => $height_AdaptSet, 'Representation' => $Rep_arr, 'AudioChannelValue' => $audioCh_Adapt_value, 'indexRange' => $indexRange_AdaptSet, 'ContentProtection' => $ContentProtect_arr);
+        'id' => $idadapt, 'scanType' => $scanType, 'mimeType' => $mimeType, 'SegmentTemplate' => $Adapt_seg_temp, 'SegmentBase' => $basearray, 'codecs' => $codecs_AdaptSet, 'width' => $width_AdaptSet, 'height' => $height_AdaptSet, 'Representation' => $Rep_arr, 'AudioChannelValue' => $audioCh_Adapt_value, 'indexRange' => $indexRange_AdaptSet, 'ContentProtection' => $ContentProtect_arr,'alignedToSet'=>$AlignedSet_Adapt_value, 'language' => $lang_AdaptSet, 'Role' => $Role_AdaptSet);
 
 
     /* $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
