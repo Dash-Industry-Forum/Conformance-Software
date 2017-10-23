@@ -24,7 +24,6 @@ if (is_dir($path)) {
 } else {
     echo "No such directory";
 }       
-
 // To get the new list of folders which includes newly created results folder.       
 $j=0;
 while($j<=$i)
@@ -65,19 +64,21 @@ echo $FoldName;
 // Check progress.xml to find if Conformance Test is completed, then move the results to TestResults folder.
 while(1)
 {
+
     if(file_exists($path.'/'.$Newfolder.'/progress.xml')){
         //$feed = file_get_contents($path.'/'.$Newfolder.'/progress.xml');
+        
         $filesize = filesize($path.'/'.$Newfolder.'/progress.xml');
-        if($filesize != 0)
-        {
+        //if($filesize != 0)
+        //if(file_exists($path.'/'.$Newfolder.'/progress.xml'))
+       // {
             $xml=simplexml_load_file($path.'/'.$Newfolder.'/progress.xml');
-
             if($xml->completed=="true")
             { 
                 rename($path.'/'.$Newfolder, $newPath.'/'.$FoldName );
                 break;
             }
-        }
+        //}
     }
     sleep(3);
 }
