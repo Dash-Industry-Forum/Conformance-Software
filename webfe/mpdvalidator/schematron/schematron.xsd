@@ -129,6 +129,8 @@
 			<assert test="if (contains(ancestor::dash:MPD/@profiles, 'http://dashif.org/guidelines/dash') and parent::dash:AdaptationSet/@contentType='audio' and ((not(@audioSamplingRate) and not(parent::dash:AdaptationSet/@audioSamplingRate)) or (not(dash:AudioChannelConfiguration) and not(parent::dash:AdaptationSet/dash:AudioChannelConfiguration)))) then false() else true()"> DASH-IF IOP Section 3.2.4: "For any Representation within an Adaptation Set with value of the @contentType="audio" the following elements and attributes shall be present: @audioSamplingRate, if not present in AdaptationSet element; AudioChannelConfiguration, if not present in AdaptationSet element" violated here</assert >                        
                         <!-- RD5.4	DASH-IF -->
                         <assert test="if (contains(ancestor::dash:MPD/@profiles, 'http://dashif.org/guidelines/dash') and ((count(tokenize(@codecs, ',')) > 1) or (count(tokenize(parent::dash:AdaptationSet/@codecs, ',')) > 1))) then false() else true()"> If profiles contain dash-if profile identifier, "codecs" attribute on AdaptationSet level OR Representation level shall not contain more than one identifiers as a comma separated list</assert >
+                        <!-- Unique ID check -->
+			<assert test="if ((@id = preceding-sibling::dash:Representation/@id) or (@id=parent::dash:AdaptationSet/preceding-sibling::dash:AdaptationSet/dash:Representation/@id))then false() else true()">The id of each Representation within a Period shall be unique.</assert>
 		</rule>
 	</pattern>
 	<pattern name="SubRepresentation element">
