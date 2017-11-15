@@ -21,7 +21,9 @@ function mpdvalidator($result_array, $locate, $foldername)
     $schematronIssuesReport;
     $url_array = $result_array;
     chdir($url_array[1]); // Change default execution directory to the location of the mpd validator
-    $mpdvalidator = syscall("ant run -Dinput=\"" . $url_array[0] . "\" -Dresolved=" . $url_array[3] . "/resolved.xml" . " -Dschema=schemas/DASH-MPD.xsd"); //run mpd validator
+    //run mpd validator
+    //$mpdvalidator = syscall("ant run -Dinput=\"" . $url_array[0] . "\" -Dresolved=" . $url_array[3] . "/resolved.xml" . " -Dschema=schemas/DASH-MPD.xsd"); 
+    $mpdvalidator = syscall('java -cp "saxon9.jar:saxon9-dom.jar:xercesImpl.jar:bin" Validator ' . $url_array[0] . " " . $url_array[3] . "/resolved.xml schemas/DASH-MPD.xsd");
     $mpdvalidator = str_replace('[java]', "", $mpdvalidator); //save the mpd validator output to variable
     $valid_word = 'Start XLink resolving';
     $report_start = strpos($mpdvalidator, $valid_word); // Checking the begining of the Xlink validation
