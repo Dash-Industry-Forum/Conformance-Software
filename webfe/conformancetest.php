@@ -39,8 +39,8 @@
     }
     else
         $url = "";
-     
-    if(isset($_REQUEST['cmaf']) && file_get_contents("cmaf_OnOff.txt"))
+    
+    if(isset($_REQUEST['cmaf']) && file_get_contents("cmaf_OnOff.txt")==1)
     {
         $cmaf = $_REQUEST['cmaf'];
     }
