@@ -94,17 +94,24 @@
         display: block;
     }
     #tot{
-
         text-align:center;
-
     }
     #groupA{
         text-align:center;
-
+        margin-left:-5%;
+        margin-top:1%;
+    }
+    .box{
+        display:inline-block;
+        text-align:center;
+        width:600px;
+        height:50px;
+        border: 1px solid rgba(0,0,0,0.08);
+        background-color: grey;
+        margin-top:0.2%;
     }
     #progressbar{
         text-align:center;
-
     }
     #to{
         text-align:center;
@@ -112,46 +119,49 @@
     }
     #dash{
         text-align:center;
+        margin-top: 15%;
+        
     }
-
     p.sansserif {
         font-family: Arial, Helvetica, sans-serif;
     }
-
     #btn8 {
         -moz-box-shadow:inset 0px 1px 0px 0px #dcecfb;
         -webkit-box-shadow:inset 0px 1px 0px 0px #dcecfb;
-        box-shadow:inset 0px 1px 0px 0px #dcecfb;
-        background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #bddbfa), color-stop(1, #80b5ea) );
+        box-shadow:inset 0px 0px 0px 0px #dcecfb;
+        background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #99ccff), color-stop(1, #80b5ea) );
         background:-moz-linear-gradient( center top, #bddbfa 5%, #80b5ea 100% );
         filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#bddbfa', endColorstr='#80b5ea');
         background-color:#bddbfa;
         -webkit-border-top-left-radius:0px;
         -moz-border-radius-topleft:0px;
-        border-top-left-radius:0px;
+        border-top-left-radius:3px;
         -webkit-border-top-right-radius:0px;
         -moz-border-radius-topright:0px;
-        border-top-right-radius:0px;
+        border-top-right-radius:3px;
         -webkit-border-bottom-right-radius:0px;
         -moz-border-radius-bottomright:0px;
-        border-bottom-right-radius:0px;
+        border-bottom-right-radius:3px;
         -webkit-border-bottom-left-radius:0px;
         -moz-border-radius-bottomleft:0px;
-        border-bottom-left-radius:0px;
+        border-bottom-left-radius:3px;
         text-indent:-1px;
         border:1px solid #84bbf3;
         display:inline-block;
         color:#ffffff;
-        font-family:Arial;
-        font-size:15px;
+        font-family:Helvetica;
+        font-size:16px;
         font-weight:bold;
-        font-style:normal;
-        height:40px;
+        font-style:italic;
+        height:50px;
         line-height:40px;
         width:100px;
         text-decoration:none;
         text-align:center;
-        text-shadow:1px 2px 0px #183d61;
+        text-shadow:1px 1px 1px #183d61;
+        position:absolute;
+        margin-left:0.5%;
+        margin-top: -0.7%;
     }
     #btn8:hover:enabled {
         background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #80b5ea), color-stop(1, #bddbfa) );
@@ -160,8 +170,8 @@
         background-color:#80b5ea;
     }
     #btn8:active:enabled {
-        position:relative;
-        top:1px;
+        /*position:relative;
+        top:1px;*/
     }
     #btn8:disabled {
         background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #C0C0C0), color-stop(1, #808080) );
@@ -182,12 +192,47 @@
     .footer {
         height: 200px; 
         overflow: hidden; 
+        margin-top:10%;
     }
-
     #dynamictable{
         position:absolute;
         top:280px;
         right:40px;
+    }
+    .box__dragndrop{
+        display: none;
+    }
+    .box.has-advanced-upload {
+        background-color: #e6e6e6;
+        outline: 1px dashed grey;
+        outline-offset: -3px;
+    }
+    .box.has-advanced-upload .box__dragndrop {
+        display: inline;
+    }
+    .box.is-dragover {
+        background-color: grey;
+    }
+    .box__file {
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+    }
+    .box__file + label {
+        position: relative;
+        margin-top:2.5%;
+        margin-left:3%;
+        display: inline-block;
+        cursor: pointer; /* "hand" cursor */
+    }
+    .box__button {
+        position: absolute;
+        margin-top:0.8%;
+        margin-left: 8%;
+        display: none;
     }
 
 </style>
@@ -202,21 +247,34 @@
 </div>
 <p align="center" class="sansserif">Validation (Conformance check) of ISO/IEC 23009-1 MPEG-DASH MPD and Segments</p>
 <div id="groupA">
-    <input type="text" id='urlinput' name="urlinput" class="mytext" placeholder="Enter MPD URL" onkeyup="CheckKey(event)"/>
+    <div>
+        <input type="text" id='urlinput' name="urlinput" class="mytext" placeholder="Enter MPD URL" onkeyup="CheckKey(event)"/>
+
+    </div>
+    <div>
+        <div class="box"  >
+            <div class="box__input" id="drop_div">
+                <input class="box__file" type="file" name="file" id="file" />
+                <label for="file"><strong>Choose a file</strong><span class="box__dragndrop"> or drag it here</span>.</label>
+                <button class="box__button" type="submit">Upload</button>
+            </div>
+        </div>
+        <button id="btn8" onclick="submit()">Submit</button>
+    </div>
   <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://localhost/content/TestCases/1b/thomson-networks/2/manifest.mpd" onkeyup="CheckKey(event)"/-->
   <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd" onkeyup="CheckKey(event)"/-->
   <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.193.185/Content/TestCases/1b/qualcomm/1/MultiRate_Broken.mpd" onkeyup="CheckKey(event)"/-->
-    <button id="btn8" onclick="submit()">Submit</button>
 
-    <b>or</b>
+    <!--b>or</b>
 
-    <input type="file" name="afile" id="afile" />
+    <input type="file" name="afile" id="afile" /-->
     <!--<input type="file" id="selectfile" /> Uploading local mpd for testing -->
-
+    
     <form action="">
         <p class="sansserif"><input type="checkbox" id="mpdvalidation" class = "validation" value="0">MPD conformance only</p><br>
     </form>
     <a id="dynamic" href="url" target="_blank" style="visibility:hidden;" >Dynamic timing validation</a>
+
 </div>
 
 <div id="progressbar" style="width:100px;background:#FFFFF;"></div>
@@ -272,21 +330,67 @@ var pollingTimer;
 var ChainedToUrl;
 var cmaf = "<?php echo $cmaf; ?>";
 
+
 /////////////////////////////////////////////////////////////
-document.querySelector('#afile').addEventListener('change', function(e) {
-    file = this.files[0];
+//Check if 'drag and drop' feature is supported by the browser, if not, then traditional file upload can be used.
+var isAdvancedUpload = function() {
+    var div = document.createElement('div');
+    return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div)) && 'FormData' in window && 'FileReader' in window;
+}();
+
+var $form = $('.box');
+var droppedFile = false;
+
+if (isAdvancedUpload) {
+    $form.addClass('has-advanced-upload');
+    $form.on('drag dragstart dragend dragover dragenter dragleave drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    })
+    .on('dragover dragenter', function() {
+        $form.addClass('is-dragover');
+    })
+    .on('dragleave dragend drop', function() {
+        $form.removeClass('is-dragover');
+    })
+    .on('drop', function(e) {
+        droppedFile = e.originalEvent.dataTransfer.files;
+        showFiles( droppedFile );
+        $form.trigger('submit');
+    });
+}
+
+$('.box__file').on('change', function(e) { // when drag & drop is NOT supported
+    droppedFile=e.target.files;
+    showFiles( droppedFile );
+    $form.trigger('submit');
+});
+
+//document.querySelector('#btn8').addEventListener('change', function(e) {
+$form.on('submit', function(e) {
+ 
+    file=droppedFile[0];
+    //file = this.files[0];
     fd = new FormData();
     fd.append("afile", file);
     fd.append("sessionid", JSON.stringify(SessionID));
-  //xhr = new XMLHttpRequest();
- // xhr.open('POST', 'process.php', true);
- // xhr.onload = function() {
-   uploaded=true;
-   submit();
+    //xhr = new XMLHttpRequest();
+    // xhr.open('POST', 'process.php', true);
+    // xhr.onload = function() {
+    uploaded=true;
+    submit();
 
-  //};
- //xhr.send(fd);
-}, false);
+    //};
+    //xhr.send(fd);
+    //}, false);
+});
+
+var $input    = $form.find('input[type="file"]'),
+    $label    = $form.find('label'),
+    showFiles = function(files) {
+        $label.text(files[0].name);
+    };
+
 ///////////////////////////////////////////////////////////////
 
 function button()
@@ -411,6 +515,7 @@ function progressupdate()
 
 function submit()
 {
+    document.getElementById("dash").style.marginTop="1%";
     mpdprocessed = false;
     url = document.getElementById("urlinput").value; 
  
@@ -432,7 +537,7 @@ function submit()
     setUpTreeView();
     setStatusTextlabel("Processing...");
     document.getElementById("btn8").disabled="true";
-    document.getElementById("afile").disabled="true";
+    document.getElementById("drop_div").disabled="true";
     document.getElementById('list').style.visibility='hidden';
     //document.getElementById('img').style.visibility='visible';
     //document.getElementById('par').style.visibility='visible';
@@ -926,7 +1031,7 @@ function loadXMLDoc(dname)
 function finishTest()
 {
     document.getElementById("btn8").disabled=false;
-    document.getElementById("afile").disabled=false;
+    document.getElementById("drop_div").disabled=false;
 
     clearInterval( progressTimer);
     clearInterval( progressSegmentsTimer);
