@@ -20,6 +20,7 @@
         <meta name="description" content="DASH Conformance">
         <meta name="keywords" content="DASH,DASH Conformance,DASH Validator">
         <meta name="author" content="Nomor Research GmbH">
+        <link rel="icon" href="favicon.ico">
     </head>
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
