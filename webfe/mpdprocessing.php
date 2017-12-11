@@ -942,7 +942,10 @@ function process_mpd()
                         $Adaptnum = (int) substr($repno, $pos, 1) + 1;
                         $pos += strlen('rep');
                         $repnum = (int) substr($repno, $pos, 1) + 1;
-                        file_put_contents($locate . '/' . "stderr.txt", "### error:  \n###        Failed to process Adaptation Set " . $Adaptnum . ", Representation " . $repnum . "!");
+                        if($Period_arr[$count1]['mimeType']== "application/ttml+xml")
+                            file_put_contents($locate . '/' . "stderr.txt", "### error:  \n###        Failed to process Adaptation Set " . $Adaptnum . ", Representation " . $repnum . "!, as mimeType= 'application/ttml+xml' not supported");
+                        else
+                            file_put_contents($locate . '/' . "stderr.txt", "### error:  \n###        Failed to process Adaptation Set " . $Adaptnum . ", Representation " . $repnum . "!");
                     }
                 }
                 rename($locate . '/' . "leafinfo.txt", $locate . '/' . $repno . "_infofile.txt"); //Rename infor file to contain representation number (to avoid over writing 
