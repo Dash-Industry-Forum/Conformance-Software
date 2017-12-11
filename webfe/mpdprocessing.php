@@ -154,7 +154,15 @@ function process_mpd()
     $progressXML->MPDConformance = $temp_mpdres;
     $progressXML->MPDConformance->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/mpdreport.txt'));
     $progressXML->asXml(trim($locate . '/progress.xml'));
-        
+       
+    //Create feature list here so that only MPD Conformance also shows feature list.
+    $dom = new DOMDocument('1.0');
+    $dom_sxe = $dom->importNode($dom_sxe, true); //create dom element to contain mpd 
+    //$dom_sxe = $dom->appendChild($dom_sxe);
+    $dom->appendChild($dom_sxe);
+    $MPD = $dom->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
+    createMpdFeatureList($dom, $schematronIssuesReport);
+
     // skip the rest when we should exit
     if ($exit === true)
     { //If session should be destroyed
@@ -174,18 +182,14 @@ function process_mpd()
     }
 
     ///////////////////////////////////////Processing mpd attributes in order to get value//////////////////////////////////////////////////////////
-    $dom = new DOMDocument('1.0');
-    $dom_sxe = $dom->importNode($dom_sxe, true); //create dom element to contain mpd 
-    //$dom_sxe = $dom->appendChild($dom_sxe);
-    $dom->appendChild($dom_sxe);
-    $MPD = $dom->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
+    
     $mediaPresentationDuration = $MPD->getAttribute('mediaPresentationDuration'); // get mediapersentation duration from mpd level
     $AST = $MPD->getAttribute('availabilityStartTime');
     $bufferdepth = $MPD->getAttribute('timeShiftBufferDepth');
     $bufferdepth = timeparsing($bufferdepth);
     $presentationduration = timeparsing($mediaPresentationDuration);
 
-    createMpdFeatureList($dom, $schematronIssuesReport);
+    //createMpdFeatureList($dom, $schematronIssuesReport);
 
     $type = $MPD->getAttribute('type'); // get mpd type
     if ($type === 'dynamic' && $dom->getElementsByTagName('SegmentTemplate')->length == 0)
