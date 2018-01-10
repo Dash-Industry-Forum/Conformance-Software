@@ -386,7 +386,7 @@ function checkSwitchingSets(){
                     $xml_comp_baseDecodeTime=$xml_comp_tfdt->item(0)->getAttribute('baseMediaDecodeTime');
                     
                     if($xml_baseDecodeTime!=$xml_comp_baseDecodeTime)
-                         fprintf($opfile, "**'CMAF check violated: Section 7.3.3- CMAF Tracks in a CMAF Switching Set SHALL start at the same decode time measured from the same timeline origin', but not matching between Rep". $id." (decode time=".$xml_baseDecodeTime.") and Rep".$id_comp." (decode time=".$xml_comp_baseDecodeTime.") \n");
+                         fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- All CMAF tracks in a CMAF Switching Set SHALL have the same value of baseMediaDecodeTime in the 1st CMAF fragment's tfdt box, measured from the same timeline origin', but not matching between Rep". $id." (decode time=".$xml_baseDecodeTime.") and Rep".$id_comp." (decode time=".$xml_comp_baseDecodeTime.") \n");
                          
                    //Check for Fragments with same decode time.
                    for($y=0; $y<$xml_num_moofs;$y++){
@@ -417,6 +417,37 @@ function checkSwitchingSets(){
                     if($xml_IVSize!=$xml_comp_IVSize)
                         fprintf($opfile, "**'CMAF check violated: Section 7.3.3- CMAF Header contained default_IV_size SHALL be identical for all CMAF Tracks in a Switching Set', but not found for Rep ".$id." (IV_size=".$xml_IVSize.") and Rep ".$id_comp." (IV_size=".$xml_comp_IVSize.") \n");
                    }
+                   
+                   //Check new presentation time check from FDIS on SwSet
+                   $xml_hdlr=$xml->getElementsByTagName('hdlr')->item(0);
+                   $xml_handlerType=$xml_hdlr->getAttribute('handler_type');
+                   $xml_trun=$xml->getElementsByTagName('trun')->item(0);
+                   $xml_comp_trun=$xml_comp->getElementsByTagName('trun')->item(0);
+                   $xml_earlyCompTime=$xml_trun->getAttribute('earliestCompositionTime');
+                   $xml_comp_earlyCompTime=$xml_comp_trun->getAttribute('earliestCompositionTime');
+                     
+                   if($xml_handlerType=='vide') 
+                   { 
+                     if($xml_earlyCompTime!=$xml_comp_earlyCompTime)
+                        fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- The presentation time of earliest media sample of the earliest CMAF fragment in each CMAF track shall be equal', but unequal presentation-times found between Rep ".$id." and Rep ".$id_comp." \n");
+                   }
+                   else if($xml_handlerType=='soun')
+                   {
+                        $xml_elst=$xml->getElementsByTagName('elstEntry');
+                        $xml_comp_elst=$xml_comp->getElementsByTagName('elstEntry');
+                        $mediaTime=0;
+                        if($xml_elst->length>0 ){
+                        $mediaTime=$xml_elst->item(0)->getAttribute('mediaTime');
+                        }
+                        $mediaTime_comp=0;
+                        if($xml_comp_elst->length>0 ){
+                        $mediaTime_comp=$xml_comp_elst->item(0)->getAttribute('mediaTime');
+                        }
+                        if($xml_earlyCompTime+$mediaTime != $xml_comp_earlyCompTime+$mediaTime_comp)
+                            fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- The presentation time of earliest media sample of the earliest CMAF fragment in each CMAF track shall be equal', but unequal presentation-times found between Rep ".$id." and Rep ".$id_comp." \n");
+                        
+                    }
+                   //
                    
                    $mediaProfileError=checkMediaProfiles($xml, $xml_comp,$xml_handlerType,$xml_comp_handlerType);//Check media profile conformance of Tracks in a Switching Set.
                    if($mediaProfileError)
