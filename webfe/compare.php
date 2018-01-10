@@ -29,7 +29,14 @@ $array = array("ftyp" => array("majorbrand", "version", "compatible_brands"),
                "mehd" => array("version", "flags", "fragmentDuration"),
                "trex" => array("version", "flags", "trackID", "sampleDescriptionIndex", "sampleDuration", "sampleSize", "sampleFlags"),
                "pssh" => array("version", "flags", "systemID", "dataSize"),
-               "tenc" => array("version", "flags", "default_IsEncrypted", "default_IV_size", "default_KID"));
+               "tenc" => array("version", "flags", "default_IsEncrypted", "default_IV_size", "default_KID"),
+               "cprt" => array("version", "flags", "language", "notice"),
+               "kind" => array("schemeURI", "value"),
+               "elng" => array("extended_languages"),
+               "sinf" => array(),
+               "schi" => array("comment"),
+               "schm" => array("scheme", "version", "location"),
+               "frma" => array("original_format"));
                
 $cfhd_SwSetFound=0;
 $caac_SwSetFound=0;
@@ -179,7 +186,7 @@ function compare($xml, $xml_comp, $compXML, $ind){
                 
                 if(array_key_exists($xml_atom_name, $array)){
                     
-                    // for checkRepresentationsConformance (implementation acc. to CMAF Table 6)
+                    // for checkRepresentationsConformance (implementation acc. to CMAF Table 11)
                     if($xml_atom_name == 'tkhd'){
                         $tkhd_cnt++;
                     }
@@ -216,19 +223,65 @@ function compare($xml, $xml_comp, $compXML, $ind){
                                 $compXML->$xml_atom_name->attributes()->$att_name = ((string) $compXML->$xml_atom_name->attributes()->$att_name) . ' Yes';
                             else
                                 $compXML->$xml_atom_name->addAttribute($att_name, 'Yes');
+                            
+                            // Check for 'sinf' box
+                            if($xml_atom_name == 'frma'){
+                                $box = 'sinf'; $box_att = 'frma';
+                                if(isset($compXML->$box->attributes()[$box_att]))
+                                    $compXML->$box->attributes()->$box_att = ((string) $compXML->$box->attributes()->$box_att) . ' Yes';
+                                else
+                                    $compXML->$box->addAttribute($box_att, 'Yes');
+                            }
+                            else if($xml_atom_name == 'schm'){
+                                $box = 'sinf'; $box_att = 'schm';
+                                if(isset($compXML->$box->attributes()[$box_att]))
+                                    $compXML->$box->attributes()->$box_att = ((string) $compXML->$box->attributes()->$box_att) . ' Yes';
+                                else
+                                    $compXML->$box->addAttribute($box_att, 'Yes');
+                            }
+                            else if($xml_atom_name == 'schi'){
+                                $box = 'sinf'; $box_att = 'schi';
+                                if(isset($compXML->$box->attributes()[$box_att]))
+                                    $compXML->$box->attributes()->$box_att = ((string) $compXML->$box->attributes()->$box_att) . ' Yes';
+                                else
+                                    $compXML->$box->addAttribute($box_att, 'Yes');
+                            }
                         }
                         else{
                             if(isset($compXML->$xml_atom_name->attributes()[$att_name]))
                                 $compXML->$xml_atom_name->attributes()->$att_name = ((string) $compXML->$xml_atom_name->attributes()->$att_name) . ' No';
                             else
                                 $compXML->$xml_atom_name->addAttribute($att_name, 'No');
+                            
+                            // Check for 'sinf' box
+                            if($xml_atom_name == 'frma'){
+                                $box = 'sinf'; $box_att = 'frma';
+                                if(isset($compXML->$box->attributes()[$box_att]))
+                                    $compXML->$box->attributes()->$box_att = ((string) $compXML->$box->attributes()->$box_att) . ' No';
+                                else
+                                    $compXML->$box->addAttribute($box_att, 'No');
+                            }
+                            else if($xml_atom_name == 'schm'){
+                                $box = 'sinf'; $box_att = 'schm';
+                                if(isset($compXML->$box->attributes()[$box_att]))
+                                    $compXML->$box->attributes()->$box_att = ((string) $compXML->$box->attributes()->$box_att) . ' No';
+                                else
+                                    $compXML->$box->addAttribute($box_att, 'No');
+                            }
+                            else if($xml_atom_name == 'schi'){
+                                $box = 'sinf'; $box_att = 'schi';
+                                if(isset($compXML->$box->attributes()[$box_att]))
+                                    $compXML->$box->attributes()->$box_att = ((string) $compXML->$box->attributes()->$box_att) . ' No';
+                                else
+                                    $compXML->$box->addAttribute($box_att, 'No');
+                            }
                         }
                     }
                 }
             }
         }
     }
-    // for checkRepresentationsConformance (implementation acc. to CMAF Table 6)
+    // for checkRepresentationsConformance (implementation acc. to CMAF Table 11)
     if ($tkhd_cnt > 1)
         fprintf($infofile, "elst: do not care\n");
     else 
