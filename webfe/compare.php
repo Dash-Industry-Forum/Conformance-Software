@@ -854,6 +854,8 @@ function checkCMAFPresentation()
     $videoFound=0;
     $audioFound=0;
     $firstEntryflag=1;
+    $firstVideoflag=1;
+    $firstNonVideoflag=1;
     $im1t_SwSetFound=0;
     $subtitle_array=array();
     $subtitleFound=0;
@@ -892,21 +894,57 @@ function checkCMAFPresentation()
             $xml_baseDecodeTime=$xml_tfdt->getAttribute('baseMediaDecodeTime');
             $xml_trun=$xml->getElementsByTagName('trun')->item(0);
             $xml_earliestCompTime=$xml_trun->getAttribute('earliestCompositionTime');
+            $xml_hdlr=$xml->getElementsByTagName('hdlr')->item(0);
+            $xml_handlerType=$xml_hdlr->getAttribute('handler_type');
+            $xml_elst=$xml->getElementsByTagName('elstEntry');
+            $mediaTime=0;
+            if($xml_elst->length>0 ){
+                $mediaTime=$xml_elst->item(0)->getAttribute('mediaTime');
+            }
+                        
             if($firstEntryflag)
             {
                 $firstEntryflag=0;
                 $firstTrackTime=$xml_baseDecodeTime;
-                $firstTrackCompTime=$xml_earliestCompTime;
                 //continue;
             }
             else{
                 if($firstTrackTime!=$xml_baseDecodeTime)
                     fprintf ($opfile,"**'CMAF check violated: Section 7.3.4-'All CMAF Tracks in a CMAF Presentation SHALL measure baseMediaDecodeTime in each Track relative to same timeline origin', but not matching between Switching Set 1 Track 1 and Switching Set ".($adapt_count+1)." Track ".$id." \n");
-                if($firstTrackCompTime!=$xml_earliestCompTime)
-                    fprintf ($opfile,"**'CMAF check violated: Section 7.3.4-'All CMAF Tracks in a CMAF Presentation SHALL be start aligned to the earliest video Sample presentation start time in the earliest Fragment ', but not matching between Switching Set 1 Track 1 and Switching Set ".($adapt_count+1)." Track ".$id." \n");
+                
             }
-            $xml_hdlr=$xml->getElementsByTagName('hdlr')->item(0);
-            $xml_handlerType=$xml_hdlr->getAttribute('handler_type');
+            //Check alignment of presentation time for video and non video tracks separately. FDIS
+            if($xml_handlerType=='vide')
+            {
+                if($firstVideoflag)
+                {
+                    $firstVideoflag=0;
+                    $firstVideoTrackPT=$mediaTime-$xml_earliestCompTime;
+                    $firstVideoAdaptcount=$adapt_count;
+                    $firstVideoRepId=$id;
+                }
+                else
+                {
+                    if($firstVideoTrackPT!=$mediaTime-$xml_earliestCompTime)
+                        fprintf ($opfile,"**'CMAF check violated: Section 7.3.6-'All CMAF Tracks in a CMAF Presentation containing video SHALL be start aligned with CMAF presentation time zero equal to the earliest video sample presentation start time in the earliest CMAF Fragment ', but not matching between Switching Set ".($firstVideoAdaptcount+1)." Track ".$firstVideoRepId." and Switching Set ".($adapt_count+1)." Track ".$id." \n");
+                }
+            }
+            else
+            {
+                if($firstNonVideoflag)
+                {
+                    $firstNonVideoflag=0;
+                    $firstNonVideoTrackPT=$mediaTime+$xml_earliestCompTime;
+                    $firstNonVideoAdaptcount=$adapt_count;
+                    $firstNonVideoRepId=$id;
+                }
+                else
+                {
+                    if($firstNonVideoTrackPT!=$mediaTime+$xml_earliestCompTime)
+                        fprintf ($opfile,"**'CMAF check violated: Section 7.3.6-'All CMAF Tracks in a CMAF Presentation that does not contain video SHALL be start aligned with CMAF presentation time zero equal to the earliest audio sample presentation start time in the earliest CMAF Fragment ', but not matching between Switching Set ".($firstNonVideoAdaptcount+1)." Track ".$firstNonVideoRepId." and Switching Set ".($adapt_count+1)." Track ".$id." \n");
+                }
+            }
+            
             
             $xml_mehd=$xml->getElementsByTagName('mehd');
             $xml_mvhd=$xml->getElementsByTagName('mvhd');
