@@ -394,6 +394,13 @@ function checkSwitchingSets(){
                     
                     if($xml_handlerType!=$xml_comp_handlerType)
                         fprintf($opfile, "**'CMAF check violated: Section 7.3.3- Each CMAF Switching Set SHALL contain CMAF Tracks of one media type', but not matching between Rep". $id." (".$xml_handlerType.") and Rep".$id_comp." (".$xml_comp_handlerType.") \n");
+                      
+                    //Check Tracks have same number of moofs.
+                    $xml_num_moofs=$xml->getElementsByTagName('moof')->length;
+                    $xml_comp_num_moofs=$xml_comp->getElementsByTagName('moof')->length;
+                    
+                    if($xml_num_moofs!=$xml_comp_num_moofs)
+                        fprintf($opfile, "**'CMAF check violated: Section 7.3.3- Each CMAF Track in a CMAF Switching Set SHALL contain the same number of CMAF Fragments', but not matching between Rep". $id." (fragments=".$xml_num_moofs.") and Rep".$id_comp." (fragments=".$xml_comp_num_moofs.") \n");
                         
                     //Check all Tracks have same ISOBMFF defined duration.
                     if($xml->getElementsByTagName('mehd')->length >0 && $xml_comp->getElementsByTagName('mehd')->length >0 ){
@@ -405,14 +412,25 @@ function checkSwitchingSets(){
 
 
                         if($xml_mehdDuration!=$xml_comp_mehdDuration)
-                            fprintf($opfile, "**'CMAF check violated: Section 7.3.3- Each CMAF Track in a CMAF Switching Set SHALL have the same ISOBMFF defined duration', but not matching between Rep". $id." (duration=".$xml_mehdDuration.") and Rep".$id_comp." (duration=".$xml_comp_mehdDuration.") \n");
+                            fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- All CMAF Tracks in a CMAF Switching Set SHALL have the same duration', but not matching between Rep". $id." (duration=".$xml_mehdDuration.") and Rep".$id_comp." (duration=".$xml_comp_mehdDuration.") \n");
                     }
-                    //Check Tracks have same number of moofs.
-                    $xml_num_moofs=$xml->getElementsByTagName('moof')->length;
-                    $xml_comp_num_moofs=$xml_comp->getElementsByTagName('moof')->length;
+                    else{ //added according to change in FDIS.
+                        $xml_lasttfdt=$xml->getElementsByTagName('tfdt')->item($xml_num_moofs-1);
+                        $xml_comp_lasttfdt=$xml_comp->getElementsByTagName('tfdt')->item($xml_comp_num_moofs-1);
+                        
+                        $xml_lastDecodeTime=$xml_lasttfdt->getAttribute('baseMediaDecodeTime');
+                        $xml_comp_lastDecodeTime=$xml_comp_lasttfdt->getAttribute('baseMediaDecodeTime');
+                        
+                        $xml_lasttrun=$xml->getElementsByTagName('trun')->item($xml_num_moofs-1);
+                        $xml_comp_lasttrun=$xml_comp->getElementsByTagName('trun')->item($xml_comp_num_moofs-1);
+                        
+                        $xml_cumSampleDur=$xml_lasttrun->getAttribute('cummulatedSampleDuration');
+                        $xml_comp_cumSampleDur=$xml_comp_lasttrun->getAttribute('cummulatedSampleDuration');
+                        
+                        if($xml_lastDecodeTime+$xml_cumSampleDur != $xml_comp_lastDecodeTime+$xml_comp_cumSampleDur)
+                            fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- All CMAF Tracks in a CMAF Switching Set SHALL have the same duration', but not matching between Rep". $id." (duration=".$xml_lastDecodeTime+$xml_cumSampleDur.") and Rep".$id_comp." (duration=".$xml_comp_lastDecodeTime+$xml_comp_cumSampleDur.") \n");
+                    }
                     
-                    if($xml_num_moofs!=$xml_comp_num_moofs)
-                        fprintf($opfile, "**'CMAF check violated: Section 7.3.3- Each CMAF Track in a CMAF Switching Set SHALL contain the same number of CMAF Fragments', but not matching between Rep". $id." (fragments=".$xml_num_moofs.") and Rep".$id_comp." (fragments=".$xml_comp_num_moofs.") \n");
                         
                     //Check base decode time of Tracks.
                     $xml_tfdt=$xml->getElementsByTagName('tfdt');    
@@ -503,7 +521,7 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
             $decodeTimeFragCurr=$xml_tfdt->item($j)->getAttribute('baseMediaDecodeTime');
             
             if($decodeTimeFragCurr!=$decodeTimeFragPrev+$cummulatedSampleDurFragPrev){//($sampleDurFragPrev*$sampleCountFragPrev)){
-                fprintf($opfile, "**'CMAF check violated: Section 7.3.1.2- Each CMAF Fragment in a CMAF Track SHALL have baseMediaDecodeTime equal to the sum of all prior Fragment durations added to the first Fragment's baseMediaDecodeTime', but not found for Rep ".$id." Fragment ".($j+1)."\n");
+                fprintf($opfile, "**'CMAF check violated: Section 7.3.2.2- Each CMAF Fragment in a CMAF Track SHALL have baseMediaDecodeTime equal to the sum of all prior Fragment durations added to the first Fragment's baseMediaDecodeTime', but not found for Rep ".$id." Fragment ".($j+1)."\n");
                 $errorInTrack=1;
             }
         }
@@ -519,11 +537,11 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
             $moofSize=$xml_moof->item($j)->getAttribute('size');
             $dataOffset=$xml_trun->item($j)->getAttribute('data_offset');
             if($dataOffset != $moofSize + 8)
-                fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3- All media samples in a CMAF Fragment SHALL be addressed by byte offsets in the TrackRunBox relative to first byte of the MovieFragmentBox', but not found for Rep ".$id." Fragment ".($j+1)."\n");
+                fprintf($opfile, "**'CMAF check violated: Section 7.3.2.3- All media samples in a CMAF Chunk SHALL be addressed by byte offsets in the TrackRunBox relative to first byte of the MovieFragmentBox', but not found for Rep ".$id." Chunk ".($j+1)."\n");
             
         }
         if($errorInTrack)
-            fprintf($opfile, "**'CMAF check violated: Section 7.3.1.2- The concatenation of a CMAF Header and all CMAF Fragments in the CMAF Track in decode order SHALL be a valid fragmented ISOBMFF file', but not found for Rep ".$id."\n");
+            fprintf($opfile, "**'CMAF check violated: Section 7.3.2.2- The concatenation of a CMAF Header and all CMAF Fragments in the CMAF Track in consecutive decode order SHALL be a valid fragmented ISOBMFF file', but not found for Rep ".$id."\n");
             
         $xml_hdlr=$xml->getElementsByTagName('hdlr')->item(0);
         $xml_handlerType=$xml_hdlr->getAttribute('handler_type');
