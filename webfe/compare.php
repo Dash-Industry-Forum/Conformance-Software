@@ -439,7 +439,7 @@ function checkSwitchingSets(){
                     $xml_comp_baseDecodeTime=$xml_comp_tfdt->item(0)->getAttribute('baseMediaDecodeTime');
                     
                     if($xml_baseDecodeTime!=$xml_comp_baseDecodeTime)
-                         fprintf($opfile, "**'CMAF check violated: Section 7.3.3- CMAF Tracks in a CMAF Switching Set SHALL start at the same decode time measured from the same timeline origin', but not matching between Rep". $id." (decode time=".$xml_baseDecodeTime.") and Rep".$id_comp." (decode time=".$xml_comp_baseDecodeTime.") \n");
+                         fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- All CMAF tracks in a CMAF Switching Set SHALL have the same value of baseMediaDecodeTime in the 1st CMAF fragment's tfdt box, measured from the same timeline origin', but not matching between Rep". $id." (decode time=".$xml_baseDecodeTime.") and Rep".$id_comp." (decode time=".$xml_comp_baseDecodeTime.") \n");
                          
                    //Check for Fragments with same decode time.
                    for($y=0; $y<$xml_num_moofs;$y++){
@@ -471,6 +471,37 @@ function checkSwitchingSets(){
                         fprintf($opfile, "**'CMAF check violated: Section 7.3.3- CMAF Header contained default_IV_size SHALL be identical for all CMAF Tracks in a Switching Set', but not found for Rep ".$id." (IV_size=".$xml_IVSize.") and Rep ".$id_comp." (IV_size=".$xml_comp_IVSize.") \n");
                    }
                    
+                   //Check new presentation time check from FDIS on SwSet
+                   $xml_hdlr=$xml->getElementsByTagName('hdlr')->item(0);
+                   $xml_handlerType=$xml_hdlr->getAttribute('handler_type');
+                   $xml_trun=$xml->getElementsByTagName('trun')->item(0);
+                   $xml_comp_trun=$xml_comp->getElementsByTagName('trun')->item(0);
+                   $xml_earlyCompTime=$xml_trun->getAttribute('earliestCompositionTime');
+                   $xml_comp_earlyCompTime=$xml_comp_trun->getAttribute('earliestCompositionTime');
+                     
+                   if($xml_handlerType=='vide') 
+                   { 
+                     if($xml_earlyCompTime!=$xml_comp_earlyCompTime)
+                        fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- The presentation time of earliest media sample of the earliest CMAF fragment in each CMAF track shall be equal', but unequal presentation-times found between Rep ".$id." and Rep ".$id_comp." \n");
+                   }
+                   else if($xml_handlerType=='soun')
+                   {
+                        $xml_elst=$xml->getElementsByTagName('elstEntry');
+                        $xml_comp_elst=$xml_comp->getElementsByTagName('elstEntry');
+                        $mediaTime=0;
+                        if($xml_elst->length>0 ){
+                        $mediaTime=$xml_elst->item(0)->getAttribute('mediaTime');
+                        }
+                        $mediaTime_comp=0;
+                        if($xml_comp_elst->length>0 ){
+                        $mediaTime_comp=$xml_comp_elst->item(0)->getAttribute('mediaTime');
+                        }
+                        if($xml_earlyCompTime+$mediaTime != $xml_comp_earlyCompTime+$mediaTime_comp)
+                            fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- The presentation time of earliest media sample of the earliest CMAF fragment in each CMAF track shall be equal', but unequal presentation-times found between Rep ".$id." and Rep ".$id_comp." \n");
+                        
+                    }
+                   //
+                   
                    $mediaProfileError=checkMediaProfiles($xml, $xml_comp,$xml_handlerType,$xml_comp_handlerType);//Check media profile conformance of Tracks in a Switching Set.
                    if($mediaProfileError)
                         fprintf($opfile, "**'CMAF check violated: Section 7.3.3- All CMAF Tracks in a CMAF Switching Set SHALL conform to one CMAF Media Profile', but not conforming for Rep ".$id." and Rep ".$id_comp." \n");
@@ -488,6 +519,7 @@ function checkSwitchingSets(){
     checkCMAFPresentation();
     //Check CMAF Selection Set conformance
     checkSelectionSet();
+    checkAlignedSwitchingSets();
 }
 
 function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
@@ -576,7 +608,7 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
             $firstSampleCompTime=$xml_trun->item(0)->getAttribute('earliestCompositionTime');
             $mediaTime=$xml_elst->item(0)->getAttribute('mediaTime');
             if($mediaTime != $firstSampleCompTime)
-                fprintf($opfile, "**'CMAF check violated: Section 7.5.12- An offset edit list SHALL be a single EditListBox with media-time equal to composition-time of earliest presented sample in the 1st Fragment', but media-time is not equal to composition-time for Rep ".$id."\n");
+                fprintf($opfile, "**'CMAF check violated: Section 7.5.13- In video CMAF track, an EditListBox shall be used to adjust the earliest video sample to movie presentation time zero, i.e., media-time equal to composition-time of earliest presented sample in the 1st Fragment', but media-time is not equal to composition-time for Rep ".$id."\n");
         }
         
         $ParamSetPresent=0;
@@ -716,42 +748,55 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
 
 function checkAlignedSwitchingSets(){
     global $locate, $Period_arr;
+    $index=array();
+    //Todo:More generalized approach with many Aligned Sw Sets.
+    //Here assumption is only two Sw Sets are aligned.
+    for($z=0;$z<count($Period_arr);$z++)
+    {
+        if($Period_arr[$z]['alignedToSet']!=0)
+            array_push ($index, $Period_arr[$z]['alignedToSet']);                
+    }
+    if(count($index)>=1) // 0 means no Aligned SwSet, 2 or more is fine, 1 means error should be raised.
+    {
+        if(!($opfile = fopen($locate."/AlignedSwitchingSet_infofile.txt", 'w'))){
+            echo "Error opening/creating Aligned SwitchingSet conformance check file: "."./AlignedSwitchingSet_infofile.txt";
+            return;
+        }
+    }
+    else
+        return;
     
-    $index1=$Period_arr[0]['SupplementalProperty']['value']; //Assuming AdaptationSet 1 is aligned with 2.
-    $index2=$Period_arr[1]['SupplementalProperty']['value']; //2 is aligned with 1. //Todo:More generalized approach with many Aligned Sw Sets.
-    
-    $loc1 = $locate . '/Adapt' . $index1.'/';
+    if(count($index)>=2) 
+    {
+        $loc1 = $locate . '/Adapt' . ($index[0]-1).'/';
         $filecount1 = 0;
         $files1 = glob($loc1. "*.xml");
         if($files1)
             $filecount1 = count($files1);
         
-        if(!($opfile = fopen($locate."/AlignedSwitchingSet_infofile", 'w'))){
-            echo "Error opening/creating SwitchingSet conformance check file: "."./SwitchingSet".$i."_infofile.txt";
-            return;
-        }
+        
         if(!file_exists($loc1))
             fprintf ($opfile, "Tried to retrieve data from a location that does not exist. \n (Possible cause: Representations are not valid and no file/directory for box info is created.)");
         else{
-            fprintf($opfile, "**Aligned SwitchingSet conformance check for: SwitchingSets (Adaptationsets) ".$index1." and ".$index2.":\n\n");
+            fprintf($opfile, "**Aligned SwitchingSet conformance check for: SwitchingSets (Adaptationsets) ".$index[1]." and ".$index[0].":\n\n");
             
             for($i=0;$i<$filecount1;$i++){
             
                 $xml = xmlFileLoad($files1[$i]);
-                $loc2 = $locate . '/Adapt' . $index2.'/';
+                $loc2 = $locate . '/Adapt' . ($index[1]-1).'/';
                 $filecount2 = 0;
                 $files2 = glob($loc2. "*.xml");
                 if($files2)
                     $filecount2 = count($files2);
                     
-                $id = $Period_arr[$index1]['Representation']['id'][$i];
+                $id = $Period_arr[$index[0]-1]['Representation']['id'][$i];
                 
                 if(!file_exists($loc2))
                     fprintf ($opfile, "Tried to retrieve data from a location that does not exist. \n (Possible cause: Representations are not valid and no file/directory for box info is created.)");
                 else{
                     for($j=0;$j<$filecount2;$j++){
                         $xml_comp = xmlFileLoad($files2[$j]);
-                        $id_comp = $Period_arr[$index2]['Representation']['id'][$j];
+                        $id_comp = $Period_arr[$index[1]-1]['Representation']['id'][$j];
                         //Check Tracks have same ISOBMFF defined duration.
                         if($xml->getElementsByTagName('mehd')->length >0 && $xml_comp->getElementsByTagName('mehd')->length >0 ){
                             $xml_mehd=$xml->getElementsByTagName('mehd')->item(0);
@@ -762,14 +807,14 @@ function checkAlignedSwitchingSets(){
 
 
                             if($xml_mehdDuration!=$xml_comp_mehdDuration)
-                                fprintf($opfile, "**'CMAF check violated: Section 7.3.3.3- Aligned Switching Sets SHALL contain CMAF Tracks of equal duration', but not matching between Rep". $id." of Switching Set ".$index1." and Rep".$id_comp."Switching Set".$index2." \n");
+                                fprintf($opfile, "**'CMAF check violated: Section 7.3.3.3- Aligned Switching Sets SHALL contain CMAF Tracks of equal duration', but not matching between Rep". $id." of Switching Set ".$index[0]." and Rep".$id_comp."Switching Set".$index[1]." \n");
                         }
                         //Check Tracks have same number of moofs.
                         $xml_num_moofs=$xml->getElementsByTagName('moof')->length;
                         $xml_comp_num_moofs=$xml_comp->getElementsByTagName('moof')->length;
                         
                         if($xml_num_moofs!=$xml_comp_num_moofs){
-                            fprintf($opfile, "**'CMAF check violated: Section 7.3..33- Aligned Switching Sets SHALL contain the same number of CMAF Fragments in every CMAF Track', but not matching between Rep". $id." of Switching Set ".$index1." and Rep".$id_comp."Switching Set".$index2." \n");
+                            fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain the same number of CMAF Fragments in every CMAF Track', but not matching between Rep ". $id." of Switching Set ".$index[0]." and Rep ".$id_comp." of Switching Set ".$index[1]." \n");
                             break;
                             }
                         //This check only if previous check is not failed.
@@ -792,7 +837,7 @@ function checkAlignedSwitchingSets(){
                              $decodeTime2=$xml_comp_tfdt->item($y)->getAttribute('baseMediaDecodeTime');
                              
                              if($cummulatedSampleDur1!= $cummulatedSampleDur2 || $decodeTime1!=$decodeTime2){
-                                fprintf($opfile, "**'CMAF check violated: Section 7.3..33- Aligned Switching Sets SHALL contain CMAF Fragments in every CMAF Track with matching baseMediaDecodeTime and duration', but not matching between Rep". $id." of Switching Set ".$index1." and Rep".$id_comp."Switching Set".index2." \n");
+                                fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain CMAF Fragments in every CMAF Track with matching baseMediaDecodeTime and duration', but not matching between Rep". $id." of Switching Set ".$index[0]." and Rep".$id_comp."Switching Set".index[1]." \n");
                                 break;
                              }
                         }
@@ -800,8 +845,16 @@ function checkAlignedSwitchingSets(){
                 }
             }
         }
-        fprintf($opfile, "\n-----Conformance checks completed----- ");
-        fclose($opfile);
+        
+    }
+    else
+    {
+        fprintf($opfile, "**Aligned SwitchingSet conformance check :\n\n");
+        fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain two or more CMAF switching sets', but only one found. \n");
+
+    }
+    fprintf($opfile, "\n-----Conformance checks completed----- ");
+    fclose($opfile);
 }
 
 function checkMediaProfiles($xml, $xml_comp,$xml_handlerType,$xml_comp_handlerType)
@@ -848,6 +901,8 @@ function checkCMAFPresentation()
     $videoFound=0;
     $audioFound=0;
     $firstEntryflag=1;
+    $firstVideoflag=1;
+    $firstNonVideoflag=1;
     $im1t_SwSetFound=0;
     $subtitle_array=array();
     $subtitleFound=0;
@@ -886,21 +941,57 @@ function checkCMAFPresentation()
             $xml_baseDecodeTime=$xml_tfdt->getAttribute('baseMediaDecodeTime');
             $xml_trun=$xml->getElementsByTagName('trun')->item(0);
             $xml_earliestCompTime=$xml_trun->getAttribute('earliestCompositionTime');
+            $xml_hdlr=$xml->getElementsByTagName('hdlr')->item(0);
+            $xml_handlerType=$xml_hdlr->getAttribute('handler_type');
+            $xml_elst=$xml->getElementsByTagName('elstEntry');
+            $mediaTime=0;
+            if($xml_elst->length>0 ){
+                $mediaTime=$xml_elst->item(0)->getAttribute('mediaTime');
+            }
+                        
             if($firstEntryflag)
             {
                 $firstEntryflag=0;
                 $firstTrackTime=$xml_baseDecodeTime;
-                $firstTrackCompTime=$xml_earliestCompTime;
                 //continue;
             }
             else{
                 if($firstTrackTime!=$xml_baseDecodeTime)
                     fprintf ($opfile,"**'CMAF check violated: Section 7.3.4-'All CMAF Tracks in a CMAF Presentation SHALL measure baseMediaDecodeTime in each Track relative to same timeline origin', but not matching between Switching Set 1 Track 1 and Switching Set ".($adapt_count+1)." Track ".$id." \n");
-                if($firstTrackCompTime!=$xml_earliestCompTime)
-                    fprintf ($opfile,"**'CMAF check violated: Section 7.3.4-'All CMAF Tracks in a CMAF Presentation SHALL be start aligned to the earliest video Sample presentation start time in the earliest Fragment ', but not matching between Switching Set 1 Track 1 and Switching Set ".($adapt_count+1)." Track ".$id." \n");
+                
             }
-            $xml_hdlr=$xml->getElementsByTagName('hdlr')->item(0);
-            $xml_handlerType=$xml_hdlr->getAttribute('handler_type');
+            //Check alignment of presentation time for video and non video tracks separately. FDIS
+            if($xml_handlerType=='vide')
+            {
+                if($firstVideoflag)
+                {
+                    $firstVideoflag=0;
+                    $firstVideoTrackPT=$mediaTime-$xml_earliestCompTime;
+                    $firstVideoAdaptcount=$adapt_count;
+                    $firstVideoRepId=$id;
+                }
+                else
+                {
+                    if($firstVideoTrackPT!=$mediaTime-$xml_earliestCompTime)
+                        fprintf ($opfile,"**'CMAF check violated: Section 7.3.6-'All CMAF Tracks in a CMAF Presentation containing video SHALL be start aligned with CMAF presentation time zero equal to the earliest video sample presentation start time in the earliest CMAF Fragment ', but not matching between Switching Set ".($firstVideoAdaptcount+1)." Track ".$firstVideoRepId." and Switching Set ".($adapt_count+1)." Track ".$id." \n");
+                }
+            }
+            else
+            {
+                if($firstNonVideoflag)
+                {
+                    $firstNonVideoflag=0;
+                    $firstNonVideoTrackPT=$mediaTime+$xml_earliestCompTime;
+                    $firstNonVideoAdaptcount=$adapt_count;
+                    $firstNonVideoRepId=$id;
+                }
+                else
+                {
+                    if($firstNonVideoTrackPT!=$mediaTime+$xml_earliestCompTime)
+                        fprintf ($opfile,"**'CMAF check violated: Section 7.3.6-'All CMAF Tracks in a CMAF Presentation that does not contain video SHALL be start aligned with CMAF presentation time zero equal to the earliest audio sample presentation start time in the earliest CMAF Fragment ', but not matching between Switching Set ".($firstNonVideoAdaptcount+1)." Track ".$firstNonVideoRepId." and Switching Set ".($adapt_count+1)." Track ".$id." \n");
+                }
+            }
+            
             
             $xml_mehd=$xml->getElementsByTagName('mehd');
             $xml_mvhd=$xml->getElementsByTagName('mvhd');
