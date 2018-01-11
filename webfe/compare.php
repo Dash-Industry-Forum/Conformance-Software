@@ -519,6 +519,7 @@ function checkSwitchingSets(){
     checkCMAFPresentation();
     //Check CMAF Selection Set conformance
     checkSelectionSet();
+    checkAlignedSwitchingSets();
 }
 
 function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
@@ -722,42 +723,55 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
 
 function checkAlignedSwitchingSets(){
     global $locate, $Period_arr;
+    $index=array();
+    //Todo:More generalized approach with many Aligned Sw Sets.
+    //Here assumption is only two Sw Sets are aligned.
+    for($z=0;$z<count($Period_arr);$z++)
+    {
+        if($Period_arr[$z]['alignedToSet']!=0)
+            array_push ($index, $Period_arr[$z]['alignedToSet']);                
+    }
+    if(count($index)>=1) // 0 means no Aligned SwSet, 2 or more is fine, 1 means error should be raised.
+    {
+        if(!($opfile = fopen($locate."/AlignedSwitchingSet_infofile.txt", 'w'))){
+            echo "Error opening/creating Aligned SwitchingSet conformance check file: "."./AlignedSwitchingSet_infofile.txt";
+            return;
+        }
+    }
+    else
+        return;
     
-    $index1=$Period_arr[0]['SupplementalProperty']['value']; //Assuming AdaptationSet 1 is aligned with 2.
-    $index2=$Period_arr[1]['SupplementalProperty']['value']; //2 is aligned with 1. //Todo:More generalized approach with many Aligned Sw Sets.
-    
-    $loc1 = $locate . '/Adapt' . $index1.'/';
+    if(count($index)>=2) 
+    {
+        $loc1 = $locate . '/Adapt' . ($index[0]-1).'/';
         $filecount1 = 0;
         $files1 = glob($loc1. "*.xml");
         if($files1)
             $filecount1 = count($files1);
         
-        if(!($opfile = fopen($locate."/AlignedSwitchingSet_infofile", 'w'))){
-            echo "Error opening/creating SwitchingSet conformance check file: "."./SwitchingSet".$i."_infofile.txt";
-            return;
-        }
+        
         if(!file_exists($loc1))
             fprintf ($opfile, "Tried to retrieve data from a location that does not exist. \n (Possible cause: Representations are not valid and no file/directory for box info is created.)");
         else{
-            fprintf($opfile, "**Aligned SwitchingSet conformance check for: SwitchingSets (Adaptationsets) ".$index1." and ".$index2.":\n\n");
+            fprintf($opfile, "**Aligned SwitchingSet conformance check for: SwitchingSets (Adaptationsets) ".$index[1]." and ".$index[0].":\n\n");
             
             for($i=0;$i<$filecount1;$i++){
             
                 $xml = xmlFileLoad($files1[$i]);
-                $loc2 = $locate . '/Adapt' . $index2.'/';
+                $loc2 = $locate . '/Adapt' . ($index[1]-1).'/';
                 $filecount2 = 0;
                 $files2 = glob($loc2. "*.xml");
                 if($files2)
                     $filecount2 = count($files2);
                     
-                $id = $Period_arr[$index1]['Representation']['id'][$i];
+                $id = $Period_arr[$index[0]-1]['Representation']['id'][$i];
                 
                 if(!file_exists($loc2))
                     fprintf ($opfile, "Tried to retrieve data from a location that does not exist. \n (Possible cause: Representations are not valid and no file/directory for box info is created.)");
                 else{
                     for($j=0;$j<$filecount2;$j++){
                         $xml_comp = xmlFileLoad($files2[$j]);
-                        $id_comp = $Period_arr[$index2]['Representation']['id'][$j];
+                        $id_comp = $Period_arr[$index[1]-1]['Representation']['id'][$j];
                         //Check Tracks have same ISOBMFF defined duration.
                         if($xml->getElementsByTagName('mehd')->length >0 && $xml_comp->getElementsByTagName('mehd')->length >0 ){
                             $xml_mehd=$xml->getElementsByTagName('mehd')->item(0);
@@ -768,14 +782,14 @@ function checkAlignedSwitchingSets(){
 
 
                             if($xml_mehdDuration!=$xml_comp_mehdDuration)
-                                fprintf($opfile, "**'CMAF check violated: Section 7.3.3.3- Aligned Switching Sets SHALL contain CMAF Tracks of equal duration', but not matching between Rep". $id." of Switching Set ".$index1." and Rep".$id_comp."Switching Set".$index2." \n");
+                                fprintf($opfile, "**'CMAF check violated: Section 7.3.3.3- Aligned Switching Sets SHALL contain CMAF Tracks of equal duration', but not matching between Rep". $id." of Switching Set ".$index[0]." and Rep".$id_comp."Switching Set".$index[1]." \n");
                         }
                         //Check Tracks have same number of moofs.
                         $xml_num_moofs=$xml->getElementsByTagName('moof')->length;
                         $xml_comp_num_moofs=$xml_comp->getElementsByTagName('moof')->length;
                         
                         if($xml_num_moofs!=$xml_comp_num_moofs){
-                            fprintf($opfile, "**'CMAF check violated: Section 7.3..33- Aligned Switching Sets SHALL contain the same number of CMAF Fragments in every CMAF Track', but not matching between Rep". $id." of Switching Set ".$index1." and Rep".$id_comp."Switching Set".$index2." \n");
+                            fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain the same number of CMAF Fragments in every CMAF Track', but not matching between Rep ". $id." of Switching Set ".$index[0]." and Rep ".$id_comp." of Switching Set ".$index[1]." \n");
                             break;
                             }
                         //This check only if previous check is not failed.
@@ -798,7 +812,7 @@ function checkAlignedSwitchingSets(){
                              $decodeTime2=$xml_comp_tfdt->item($y)->getAttribute('baseMediaDecodeTime');
                              
                              if($cummulatedSampleDur1!= $cummulatedSampleDur2 || $decodeTime1!=$decodeTime2){
-                                fprintf($opfile, "**'CMAF check violated: Section 7.3..33- Aligned Switching Sets SHALL contain CMAF Fragments in every CMAF Track with matching baseMediaDecodeTime and duration', but not matching between Rep". $id." of Switching Set ".$index1." and Rep".$id_comp."Switching Set".index2." \n");
+                                fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain CMAF Fragments in every CMAF Track with matching baseMediaDecodeTime and duration', but not matching between Rep". $id." of Switching Set ".$index[0]." and Rep".$id_comp."Switching Set".index[1]." \n");
                                 break;
                              }
                         }
@@ -806,8 +820,16 @@ function checkAlignedSwitchingSets(){
                 }
             }
         }
-        fprintf($opfile, "\n-----Conformance checks completed----- ");
-        fclose($opfile);
+        
+    }
+    else
+    {
+        fprintf($opfile, "**Aligned SwitchingSet conformance check :\n\n");
+        fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain two or more CMAF switching sets', but only one found. \n");
+
+    }
+    fprintf($opfile, "\n-----Conformance checks completed----- ");
+    fclose($opfile);
 }
 
 function checkMediaProfiles($xml, $xml_comp,$xml_handlerType,$xml_comp_handlerType)

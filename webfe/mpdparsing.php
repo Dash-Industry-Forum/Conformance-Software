@@ -261,14 +261,17 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
 	//Check if SupplementalProperty for Aligned Switching Set is present
 	$Supplemental_Adapt=$Adapt->getElementsByTagName("SupplementalProperty");
 	//ToDo- Check if schemeIdUri is adaptation-set-switching:2016
+        $AlignedSet_Adapt_value=0;
 	if($Supplemental_Adapt->length>0)
 	{
-	    $AlignedSet_Adapt_value = $Supplemental_Adapt->item(0)->getAttribute ('value');
+            
+            $AlignedSet_Adapt_schemeIdUri = $Supplemental_Adapt->item(0)->getAttribute ('schemeIdUri');
+            if(strpos($AlignedSet_Adapt_schemeIdUri,'urn:mpeg:dash:adaptation-set-switching:2016')!==FALSE){
+                $AlignedSet_Adapt_value = $Supplemental_Adapt->item(0)->getAttribute ('value');
+                $AlignedSet_Adapt_value = (int)$AlignedSet_Adapt_value;
+            }
 	}
-	else
-	{
-	    $AlignedSet_Adapt_value=0;
-	}
+	
 	//
 	
 	//Check if Role is present at Adapt Set level- With respect to subtitle conformance- CMAF.
