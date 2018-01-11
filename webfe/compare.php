@@ -582,7 +582,7 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
             $firstSampleCompTime=$xml_trun->item(0)->getAttribute('earliestCompositionTime');
             $mediaTime=$xml_elst->item(0)->getAttribute('mediaTime');
             if($mediaTime != $firstSampleCompTime)
-                fprintf($opfile, "**'CMAF check violated: Section 7.5.12- An offset edit list SHALL be a single EditListBox with media-time equal to composition-time of earliest presented sample in the 1st Fragment', but media-time is not equal to composition-time for Rep ".$id."\n");
+                fprintf($opfile, "**'CMAF check violated: Section 7.5.13- In video CMAF track, an EditListBox shall be used to adjust the earliest video sample to movie presentation time zero, i.e., media-time equal to composition-time of earliest presented sample in the 1st Fragment', but media-time is not equal to composition-time for Rep ".$id."\n");
         }
         
         $ParamSetPresent=0;
