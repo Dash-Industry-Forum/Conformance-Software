@@ -772,22 +772,42 @@ function checkAlignedSwitchingSets(){
                     for($j=0;$j<$filecount2;$j++){
                         $xml_comp = xmlFileLoad($files2[$j]);
                         $id_comp = $Period_arr[$index[1]-1]['Representation']['id'][$j];
-                        //Check Tracks have same ISOBMFF defined duration.
-                        if($xml->getElementsByTagName('mehd')->length >0 && $xml_comp->getElementsByTagName('mehd')->length >0 ){
-                            $xml_mehd=$xml->getElementsByTagName('mehd')->item(0);
-                            $xml_mehdDuration=$xml_mehd->getAttribute('fragmentDuration');
-
-                            $xml_comp_mehd=$xml_comp->getElementsByTagName('mehd')->item(0);
-                            $xml_comp_mehdDuration=$xml_comp_mehd->getAttribute('fragmentDuration');
-
-
-                            if($xml_mehdDuration!=$xml_comp_mehdDuration)
-                                fprintf($opfile, "**'CMAF check violated: Section 7.3.3.3- Aligned Switching Sets SHALL contain CMAF Tracks of equal duration', but not matching between Rep". $id." of Switching Set ".$index[0]." and Rep".$id_comp."Switching Set".$index[1]." \n");
-                        }
-                        //Check Tracks have same number of moofs.
                         $xml_num_moofs=$xml->getElementsByTagName('moof')->length;
                         $xml_comp_num_moofs=$xml_comp->getElementsByTagName('moof')->length;
                         
+                        //Check Tracks have same ISOBMFF defined duration.
+                        if($i==0 && $j==0) // As duration is checked between Sw Sets, checking only once is enough.
+                        {
+                            if($xml->getElementsByTagName('mehd')->length >0 && $xml_comp->getElementsByTagName('mehd')->length >0 ){
+                                $xml_mehd=$xml->getElementsByTagName('mehd')->item(0);
+                                $xml_mehdDuration=$xml_mehd->getAttribute('fragmentDuration');
+
+                                $xml_comp_mehd=$xml_comp->getElementsByTagName('mehd')->item(0);
+                                $xml_comp_mehdDuration=$xml_comp_mehd->getAttribute('fragmentDuration');
+
+
+                                if($xml_mehdDuration!=$xml_comp_mehdDuration)
+                                    fprintf($opfile, "**'CMAF check violated: Section 7.3.3.3- Aligned Switching Sets SHALL contain CMAF switching sets of equal duration', but not matching between Switching Set ".$index[0]." and Switching Set ".$index[1]." \n");
+                            }
+                            else
+                            {
+                                $xml_lasttfdt=$xml->getElementsByTagName('tfdt')->item($xml_num_moofs-1);
+                                $xml_comp_lasttfdt=$xml_comp->getElementsByTagName('tfdt')->item($xml_comp_num_moofs-1);
+
+                                $xml_lastDecodeTime=$xml_lasttfdt->getAttribute('baseMediaDecodeTime');
+                                $xml_comp_lastDecodeTime=$xml_comp_lasttfdt->getAttribute('baseMediaDecodeTime');
+
+                                $xml_lasttrun=$xml->getElementsByTagName('trun')->item($xml_num_moofs-1);
+                                $xml_comp_lasttrun=$xml_comp->getElementsByTagName('trun')->item($xml_comp_num_moofs-1);
+
+                                $xml_cumSampleDur=$xml_lasttrun->getAttribute('cummulatedSampleDuration');
+                                $xml_comp_cumSampleDur=$xml_comp_lasttrun->getAttribute('cummulatedSampleDuration');
+
+                                if($xml_lastDecodeTime+$xml_cumSampleDur != $xml_comp_lastDecodeTime+$xml_comp_cumSampleDur)
+                                    fprintf($opfile, "**'CMAF check violated: Section 7.3.3.3- Aligned Switching Sets SHALL contain CMAF switching sets of equal duration', but not matching between Rep". $id." of Switching Set ".$index[0]." and Rep ".$id_comp." of Switching Set ".$index[1]." \n");
+                            }
+                        }
+                        //Check Tracks have same number of moofs.
                         if($xml_num_moofs!=$xml_comp_num_moofs){
                             fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain the same number of CMAF Fragments in every CMAF Track', but not matching between Rep ". $id." of Switching Set ".$index[0]." and Rep ".$id_comp." of Switching Set ".$index[1]." \n");
                             break;
@@ -812,7 +832,7 @@ function checkAlignedSwitchingSets(){
                              $decodeTime2=$xml_comp_tfdt->item($y)->getAttribute('baseMediaDecodeTime');
                              
                              if($cummulatedSampleDur1!= $cummulatedSampleDur2 || $decodeTime1!=$decodeTime2){
-                                fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain CMAF Fragments in every CMAF Track with matching baseMediaDecodeTime and duration', but not matching between Rep". $id." of Switching Set ".$index[0]." and Rep".$id_comp."Switching Set".index[1]." \n");
+                                fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain CMAF Fragments in every CMAF Track with matching baseMediaDecodeTime and duration', but not matching between Rep ". $id." of Switching Set ".$index[0]." and Rep ".$id_comp." of Switching Set ".index[1]." \n");
                                 break;
                              }
                         }
