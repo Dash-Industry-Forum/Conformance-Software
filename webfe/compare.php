@@ -901,6 +901,8 @@ function checkCMAFPresentation()
     $im1t_SwSetFound=0;
     $subtitle_array=array();
     $subtitleFound=0;
+    $trackDurArray=array();
+    $maxFragDur=0;
    // $lang_count=0;
     if(!($opfile = fopen($locate."/Presentation_infofile.txt", 'w'))){
             echo "Error opening/creating Presentation profile conformance check file: "."./Presentation_infofile.txt";
@@ -934,11 +936,14 @@ function checkCMAFPresentation()
             //Check Section 7.3.4 conformance
             $xml_tfdt=$xml->getElementsByTagName('tfdt')->item(0);
             $xml_baseDecodeTime=$xml_tfdt->getAttribute('baseMediaDecodeTime');
-            $xml_trun=$xml->getElementsByTagName('trun')->item(0);
-            $xml_earliestCompTime=$xml_trun->getAttribute('earliestCompositionTime');
+            $xml_trun=$xml->getElementsByTagName('trun');
+            $xml_earliestCompTime=$xml_trun->item(0)->getAttribute('earliestCompositionTime');
             $xml_hdlr=$xml->getElementsByTagName('hdlr')->item(0);
             $xml_handlerType=$xml_hdlr->getAttribute('handler_type');
             $xml_elst=$xml->getElementsByTagName('elstEntry');
+            $xml_mdhd=$xml->getElementsByTagName('mdhd');
+            $timescale=$xml_mdhd->item(0)->getAttribute('timescale');
+            
             $mediaTime=0;
             if($xml_elst->length>0 ){
                 $mediaTime=$xml_elst->item(0)->getAttribute('mediaTime');
@@ -947,12 +952,12 @@ function checkCMAFPresentation()
             if($firstEntryflag)
             {
                 $firstEntryflag=0;
-                $firstTrackTime=$xml_baseDecodeTime;
+                $firstTrackTime=$xml_baseDecodeTime/$timescale;
                 //continue;
             }
             else{
-                if($firstTrackTime!=$xml_baseDecodeTime)
-                    fprintf ($opfile,"**'CMAF check violated: Section 7.3.4-'All CMAF Tracks in a CMAF Presentation SHALL measure baseMediaDecodeTime in each Track relative to same timeline origin', but not matching between Switching Set 1 Track 1 and Switching Set ".($adapt_count+1)." Track ".$id." \n");
+                if($firstTrackTime!=$xml_baseDecodeTime/$timescale)
+                    fprintf ($opfile,"**'CMAF check violated: Section 7.3.6-'All CMAF Tracks in a CMAF Presentation SHALL have the same timeline origin', but not matching between Switching Set 1 Track 1 and Switching Set ".($adapt_count+1)." Track ".$id." \n");
                 
             }
             //Check alignment of presentation time for video and non video tracks separately. FDIS
@@ -987,26 +992,35 @@ function checkCMAFPresentation()
                 }
             }
             
-            
-            $xml_mehd=$xml->getElementsByTagName('mehd');
+            //To find the longest CMAF track in the presentation
             $xml_mvhd=$xml->getElementsByTagName('mvhd');
-            if($xml_mehd->length>0){
-                $trackDur=$xml_mehd->item(0)->getAttribute('fragmentDuration');
-                $timescale_mvhd=$xml_mvhd->item(0)->getAttribute('timeScale');
-                $trackDur=$trackDur/$timescale_mvhd;
-                $xml_tfhd=$xml->getElementsByTagName('tfhd');
-                //$sampleDur=$xml_tfhd[0]->getAttribute('defaultSampleDuration');
-                //$sampleCount=$xml_trun->getAttribute('sampleCount');
-                $cummulatedSampleDur=$xml_trun->getAttribute('cummulatedSampleDuration');
-                $xml_mdhd=$xml->getElementsByTagName('mdhd');
-                $timescale=$xml_mdhd->item(0)->getAttribute('timescale');
-                if($xml_handlerType=='vide')
-                    $videoFragDur=($cummulatedSampleDur/$timescale);
-                if(!($trackDur>=$PresentationDur-$videoFragDur) && ($trackDur<=$PresentationDur+$videoFragDur))
-                   fprintf ($opfile,"**'CMAF check violated: Section 7.3.4-'CMAF Tracks in a CMAF Presentation SHALL equal the CMAF Presentation duration within a tolerance of one video CMAF Fragment duration ', but not found in Switching Set ".($adapt_count+1)." Track ".$id." \n");
-
+            $xml_mehd=$xml->getElementsByTagName('mehd');
+            $xml_num_moofs=$xml->getElementsByTagName('moof')->length;
+            if($xml_mehd->length>0)
+            {
+                $mvhd_timescale=$xml_mvhd->item(0)->getAttribute('timeScale');
+                $fragmentDur=$xml_mehd->item(0)->getAttribute('fragmentDuration');
+                array_push($trackDurArray,$fragmentDur/$mvhd_timescale);
             }
-            
+            else
+            { 
+                $xml_lasttfdt=$xml->getElementsByTagName('tfdt')->item($xml_num_moofs-1);
+                $xml_lastDecodeTime=$xml_lasttfdt->getAttribute('baseMediaDecodeTime');
+                $xml_lasttrun=$xml->getElementsByTagName('trun')->item($xml_num_moofs-1);
+                $xml_cumSampleDur=$xml_lasttrun->getAttribute('cummulatedSampleDuration');
+                array_push($trackDurArray,($xml_lastDecodeTime+$xml_cumSampleDur)/$timescale);
+            }
+                        
+            //Find max video fragment duration from all the tracks.
+            if($xml_handlerType=='vide'){
+                for($z=0;$z<$xml_num_moofs;$z++)
+                {
+                    $fragDur=($xml_trun->item($z)->getAttribute('cummulatedSampleDuration'))/$timescale;
+                    if($fragDur>$maxFragDur)
+                        $maxFragDur=$fragDur;
+                }
+            }
+            //
             
             //Check profile conformance
             //$xml_ftyp=$xml->getElementsByTagName('ftyp')[0];
@@ -1145,6 +1159,19 @@ function checkCMAFPresentation()
         }
         //
     }
+    //Check if presentation duration is same as longest track duration.
+    if(round($PresentationDur,1)!=round(max($trackDurArray),1))
+        fprintf($opfile, "**'CMAF check violated: Section 7.3.6 - 'The duration of a CMAF presentation shall be the duration of its longest CMAF track', but not found (Presentation time= ".$PresentationDur." and longest Track= ".max($trackDurArray).") \n");
+    //
+    //
+    for($y=0;$y<count($trackDurArray);$y++)
+    {
+        if(!((round($trackDurArray[$y],1)>=round($PresentationDur-$maxFragDur,1)) && (round($trackDurArray[$y],1)<=round($PresentationDur+$maxFragDur,1))))
+            fprintf ($opfile,"**'CMAF check violated: Section 7.3.6-'CMAF Tracks in a CMAF Presentation SHALL equal the CMAF Presentation duration within a tolerance of the longest video CMAF Fragment duration ', but not found in the Track ".$y." \n");
+
+    }
+    //
+    
     if(($profile_cmfhd || $profile_cmfhdc ||$profile_cmfhds) && $videoFound && $cfhd_SwSetFound!=1)
         fprintf($opfile, "**'CMAF check violated: Section A.1.2/A.1.3/A.1.4 - 'If containing video, SHALL include at least one Switching Set constrained to the 'cfhd' Media Profile', but found none \n");
     if(($profile_cmfhd || $profile_cmfhdc ||$profile_cmfhds) && $audioFound && $caac_SwSetFound!=1)
