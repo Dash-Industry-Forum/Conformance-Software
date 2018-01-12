@@ -523,6 +523,8 @@ function checkSwitchingSets(){
 }
 
 function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
+    global $profiles;
+    
     for($i=0; $i<$filecount; $i++){     
         $errorInTrack=0;
         $filename = $files[$i];                 //load file
@@ -544,6 +546,29 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
         
         }*/
         
+        // 'trun' version check for CMAF video tracks
+        $adapt_mime_type = $Adapt['mimeType'];
+        $rep_mime_type = $Adapt['Representation']['mimeType'][$i];
+        if(strpos($rep_mime_type, 'video') !== FALSE || strpos($adapt_mime_type, 'video') !== FALSE){
+            if(strpos($profiles, 'urn:mpeg:dash:profile:isoff-live:2011') !== FALSE){
+                for($j=0;$j<$xml_num_moofs;$j++){
+                    $trun_version = $xml_trun->item($j)->getAttribute('version');
+                    if($trun_version != "1")
+                        fprintf($opfile, "**'CMAF check violated: Section 7.5.17- Version 1 SHALL be used for video CMAF tracks, except in case of a video CMAF track file', but " . $trun_version . " found for Rep ".$id." Track ".($j+1)."\n");
+                }
+            }
+        }
+        
+        // 'subs' presence check for TTML image subtitle track with media profile 'im1i'
+        $rep_codec_type = $Adapt['Representation']['codec'][$i];
+        if(strpos($rep_codec_type, 'stpp.ttml.im1i') !== FALSE){
+            for($j=0;$j<$xml_num_moofs;$j++){
+                $temp_moof = $xml_moof[$j];
+                $xml_subs = $temp_moof->getElementsByTagName('subs');
+                if($xml_subs->length == 0)
+                    fprintf($opfile, "**'CMAF check violated: Section 7.5.20- Each CMAF fragment in a TTML image subtitle track of CMAF media profile 'im1i' SHALL contain a SubSampleInformationBox in the TrackFragmentBox, but " . $xml_subs->length . " found for Rep ".$id." Fragment ".($j+1)."\n");
+            }
+        }
         
         for($j=1;$j<$xml_num_moofs;$j++){
             //$sampleDurFragPrev=$xml_tfhd[$j-1]->getAttribute('defaultSampleDuration');

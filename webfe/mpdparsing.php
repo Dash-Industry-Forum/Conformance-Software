@@ -348,6 +348,11 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
                 if ($repProfiles[$i] === "")
                     $repProfiles[$i] = $adapsetProfiles;
 
+                $repmimeTypevar = $temprep->getAttribute('mimeType');
+                if(empty($repmimeTypevar))
+                    $repmimeTypevar = 0;
+                $repmimeType [$i] = $repmimeTypevar;
+                
                 $codecsvar = $temprep->getAttribute('codecs');
                 if (empty($codecsvar))
                     $codecsvar = 0;
@@ -409,7 +414,7 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
     $Adapt_urlbase = $rep_url; //Incase of using BaseURL just add all BaseURLs within array containint all presentations
     //Array of each presentation containing all attributes and nodes within Presentations
 
-    $Rep_arr = array('id' => $id, 'codecs' => $codecs, 'width' => $width, 'height' => $height, 'scanType' => $scanType, 'frameRate' => $frameRate,
+    $Rep_arr = array('id' => $id, 'codecs' => $codecs, 'mimeType' => $repmimeType, 'width' => $width, 'height' => $height, 'scanType' => $scanType, 'frameRate' => $frameRate,
         'sar' => $sar, 'bandwidth' => $bandwidth, 'SegmentTemplate' => $rep_seg_temp, 'SegmentBase' => $segarray, 'startWithSAP' => $repStartWithSAP, 'profiles' => $repProfiles,
         'ContentProtectionElementCount' => $ContentProtectionElementCountRep, 'presentationTimeOffset' => $Rep_Timeoffset, 'timescale' => $timescale, 'AudioChannelValue' => $audioCh_value, 'indexRange' => $indexRange_RepSet);
     // Array of all adapationsets containing all attributes and nodes including Presentations 
