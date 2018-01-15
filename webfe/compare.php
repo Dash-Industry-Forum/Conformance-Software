@@ -82,7 +82,7 @@ function checkRepresentationsConformance(){
         if($files)
             $filecount = count($files);
         
-        if(!($opfile = fopen($locate."/Adapt".$i."_compInfo.txt", 'w'))){
+        if(!($opfile = fopen($locate."/Adapt".$i."_compInfo.txt", 'a'))){
             echo "Error opening/creating compared representations' conformance check file: "."./Adapt".$i."_compInfo.txt";
             return;
         }
@@ -92,7 +92,6 @@ function checkRepresentationsConformance(){
         else if($filecount == 0)                     //if no file exists in the directory, nothing to check
             fprintf($opfile, "**No identical box checks possible between Tracks in Adaptationset/Switching Set ".($i+1)."\n");
         else{                                   //if file(s) do(es) exist, then start checking
-            fprintf($opfile, "**Compared Representations/Tracks' conformance check for: AdaptationSet/Switching Set ".($i+1).":\n\n");
             for($j=0; $j<$filecount; $j++){         //iterate over all files
                 $info_str = file_get_contents($locate."/Adapt".$i."/infofile".$j.".txt");
                 
@@ -103,7 +102,6 @@ function checkRepresentationsConformance(){
                 while($xml->read()){                //if any attribute in the xml file contains "No", then this will be considered as an error
                     if($first){                     //obtain the rep ids in the xml file. (info for $opfile)
                         $ids = getIds($xml);
-                        fprintf($opfile, "Checking identical boxes -Representation with id: ".$ids[0]." vs Representation with id: ".$ids[1]."\n");
                         $first = false;
                     }
                     $atom_name = $xml->name;
@@ -120,7 +118,7 @@ function checkRepresentationsConformance(){
                                 if($atom_name == "ftyp" && strpos($info_str, 'ftyp: do not care') !== FALSE)
                                     continue;
                                 else{
-                                    fprintf ($opfile, ' Error: Different value for the attribute: '.$xml->name.' in the atom: '.$atom_name."\n\n");
+                                    fprintf ($opfile, "**'CMAF check violated: Section 7.3.4- CMAF header parameters SHALL NOT differ between CMAF tracks, except as allowed in Table 11', but ".$xml->name.' in the box: '.$atom_name." is different between Rep. $ids[0] and Rep. $ids[1] in Switching Set " . (string) ($i+1) . " \n\n");
                                     $found = true;
                                 }
                             }
@@ -131,7 +129,6 @@ function checkRepresentationsConformance(){
                 }
             
                 if(!$found){                        //otherwise this comparison conforms to specifications 
-                    fprintf ($opfile, " Everything is fine with the represenations\n\n");
                     $found = false;
                 }
             }
@@ -328,6 +325,7 @@ function compareRepresentations(){
             $compXML->addAttribute('comparedIds', "[rep=".$id." rep=".$id_comp."]");
             
             compare($xml, $xml_comp, $compXML, $ind);     //start comparing
+            compareHevc($filename, $filename_comp, $id, $id_comp);
             
             $compXML->asXml($path);                 //save changes
             $ind++;
@@ -346,6 +344,72 @@ function xmlFileLoad($filename)
             
     $xml_atomlist = $abs->getElementsByTagName('atomlist')->item(0);
     return $xml_atomlist;
+}
+
+function compareHevc($filename, $filename_comp, $id, $id_comp){
+    global $locate, $count1;
+    
+    $att_names_sps = array('vui_parameters_present_flag', 'video_signal_type_present_flag', 'colour_description_present_flag',
+        'colour_primaries', 'transfer_characteristics', 'matrix_coeffs', 'chroma_loc_info_present_flag',
+        'chroma_sample_loc_type_top_field', 'chroma_sample_loc_type_bottom_field', 'neutral_chroma_indication_flag');
+    $att_names_sei = array('length', 'zero-bit', 'nuh_layer_id', 'nuh_temporal_id_plus1');
+    
+    
+    $opfile = fopen($locate."/Adapt".$count1."_compInfo.txt", 'a');
+    
+    $xml = xmlFileLoad($filename);
+    $xml_comp = xmlFileLoad($filename_comp);
+    
+    $xml_hvcC=$xml->getElementsByTagName('hvcC')->item(0);
+    $xml_comp_hvcC = $xml_comp->getElementsByTagName('hvcC')->item(0);
+    
+    $xml_hvcC_nals = $xml_hvcC->childNodes;
+    $nal_len = $xml_hvcC_nals->length;
+    $xml_comp_hvcC_nals = $xml_comp_hvcC->childNodes;
+    $comp_nal_len = $xml_comp_hvcC_nals->length;
+    
+    if($nal_len == $comp_nal_len){
+        for ($i=0; $i<$nal_len; $i++){
+            $nal_unit_arr = $xml_hvcC_nals->item($i);
+            $comp_nal_unit_arr = $xml_comp_hvcC_nals->item($i);
+            
+            if($nal_unit_arr->nodeName == $comp_nal_unit_arr->nodeName && strpos($nal_unit_arr->nodeName, 'NAL_Unit_Array') !== FALSE){
+                $nal_unit_type = $nal_unit_arr->getAttribute('nalUnitType');
+                $comp_nal_unit_type = $comp_nal_unit_arr->getAttribute('nalUnitType');
+                
+                if($nal_unit_type == $comp_nal_unit_type){
+                    if($nal_unit_arr->childNodes->length == $comp_nal_unit_arr->childNodes->length){
+                        for($j=0; $j<$nal_unit_arr->childNodes->length; $j++){
+                            $nal_unit = $nal_unit_arr->childNodes[$j];
+                            $comp_nal_unit = $comp_nal_unit_arr->childNodes[$j];
+                            if($nal_unit->nodeName == $comp_nal_unit->nodeName && strpos($nal_unit->nodeName, 'NALUnit') !== FALSE){
+                                if($nal_unit_type == '33'){
+                                    foreach ($att_names_sps as $att_name) {
+                                        $nal_unit_att = $nal_unit->getAttribute($att_name);
+                                        $comp_nal_unit_att = $comp_nal_unit->getAttribute($att_name);
+                        
+                                        if($nal_unit_att != $comp_nal_unit_att)
+                                            fprintf($opfile, "**'CMAF check violated: Section B.2.4- CMAF Switching Sets SHALL be constrained to include identical SPS VUI color mastering and dynamic range information in the first sample entry of every CMAF header', but $att_name is $nal_unit_att for Rep. $id and $comp_nal_unit_att for Rep. $id_comp.\n");
+                                    }
+                                }
+                                elseif($nal_unit_type == '39' || $nal_unit_type == '40'){
+                                    foreach ($att_names_sei as $att_name) {
+                                        $nal_unit_att = $nal_unit->getAttribute($att_name);
+                                        $comp_nal_unit_att = $comp_nal_unit->getAttribute($att_name);
+                        
+                                        if($nal_unit_att != $comp_nal_unit_att)
+                                            fprintf($opfile, "**'CMAF check violated: Section B.2.4- CMAF Switching Sets SHALL be constrained to include identical SEI NALS in the first sample entry of every CMAF header', but $att_name is $nal_unit_att for Rep. $id and $comp_nal_unit_att for Rep. $id_comp. \n");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    fclose($opfile);
 }
 
 function checkSwitchingSets(){
@@ -561,7 +625,7 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
         
         // 'subs' presence check for TTML image subtitle track with media profile 'im1i'
         $rep_codec_type = $Adapt['Representation']['codec'][$i];
-        if(strpos($rep_codec_type, 'stpp.ttml.im1i') !== FALSE){
+        if(strpos($rep_codec_type, 'im1i') !== FALSE){
             for($j=0;$j<$xml_num_moofs;$j++){
                 $temp_moof = $xml_moof[$j];
                 $xml_subs = $temp_moof->getElementsByTagName('subs');
