@@ -6,7 +6,7 @@
  * and open the template in the editor.
  */
 
-// All the boxes and related attributes to be checked for CMAF Table 6
+// All the boxes and related attributes to be checked for CMAF Table 11
 $array = array("ftyp" => array("majorbrand", "version", "compatible_brands"),
                "mvhd" => array("version", "flags", "timeScale", "duration", "nextTrackID"),
                "tkhd" => array("version", "flags", "trackID", "duration", "volume"),
@@ -723,15 +723,7 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
                           if($xml_senc->length==0){
                              fprintf($opfile, "**'CMAF check violated: Section 7.4.2. - When Sample Encryption Sample Auxiliary Info is used, 'senc' SHALL be present in each CMAF Fragment, but not found in Rep/Track ".$id." Fragment ".($j+1)."\n");
                              fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decrypted when independently accessed, but missing in the Fragment ".($j+1)." of Rep/Track ".$id."\n");
-                          }else{
-                             $xml_saio=$xml_traf->item(0)->getElementsByTagName('saio');
-                             $xml_saioOffset=$xml_saio->item(0)->getAttribute('saio_offset_0');
-                             $xml_senc_offset=$xml_senc->item(0)->getAttribute('offset');
-                             $xml_moof_offset=$xml_moof->item($j)->getAttribute('offset');
-                             if($xml_saioOffset!=$xml_senc_offset+16-$xml_moof_offset)
-                                   fprintf($opfile, "**'CMAF check violated: Section 7.4.2. - The SampleAuxiliaryInformantionOffsetsBox SHALL locate the Sample Aux Info in 'senc' box, but not found in Rep/Track ".$id." Fragment ".($j+1)."\n");
                           }
-
                       }
                   }
               }
