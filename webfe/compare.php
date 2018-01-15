@@ -611,7 +611,7 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
                 fprintf($opfile, "**'CMAF check violated: Section 7.5.13- In video CMAF track, an EditListBox shall be used to adjust the earliest video sample to movie presentation time zero, i.e., media-time equal to composition-time of earliest presented sample in the 1st Fragment', but media-time is not equal to composition-time for Rep ".$id."\n");
         }
         
-        $ParamSetPresent=0;
+        /*$ParamSetPresent=0;
         $xml_videSample=$xml->getElementsByTagName('vide_sampledescription');
         if($xml_videSample->length>0){
             $sdType=$xml_videSample->item(0)->getAttribute('sdType');
@@ -629,6 +629,38 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
                             fprintf($opfile, "**'CMAF check violated: Section B.2.1.2. - For a Visual Sample Entry with codingname 'hvc1', SHALL contain one or more decoding parameter sets(Containing VPS,SPS and PPS NALs for HEVC Video), but found none in the Rep/Track ".$id."\n");
                 }
             }
+        }*/
+        $xml_videSample=$xml->getElementsByTagName('vide_sampledescription');
+        if($xml_videSample->length>0){
+            $sdType=$xml_videSample->item(0)->getAttribute('sdType');
+            if($sdType == "hvc1" || $sdType =="hev1"){
+                $xml_hvcc=$xml_videSample->item(0)->getElementsByTagName('hvcC');
+                if($xml_hvcc->length!=1)
+                    fprintf($opfile, "**'CMAF check violated: Section B.2.3. - The HEVCSampleEntry SHALL contain an HEVCConfigurationBox (hvcC) containing an HEVCDecoderConfigurationRecord, but found ".$xml_hvcc->length." box in the Rep/Track ".$id."\n");
+            }
+            if( $sdType =="hev1"){
+                $vui_flag=0;
+                $xml_NALUnit=$xml->getElementsByTagName('NALUnit');
+                for($k=0; $k< ($xml_NALUnit->length); $k++){    
+                    $ParamSet=$xml_NALUnit->item($k)->getAttribute('nal_unit_type');
+                        if($ParamSet ==33)
+                            $vui_flag=$xml_NALUnit->item($k)->getAttribute('vui_parameters_present_flag');    
+                }
+                if($vui_flag==0){
+                    $colr=$xml_videSample->item(0)->getElementsByTagName('colr');
+                    $pasp=$xml_videSample->item(0)->getElementsByTagName('pasp');
+                    if($pasp->length==0)
+                        fprintf($opfile, "**'CMAF check violated: Section B.2.3. - The HEVCSampleEntry SHALL contain PixelAspectRatioBox (pasp), but not found in the Rep/Track ".$id."\n");
+                    if($colr->length==0)
+                        fprintf($opfile, "**'CMAF check violated: Section B.2.3. - The HEVCSampleEntry SHALL contain ColorInformationBox (colr), but not found in the Rep/Track ".$id."\n");
+                    else{
+                        if($colr->item(0)->getAttribute('colrtype') !='nclx')
+                            fprintf($opfile, "**'CMAF check violated: Section B.2.3. - The HEVCSampleEntry SHALL contain ColorInformationBox (colr) with colour_type 'nclx', but this colour_type ".$colr->item(0)->getAttribute('colrtype')." found in the Rep/Track ".$id."\n");
+
+                    }
+                }
+            }
+            
         }
         //Check for metadata required to decode, decrypt, display in CMAF Header.
         // $xml_hdlr=$xml->getElementsByTagName('hdlr')[0];
