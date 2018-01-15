@@ -346,12 +346,42 @@ function xmlFileLoad($filename)
     return $xml_atomlist;
 }
 
+function getNALArray($hvcC, $type){
+    $hvcC_nals = $hvcC->childNodes;
+    $nal_len = $hvcC_nals->length;
+    
+    for($i=0; $i<$nal_len; $i++){
+        $nal_unit_arr = $hvcC_nals->item($i);
+        if(strpos($nal_unit_arr->nodeName, 'NAL_Unit_Array') !== FALSE){
+            $nal_unit_type = $nal_unit_arr->getAttribute('nalUnitType');
+            if($nal_unit_type == $type){
+                return $nal_unit_arr;
+            }
+        }
+    }
+    return NULL;
+}
+
+function getNALUnit($nal_array){
+    $nodes = $nal_array->childNodes;
+    $nal_array_len = $nodes->length;
+    
+    for($i=0; $i<$nal_array_len; $i++){
+        $nal_unit = $nodes->item($i);
+        if(strpos($nal_unit->nodeName, 'NALUnit') !== FALSE){
+            return $nal_unit;
+        }
+    }
+    return NULL;
+}
+
 function compareHevc($filename, $filename_comp, $id, $id_comp){
     global $locate, $count1;
     
     $att_names_sps = array('vui_parameters_present_flag', 'video_signal_type_present_flag', 'colour_description_present_flag',
         'colour_primaries', 'transfer_characteristics', 'matrix_coeffs', 'chroma_loc_info_present_flag',
-        'chroma_sample_loc_type_top_field', 'chroma_sample_loc_type_bottom_field', 'neutral_chroma_indication_flag');
+        'chroma_sample_loc_type_top_field', 'chroma_sample_loc_type_bottom_field', 'neutral_chroma_indication_flag', 
+        'sps_extension_present_flag', 'sps_range_extension_flag', 'extended_precision_processing_flag');
     $att_names_sei = array('length', 'zero-bit', 'nuh_layer_id', 'nuh_temporal_id_plus1');
     
     
@@ -363,50 +393,58 @@ function compareHevc($filename, $filename_comp, $id, $id_comp){
     $xml_hvcC=$xml->getElementsByTagName('hvcC')->item(0);
     $xml_comp_hvcC = $xml_comp->getElementsByTagName('hvcC')->item(0);
     
-    $xml_hvcC_nals = $xml_hvcC->childNodes;
-    $nal_len = $xml_hvcC_nals->length;
-    $xml_comp_hvcC_nals = $xml_comp_hvcC->childNodes;
-    $comp_nal_len = $xml_comp_hvcC_nals->length;
-    
-    if($nal_len == $comp_nal_len){
-        for ($i=0; $i<$nal_len; $i++){
-            $nal_unit_arr = $xml_hvcC_nals->item($i);
-            $comp_nal_unit_arr = $xml_comp_hvcC_nals->item($i);
+    $xml_SPS = getNALArray($xml_hvcC, '33');
+    $xml_comp_SPS = getNALArray($xml_comp_hvcC, '33');
+    if($xml_SPS != NULL && $xml_comp_SPS != NULL){
+        $sps_unit = getNALUnit($xml_SPS);
+        $sps_unit_comp = getNALUnit($xml_comp_SPS);
+        
+        foreach ($att_names_sps as $att_name) {
+            $nal_unit_att = $sps_unit->getAttribute($att_name);
+            $comp_nal_unit_att = $sps_unit_comp->getAttribute($att_name);
             
-            if($nal_unit_arr->nodeName == $comp_nal_unit_arr->nodeName && strpos($nal_unit_arr->nodeName, 'NAL_Unit_Array') !== FALSE){
-                $nal_unit_type = $nal_unit_arr->getAttribute('nalUnitType');
-                $comp_nal_unit_type = $comp_nal_unit_arr->getAttribute('nalUnitType');
-                
-                if($nal_unit_type == $comp_nal_unit_type){
-                    if($nal_unit_arr->childNodes->length == $comp_nal_unit_arr->childNodes->length){
-                        for($j=0; $j<$nal_unit_arr->childNodes->length; $j++){
-                            $nal_unit = $nal_unit_arr->childNodes[$j];
-                            $comp_nal_unit = $comp_nal_unit_arr->childNodes[$j];
-                            if($nal_unit->nodeName == $comp_nal_unit->nodeName && strpos($nal_unit->nodeName, 'NALUnit') !== FALSE){
-                                if($nal_unit_type == '33'){
-                                    foreach ($att_names_sps as $att_name) {
-                                        $nal_unit_att = $nal_unit->getAttribute($att_name);
-                                        $comp_nal_unit_att = $comp_nal_unit->getAttribute($att_name);
-                        
-                                        if($nal_unit_att != $comp_nal_unit_att)
-                                            fprintf($opfile, "**'CMAF check violated: Section B.2.4- CMAF Switching Sets SHALL be constrained to include identical SPS VUI color mastering and dynamic range information in the first sample entry of every CMAF header', but $att_name is $nal_unit_att for Rep. $id and $comp_nal_unit_att for Rep. $id_comp.\n");
-                                    }
-                                }
-                                elseif($nal_unit_type == '39' || $nal_unit_type == '40'){
-                                    foreach ($att_names_sei as $att_name) {
-                                        $nal_unit_att = $nal_unit->getAttribute($att_name);
-                                        $comp_nal_unit_att = $comp_nal_unit->getAttribute($att_name);
-                        
-                                        if($nal_unit_att != $comp_nal_unit_att)
-                                            fprintf($opfile, "**'CMAF check violated: Section B.2.4- CMAF Switching Sets SHALL be constrained to include identical SEI NALS in the first sample entry of every CMAF header', but $att_name is $nal_unit_att for Rep. $id and $comp_nal_unit_att for Rep. $id_comp. \n");
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            if($nal_unit_att != $comp_nal_unit_att)
+                fprintf($opfile, "**'CMAF check violated: Section B.2.4- CMAF Switching Sets SHALL be constrained to include identical SPS VUI color mastering and dynamic range information in the first sample entry of every CMAF header in the CMAF switching set to provide consistent initialization and calibration', but $att_name is $nal_unit_att for Rep. $id and $comp_nal_unit_att for Rep. $id_comp.\n");
         }
+    }
+    elseif(($xml_SPS != NULL && $xml_comp_SPS == NULL) || ($xml_SPS == NULL && $xml_comp_SPS != NULL)){
+        fprintf($opfile, "**'CMAF check violated: Section B.2.4- CMAF Switching Sets SHALL be constrained to include identical SPS VUI color mastering and dynamic range information in the first sample entry of every CMAF header in the CMAF switching set to provide consistent initialization and calibration', but Rep. $id and Rep. $id_comp are not symmetric in SPS NAL presence.\n");
+    }
+    
+    $xml_PRESEI = getNALArray($xml_hvcC, '39');
+    $xml_comp_PRESEI = getNALArray($xml_comp_hvcC, '39');
+    if($xml_PRESEI != NULL && $xml_comp_PRESEI != NULL){
+        $presei_unit = getNALUnit($xml_PRESEI);
+        $presei_unit_comp = getNALUnit($xml_comp_PRESEI);
+        
+        foreach ($att_names_sei as $att_name) {
+            $nal_unit_att = $presei_unit->getAttribute($att_name);
+            $comp_nal_unit_att = $presei_unit_comp->getAttribute($att_name);
+            
+            if($nal_unit_att != $comp_nal_unit_att)
+                fprintf($opfile, "**'CMAF check violated: Section B.2.4- CMAF Switching Sets SHALL be constrained to include identical SEI NALS in the first sample entry of every CMAF header in the CMAF switching set to provide consistent initialization and calibration', but $att_name is $nal_unit_att for Rep. $id and $comp_nal_unit_att for Rep. $id_comp. \n");
+            }
+    }
+    elseif(($xml_PRESEI != NULL && $xml_comp_PRESEI == NULL) || ($xml_PRESEI == NULL && $xml_comp_PRESEI != NULL)){
+        fprintf($opfile, "**'CMAF check violated: Section B.2.4- CMAF Switching Sets SHALL be constrained to include identical SPS VUI color mastering and dynamic range information in the first sample entry of every CMAF header in the CMAF switching set to provide consistent initialization and calibration', but Rep. $id and Rep. $id_comp are not symmetric in SEI NAL presence.\n");
+    }
+    
+    $xml_SUFSEI = getNALArray($xml_hvcC, '40');
+    $xml_comp_SUFSEI = getNALArray($xml_comp_hvcC, '40');
+    if($xml_SUFSEI != NULL && $xml_comp_SUFSEI != NULL){
+        $sufsei_unit = getNALUnit($xml_SUFSEI);
+        $sufsei_unit_comp = getNALUnit($xml_comp_SUFSEI);
+        
+        foreach ($att_names_sei as $att_name) {
+            $nal_unit_att = $sufsei_unit->getAttribute($att_name);
+            $comp_nal_unit_att = $sufsei_unit_comp->getAttribute($att_name);
+            
+            if($nal_unit_att != $comp_nal_unit_att)
+                fprintf($opfile, "**'CMAF check violated: Section B.2.4- CMAF Switching Sets SHALL be constrained to include identical SEI NALS in the first sample entry of every CMAF header in the CMAF switching set to provide consistent initialization and calibration', but $att_name is $nal_unit_att for Rep. $id and $comp_nal_unit_att for Rep. $id_comp. \n");
+            }
+    }
+    elseif(($xml_SUFSEI != NULL && $xml_comp_SUFSEI == NULL) || ($xml_SUFSEI == NULL && $xml_comp_SUFSEI != NULL)){
+        fprintf($opfile, "**'CMAF check violated: Section B.2.4- CMAF Switching Sets SHALL be constrained to include identical SPS VUI color mastering and dynamic range information in the first sample entry of every CMAF header in the CMAF switching set to provide consistent initialization and calibration', but Rep. $id and Rep. $id_comp are not symmetric in SEI NAL presence.\n");
     }
     
     fclose($opfile);
