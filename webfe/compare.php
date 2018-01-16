@@ -474,7 +474,7 @@ function checkSwitchingSets(){
             //fprintf($opfile, "**SwitchingSet conformance check for: SwitchingSet (Adaptationset) ".($adapt_count+1).":\n\n");
             
             if($filecount == 0)                     //if no file exists in the directory, nothing to check
-                fprintf($opfile, "**'CMAF check violated: Section 7.3.3- CMAF Switching Set SHALL contain one or more CMAF Tracks', but found".($filecount)."\n");
+                fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- CMAF Switching Set SHALL contain one or more CMAF Tracks', but found".($filecount)."\n");
        
      
             for($i=0; $i<$filecount-1; $i++){               //iterate over files
@@ -495,14 +495,14 @@ function checkSwitchingSets(){
                     $id_comp = $Adapt['Representation']['id'][$j];
                     
                     if($xml_handlerType!=$xml_comp_handlerType)
-                        fprintf($opfile, "**'CMAF check violated: Section 7.3.3- Each CMAF Switching Set SHALL contain CMAF Tracks of one media type', but not matching between Rep". $id." (".$xml_handlerType.") and Rep".$id_comp." (".$xml_comp_handlerType.") \n");
+                        fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- A CMAF Switching Set SHALL contain CMAF Tracks of only one media type', but not matching between Rep". $id." (".$xml_handlerType.") and Rep".$id_comp." (".$xml_comp_handlerType.") \n");
                       
                     //Check Tracks have same number of moofs.
                     $xml_num_moofs=$xml->getElementsByTagName('moof')->length;
                     $xml_comp_num_moofs=$xml_comp->getElementsByTagName('moof')->length;
                     
                     if($xml_num_moofs!=$xml_comp_num_moofs)
-                        fprintf($opfile, "**'CMAF check violated: Section 7.3.3- Each CMAF Track in a CMAF Switching Set SHALL contain the same number of CMAF Fragments', but not matching between Rep". $id." (fragments=".$xml_num_moofs.") and Rep".$id_comp." (fragments=".$xml_comp_num_moofs.") \n");
+                        fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- All CMAF Tracks in a CMAF Switching Set SHALL contain the same number of CMAF Fragments', but not matching between Rep". $id." (fragments=".$xml_num_moofs.") and Rep".$id_comp." (fragments=".$xml_comp_num_moofs.") \n");
                         
                     //Check all Tracks have same ISOBMFF defined duration.
                     if($xml->getElementsByTagName('mehd')->length >0 && $xml_comp->getElementsByTagName('mehd')->length >0 ){
@@ -552,12 +552,12 @@ function checkSwitchingSets(){
                         if($xml_baseDecodeTime==$xml_comp_baseDecodeTime)
                             break;
                         elseif($z==$xml_comp_num_moofs-1)
-                            fprintf($opfile, "**'CMAF check violated: Section 7.3.3- For any CMAF Fragment in one CMAF Track in a CMAF Switching Set there SHALL be a CMAF Fragment with same decode time in all other CMAF Tracks', but not found for Rep ".$id." Fragment ".($y+1)." in Rep ".$id_comp."\n");
+                            fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- For any CMAF Fragment in one CMAF Track in a CMAF Switching Set there SHALL be a CMAF Fragment with same decode time in all other CMAF Tracks', but not found for Rep ".$id." Fragment ".($y+1)." in Rep ".$id_comp."\n");
                     }
                    }
                    
                    //Check tenc encryption parameters.
-                   if($xml->getElementsByTagName('tenc')->length >0 && $xml_comp->getElementsByTagName('tenc')->length >0){
+                   /*if($xml->getElementsByTagName('tenc')->length >0 && $xml_comp->getElementsByTagName('tenc')->length >0){
                     $xml_tenc=$xml->getElementsByTagName('tenc');    
                     $xml_KID=$xml_tenc->item(0)->getAttribute('default_KID');
                     $xml_comp_tenc=$xml_comp->getElementsByTagName('tenc');    
@@ -571,7 +571,7 @@ function checkSwitchingSets(){
                         
                     if($xml_IVSize!=$xml_comp_IVSize)
                         fprintf($opfile, "**'CMAF check violated: Section 7.3.3- CMAF Header contained default_IV_size SHALL be identical for all CMAF Tracks in a Switching Set', but not found for Rep ".$id." (IV_size=".$xml_IVSize.") and Rep ".$id_comp." (IV_size=".$xml_comp_IVSize.") \n");
-                   }
+                   }*/
                    
                    //Check new presentation time check from FDIS on SwSet
                    $xml_hdlr=$xml->getElementsByTagName('hdlr')->item(0);
@@ -606,7 +606,7 @@ function checkSwitchingSets(){
                    
                    $mediaProfileError=checkMediaProfiles($xml, $xml_comp,$xml_handlerType,$xml_comp_handlerType);//Check media profile conformance of Tracks in a Switching Set.
                    if($mediaProfileError)
-                        fprintf($opfile, "**'CMAF check violated: Section 7.3.3- All CMAF Tracks in a CMAF Switching Set SHALL conform to one CMAF Media Profile', but not conforming for Rep ".$id." and Rep ".$id_comp." \n");
+                        fprintf($opfile, "**'CMAF check violated: Section 7.3.4.1- All CMAF Tracks in a CMAF Switching Set SHALL conform to one CMAF Media Profile', but not conforming for Rep ".$id." and Rep ".$id_comp." \n");
                     
                 }
             }
@@ -690,7 +690,7 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
                 $firstSampleCompTime=$xml_trun->item($j)->getAttribute('earliestCompositionTime');
                 $firstDecTime=$xml_tfdt->item(0)->getAttribute('baseMediaDecodeTime');
                 if($firstSampleCompTime!=$firstDecTime)
-                    fprintf($opfile, "**'CMAF check violated: Section 7.5.16- For 'trun' version 1, the composition time of 1st presented sample in a CMAF Segment SHALL be same as 1st Sample decode time (baseMediaDecodeTime), but not found in Rep ".$id." \n");
+                    fprintf($opfile, "**'CMAF check violated: Section 7.5.17- For 'trun' version 1, the composition time of 1st presented sample in a CMAF Segment SHALL be same as 1st Sample decode time (baseMediaDecodeTime), but not found in Rep ".$id." \n");
         
             }
             $moofSize=$xml_moof->item($j)->getAttribute('size');
@@ -781,15 +781,15 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
                     $level_idc=$xml_NALComment->item(0)->getAttribute('level_idc');
                 }
                 if($width== NULL )
-                     fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but 'width' missing in the Header of Rep/Track ".$id."\n");
+                     fprintf($opfile, "**'CMAF check violated: Section 7.3.2.4. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but 'width' missing in the Header of Rep/Track ".$id."\n");
                 if($height==NULL)
-                     fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but 'height' missing in the Header of Rep/Track ".$id."\n");
+                     fprintf($opfile, "**'CMAF check violated: Section 7.3.2.4. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but 'height' missing in the Header of Rep/Track ".$id."\n");
                 if($profile_idc ==NULL)
-                     fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but 'profile_idc' missing in the Header of Rep/Track ".$id."\n");
+                     fprintf($opfile, "**'CMAF check violated: Section 7.3.2.4. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but 'profile_idc' missing in the Header of Rep/Track ".$id."\n");
                 if($level_idc==NULL)
-                     fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but 'level_idc' missing in the Header of Rep/Track ".$id."\n");
+                     fprintf($opfile, "**'CMAF check violated: Section 7.3.2.4. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but 'level_idc' missing in the Header of Rep/Track ".$id."\n");
                 if(($num_ticks==NULL || $time_scale==NULL))
-                     fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but FPS info (num_ticks & time_scale) missing in the Header of Rep/Track ".$id."\n");
+                     fprintf($opfile, "**'CMAF check violated: Section 7.3.2.4. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but FPS info (num_ticks & time_scale) missing in the Header of Rep/Track ".$id."\n");
              }
             
          }
@@ -801,11 +801,11 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
              if($xml_audioDec->length>0)
                 $channelConfig=$xml_audioDec->item(0)->getAttribute('channelConfig');
              if($sdType==NULL  )
-                 fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but audio 'sdTtype' missing in the Header of Rep/Track ".$id."\n");
+                 fprintf($opfile, "**'CMAF check violated: Section 7.3.2.4. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but audio 'sdTtype' missing in the Header of Rep/Track ".$id."\n");
              if($samplingRate==NULL)
-                 fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but audio 'samplingRate' missing in the Header of Rep/Track ".$id."\n");
+                 fprintf($opfile, "**'CMAF check violated: Section 7.3.2.4. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but audio 'samplingRate' missing in the Header of Rep/Track ".$id."\n");
              if($channelConfig==NULL)
-                 fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but audio 'channelConfig' missing in the Header of Rep/Track ".$id."\n");
+                 fprintf($opfile, "**'CMAF check violated: Section 7.3.2.4. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decoded and displayed when independently accessed, but audio 'channelConfig' missing in the Header of Rep/Track ".$id."\n");
 
          }
          $dash264 = false;
@@ -814,7 +814,7 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
          }         
          if ($Adapt['Representation']['ContentProtectionElementCount'][$i] > 0 && $dash264 == true) {
               if($xml->getElementsByTagName('tenc')->length ==0)
-                 fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decrypted when independently accessed, but missing in the Header of Rep/Track ".$id."\n");
+                 fprintf($opfile, "**'CMAF check violated: Section 7.3.2.4. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decrypted when independently accessed, but missing in the Header of Rep/Track ".$id."\n");
               else{
                   $xml_tenc=$xml->getElementsByTagName('tenc');
                   $AuxInfoPresent=($xml_tenc->item(0)->getAttribute('default_IV_size')!=0);
@@ -824,7 +824,7 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
                           $xml_senc=$xml_traf->item(0)->getElementsByTagName('senc');
                           if($xml_senc->length==0){
                              fprintf($opfile, "**'CMAF check violated: Section 7.4.2. - When Sample Encryption Sample Auxiliary Info is used, 'senc' SHALL be present in each CMAF Fragment, but not found in Rep/Track ".$id." Fragment ".($j+1)."\n");
-                             fprintf($opfile, "**'CMAF check violated: Section 7.3.1.3. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decrypted when independently accessed, but missing in the Fragment ".($j+1)." of Rep/Track ".$id."\n");
+                             fprintf($opfile, "**'CMAF check violated: Section 7.3.2.4. - Each CMAF Fragment in combination with its associated Header SHALL contain sufficient metadata to be decrypted when independently accessed, but missing in the Fragment ".($j+1)." of Rep/Track ".$id."\n");
                           }
                       }
                   }
@@ -842,7 +842,7 @@ function checkCMAFTracks($files,$filecount,$opfile,$Adapt){
                     for($z=0; $z<$ref_count; $z++){
                         $ref_type=$sidx->item($j)->getAttribute('reference_type_'.($z+1));
                         if($ref_type!=0)
-                            fprintf($opfile, "**'CMAF check violated: Section 7.3.2.3. - If SegmentIndexBoxes exist, each subsegment referenced in the SegmentIndexBox SHALL be a single CMAF Fragment contained in the CMAF Track File, but reference to Fragment not found in Rep/Track ".$id.", Segment ".($z+1)."\n");
+                            fprintf($opfile, "**'CMAF check violated: Section 7.3.3.3. - If SegmentIndexBoxes exist, each subsegment referenced in the SegmentIndexBox SHALL be a single CMAF Fragment contained in the CMAF Track File, but reference to Fragment not found in Rep/Track ".$id.", Segment ".($z+1)."\n");
                     //Check on non_sync_sample
                      /*   if($xml_handlerType=='vide'){
                         $sap_type=intval($sidx[$j]->getAttribute('SAP_type_'.($z+1)));
@@ -938,7 +938,7 @@ function checkAlignedSwitchingSets(){
 
 
                                 if($xml_mehdDuration!=$xml_comp_mehdDuration)
-                                    fprintf($opfile, "**'CMAF check violated: Section 7.3.3.3- Aligned Switching Sets SHALL contain CMAF switching sets of equal duration', but not matching between Switching Set ".$index[0]." and Switching Set ".$index[1]." \n");
+                                    fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain CMAF switching sets of equal duration', but not matching between Switching Set ".$index[0]." and Switching Set ".$index[1]." \n");
                             }
                             else
                             {
@@ -955,7 +955,7 @@ function checkAlignedSwitchingSets(){
                                 $xml_comp_cumSampleDur=$xml_comp_lasttrun->getAttribute('cummulatedSampleDuration');
 
                                 if($xml_lastDecodeTime+$xml_cumSampleDur != $xml_comp_lastDecodeTime+$xml_comp_cumSampleDur)
-                                    fprintf($opfile, "**'CMAF check violated: Section 7.3.3.3- Aligned Switching Sets SHALL contain CMAF switching sets of equal duration', but not matching between Rep". $id." of Switching Set ".$index[0]." and Rep ".$id_comp." of Switching Set ".$index[1]." \n");
+                                    fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain CMAF switching sets of equal duration', but not matching between Rep". $id." of Switching Set ".$index[0]." and Rep ".$id_comp." of Switching Set ".$index[1]." \n");
                             }
                         }
                         //Check Tracks have same number of moofs.
@@ -1356,7 +1356,7 @@ function checkSelectionSet()
         }
     
     if(sizeof($Period_arr)<1)
-        fprintf ($opfile,"**'CMAF check violated: Section 7.3.4-'A CMAF Selection Set SHALL contain one or more CMAF Switching Sets', but found none. \n");
+        fprintf ($opfile,"**'CMAF check violated: Section 7.3.5-'A CMAF Selection Set SHALL contain one or more CMAF Switching Sets', but found none. \n");
 
     fprintf($opfile, "**Selection Set conformance check: \n\n");
     for($adapt_count=0; $adapt_count<sizeof($Period_arr); $adapt_count++){
@@ -1387,7 +1387,7 @@ function checkSelectionSet()
                     }
                     else{
                         if($firstSwSetType!=$xml_handlerType)
-                             fprintf ($opfile,"**'CMAF check violated: Section 7.3.4-'All CMAF Switching Sets within a CMAF Selection Set SHALL be of the same media type', but not matching between Switching Set 1 and ".($adapt_count+1)." \n");
+                             fprintf ($opfile,"**'CMAF check violated: Section 7.3.5-'All CMAF Switching Sets within a CMAF Selection Set SHALL be of the same media type', but not matching between Switching Set 1 and ".($adapt_count+1)." \n");
                     }
                //}
                $xml_mehd=$xml->getElementsByTagName('mehd');
@@ -1422,7 +1422,7 @@ function checkSelectionSet()
         }
         for($k=0;$k<count($SwSetDurArray);$k++){
             if($SwSetDurArray[$k]>$longFragDur)
-               fprintf ($opfile,"**'CMAF check violated: Section 7.3.3.4-'All Switching Sets within a CMAF Selection Set SHALL be of the same duration, withing a tolerance of the longest CMAF Fragment duration of any Track in the Selection Set', but not found \n");
+               fprintf ($opfile,"**'CMAF check violated: Section 7.3.5-'All Switching Sets within a CMAF Selection Set SHALL be of the same duration, withing a tolerance of the longest CMAF Fragment duration of any Track in the Selection Set', but not found \n");
         }
     }
     
