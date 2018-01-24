@@ -426,13 +426,16 @@ function process_mpd()
                 $bandwidth = $Period_arr[$k]['Representation']['bandwidth'][$j]; // get bandwidth of given representation
                 $id = $Period_arr[$k]['Representation']['id'][$j]; // get id of given representation
 
-                $init = str_replace(array('$Bandwidth$', '$RepresentationID$'), array($bandwidth, $id), $initialization); //get initialization segment template is replaced by bandwidth and id 
-                //test is $direct contains "/" in the end
-                if (substr($direct, -1) == '/')
-                    $initurl = $direct . $init; //full initialization URL
-                else
-                    $initurl = $direct . "/" . $init; //full initialization URL
-                $segm_url[] = $initurl; //add segment to URL
+                if($initialization != ""){
+                    $init = str_replace(array('$Bandwidth$', '$RepresentationID$'), array($bandwidth, $id), $initialization); //get initialization segment template is replaced by bandwidth and id 
+                    //test is $direct contains "/" in the end
+                    if (substr($direct, -1) == '/')
+                        $initurl = $direct . $init; //full initialization URL
+                    else
+                        $initurl = $direct . "/" . $init; //full initialization URL
+                    $segm_url[] = $initurl; //add segment to URL
+                }
+                
                 $timehashmask = 0; // default value if timeline doesnt exist
                 if (!empty($timehash))
                 { // if time line exist
