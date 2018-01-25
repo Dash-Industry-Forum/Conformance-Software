@@ -983,7 +983,7 @@ function checkAlignedSwitchingSets(){
                              $decodeTime2=$xml_comp_tfdt->item($y)->getAttribute('baseMediaDecodeTime');
                              
                              if($cummulatedSampleDur1!= $cummulatedSampleDur2 || $decodeTime1!=$decodeTime2){
-                                fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain CMAF Fragments in every CMAF Track with matching baseMediaDecodeTime and duration', but not matching between Rep ". $id." of Switching Set ".$index[0]." and Rep ".$id_comp." of Switching Set ".index[1]." \n");
+                                fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain CMAF Fragments in every CMAF Track with matching baseMediaDecodeTime and duration', but not matching between Rep ". $id." of Switching Set ".$index[0]." and Rep ".$id_comp." of Switching Set ".$index[1]." \n");
                                 break;
                              }
                         }
