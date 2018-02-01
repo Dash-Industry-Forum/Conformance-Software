@@ -525,8 +525,17 @@ function processSegmentBase($basedom)
 //timeparsing function convert the time format specified in mpd into absolute seconds example :PT1H2M4.00S>>  3724 second
 function timeparsing($mediaPresentationDuration)
 {
+    $y = str_replace("P", "", $mediaPresentationDuration); // process mediapersentation duration
+    if(strpos($y, 'D') !== false){
+        $D = explode("D", $y); //get days
 
-    $y = str_replace("PT", "", $mediaPresentationDuration); // process mediapersentation duration
+        $y = substr($y, strpos($y, 'D') + 1);
+    }
+    else
+        $D[0] = 0;
+    
+    $y = str_replace("T", "", $y);
+    
     if (strpos($y, 'H') !== false)
     {
         $H = explode("H", $y); //get hours
@@ -546,12 +555,12 @@ function timeparsing($mediaPresentationDuration)
         $M[0] = 0;
 
     $S = explode("S", $y); // get seconds
-    $presentationduration = ($H[0] * 60 * 60) + ($M[0] * 60) + $S[0]; // calculate durations in seconds
+    $presentationduration = ($D[0] * 24 * 60 * 60) + ($H[0] * 60 * 60) + ($M[0] * 60) + $S[0]; // calculate durations in seconds
 
     return $presentationduration;
 }
 
-function dynamicnumber($bufferduration, $segmentduration, $AST, $start, $periodarray)
+function dynamicnumber($bufferduration, $segmentduration, $AST, $start, $startNumber, $periodarray)
 {
     $avgsum = array();
     $sumbandwidth = array();
@@ -568,11 +577,11 @@ function dynamicnumber($bufferduration, $segmentduration, $AST, $start, $perioda
 
     date_default_timezone_set("UTC"); //Set default timezone to UTC
     $now = time(); // Get actual time
-    $AST = strtotime($AST);
+    $AST = strtotime($AST, $now);
     $LST = $now - ($AST + $start - $segmentduration);
 
     $LSN = intval($LST / $segmentduration);
-    $earlistsegment = $LSN - $buffercapacity * $percent;
+    $earlistsegment = (($LSN - $buffercapacity * $percent) > 0) ? ($LSN - $buffercapacity * $percent) : $startNumber;
 
 
     $result = array();

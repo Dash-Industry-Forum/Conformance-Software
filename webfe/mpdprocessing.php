@@ -210,9 +210,14 @@ function process_mpd()
     { // search for all nodes within mpd
         if ($node->nodeName === 'Period')
         {
-            if ($periodCount === 0)
+            if ($type !== 'dynamic' && $periodCount === 0)
             { //only process the first Period
                 $periodNode = $node;
+            }
+            elseif ($type === 'dynamic')
+            {
+                #$dynamic_start = $node->attributes->getNamedItem('start')->nodeValue;
+                $periodNodes[] = $node;
             }
             $periodCount++;
         }
@@ -261,8 +266,31 @@ function process_mpd()
       $progressXML->MPDChainingURL=$MPDChainingURL;
       $progressXML->asXml(trim($locate . '/progress.xml'));
     }
-    $start = processPeriod($periodNode, $dir); // start getting information from period level
-    $start = timeparsing($start); //Get start time in seconds
+    if($type === 'static'){
+        $start = processPeriod($periodNode, $dir); // start getting information from period level
+        $start = timeparsing($start); //Get start time in seconds
+    }
+    elseif($type === 'dynamic'){
+        for($c=0; $c<$periodCount; $c++){
+            $dyn_start = processPeriod($periodNodes[$c], $dir);
+            $starts[] = timeparsing($dyn_start);
+            $periods[] = $Period_arr;
+        }
+        
+        $now = time();
+        for($p=0; $p< sizeof($periods); $p++){
+            if(!empty($periodNodes[$p]->getAttribute('duration')))
+                $p_duration = $periodNodes[$p]->getAttribute('duration');
+            
+            $whereami = $now - (strtotime($AST) + $starts[$p]);
+            $p_duration = timeparsing($p_duration);
+            if($whereami <= $p_duration){
+                $Period_arr = $periods[$p];
+                $start = $starts[$p];
+                break;
+            }
+        }
+    }
     $segm_url = array(); // contains segments url within one 
     $adapt_url = array(); // contains all segments urls within adapatations set
     if ($setsegflag)
@@ -452,7 +480,7 @@ function process_mpd()
                     //set proper timing from "t" attribute
                     //check "r" etc.
 //                        }
-                    $segmentinfo = dynamicnumber($bufferdepth, $duration, $AST, $start, $Period_arr);
+                    $segmentinfo = dynamicnumber($bufferdepth, $duration, $AST, $start, $startnumber, $Period_arr);
                     $segmentno = $segmentinfo[1]; //Latest available segment number
                     $i = $segmentinfo[0]; // first segment in buffer
                 }
