@@ -650,7 +650,6 @@ function process_mpd()
             {
                 $RepXML = $AdaptationXML->addChild('Representation');
                 $RepXML->addAttribute('id', $k1 + 1);
-                $abc = $period_url[$j1][$k1];
                 
                 $str = '{';
                 for($l1 = 0; $l1 < sizeof($period_url[$j1][$k1]); $l1++)
