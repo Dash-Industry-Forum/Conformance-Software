@@ -987,8 +987,8 @@ function process_mpd()
                         $Adaptnum = (int) substr($repno, $pos, 1) + 1;
                         $pos += strlen('rep');
                         $repnum = (int) substr($repno, $pos, 1) + 1;
-                        if($Period_arr[$count1]['mimeType']== "application/ttml+xml")
-                            file_put_contents($locate . '/' . "stderr.txt", "### error:  \n###        Failed to process Adaptation Set " . $Adaptnum . ", Representation " . $repnum . "!, as mimeType= 'application/ttml+xml' not supported");
+                        if($Period_arr[$count1]['mimeType']== "application/ttml+xml" || $Period_arr[$count1]['mimeType']== "image/jpeg")
+                            file_put_contents($locate . '/' . "stderr.txt", "### error:  \n###        Failed to process Adaptation Set " . $Adaptnum . ", Representation " . $repnum . "!, as mimeType= '".$Period_arr[$count1]['mimeType']."' not supported");
                         else
                             file_put_contents($locate . '/' . "stderr.txt", "### error:  \n###        Failed to process Adaptation Set " . $Adaptnum . ", Representation " . $repnum . "!");
                     }
