@@ -55,6 +55,13 @@
 
     window.onload = function()
     {
+        //Display the version number after refering to change log.     
+        $.post(
+                "getIOPVersion.php",
+        ).done(function(response){
+            document.getElementById("footerVersion").innerHTML=response;
+        });
+
         url = "<?php echo $url; ?>";
         if(url !== "")
         {
@@ -1138,10 +1145,10 @@ function UrlExists(url, cb){
     ga('create', 'UA-48482208-1', 'dashif.org');
     ga('send', 'pageview');
 </script>
-    
+
 <footer>
-    <center> <p>v2.0
-        <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
+    <center> <p id="footerVersion"></p>
+        <p><a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
     </center>
     <center> <p>
         <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/">GitHub</a></p>
