@@ -71,9 +71,9 @@
 			<!-- R3.4 -->
 			<assert test="if (descendant::dash:Representation/@bandwidth &lt; @minBandwidth or descendant::dash:Representation/@bandwidth > @maxBandwidth) then false() else true()">The value of the bandwidth attribute shall be in the range defined by the AdaptationSet.</assert>
 			<!-- R3.5 -->
-			<assert test="if (descendant::dash:Representation/@width &lt; @minWidth or descendant::dash:Representation/@width > @maxWidth) then false() else true()">The value of the width attribute shall be in the range defined by the AdaptationSet.</assert>
+			<assert test="if (descendant::dash:Representation/@width > @maxWidth) then false() else true()">The value of the width attribute shall be in the range defined by the AdaptationSet.</assert>
 			<!-- R3.6 -->
-			<assert test="if (descendant::dash:Representation/@height &lt; @minHeight or descendant::dash:Representation/@height > @maxHeight) then false() else true()">The value of the height attribute shall be in the range defined by the AdaptationSet.</assert>
+			<assert test="if (descendant::dash:Representation/@height > @maxHeight) then false() else true()">The value of the height attribute shall be in the range defined by the AdaptationSet.</assert>
 			<!-- R3.7 -->
 			<assert test="if (count(child::dash:Representation)=0) then false() else true()">An AdaptationSet shall have at least one Representation element.</assert>
 			<!-- R3.8 -->

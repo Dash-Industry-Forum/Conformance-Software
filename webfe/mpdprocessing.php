@@ -43,7 +43,7 @@ function process_mpd()
             {
                 $change1 = time() - (int) $tempXML->completed->attributes();
             }
-            if ($change1 > 1800 || $change2 > 1800)  //clean folder after 30 mins after test completed or 30 mins after test started
+            if ($change1 > 7200 || $change2 > 7200)  //clean folder after 2 hours after test completed or 2 hours after test started
                 rrmdir(dirname(__FILE__) . '/' . 'temp' . '/' . $file); // if last time folder was modified exceed 300 second it should be removed 
         }
     }
@@ -153,6 +153,7 @@ function process_mpd()
     }
     $progressXML->MPDConformance = $temp_mpdres;
     $progressXML->MPDConformance->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/mpdreport.txt'));
+    $progressXML->MPDConformance->addAttribute('MPDLocation', $url_array[0]); // add exact MPD file location for issue debugging purposes
     $progressXML->asXml(trim($locate . '/progress.xml'));
        
     //Create feature list here so that only MPD Conformance also shows feature list.
@@ -162,6 +163,7 @@ function process_mpd()
     $dom->appendChild($dom_sxe);
     $MPD = $dom->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
     createMpdFeatureList($dom, $schematronIssuesReport);
+    $dom->save($locate."/providedMPD.mpd"); // save the MPD for issue debugging purposes
 
     // skip the rest when we should exit
     if ($exit === true)
@@ -210,9 +212,14 @@ function process_mpd()
     { // search for all nodes within mpd
         if ($node->nodeName === 'Period')
         {
-            if ($periodCount === 0)
+            if ($type !== 'dynamic' && $periodCount === 0)
             { //only process the first Period
                 $periodNode = $node;
+            }
+            elseif ($type === 'dynamic')
+            {
+                #$dynamic_start = $node->attributes->getNamedItem('start')->nodeValue;
+                $periodNodes[] = $node;
             }
             $periodCount++;
         }
@@ -261,8 +268,31 @@ function process_mpd()
       $progressXML->MPDChainingURL=$MPDChainingURL;
       $progressXML->asXml(trim($locate . '/progress.xml'));
     }
-    $start = processPeriod($periodNode, $dir); // start getting information from period level
-    $start = timeparsing($start); //Get start time in seconds
+    if($type === 'static'){
+        $start = processPeriod($periodNode, $dir); // start getting information from period level
+        $start = timeparsing($start); //Get start time in seconds
+    }
+    elseif($type === 'dynamic'){
+        for($c=0; $c<$periodCount; $c++){
+            $dyn_start = processPeriod($periodNodes[$c], $dir);
+            $starts[] = timeparsing($dyn_start);
+            $periods[] = $Period_arr;
+        }
+        
+        $now = time();
+        for($p=0; $p< sizeof($periods); $p++){
+            if(!empty($periodNodes[$p]->getAttribute('duration')))
+                $p_duration = $periodNodes[$p]->getAttribute('duration');
+            
+            $whereami = $now - (strtotime($AST) + $starts[$p]);
+            $p_duration = timeparsing($p_duration);
+            if($whereami <= $p_duration){
+                $Period_arr = $periods[$p];
+                $start = $starts[$p];
+                break;
+            }
+        }
+    }
     $segm_url = array(); // contains segments url within one 
     $adapt_url = array(); // contains all segments urls within adapatations set
     if ($setsegflag)
@@ -426,13 +456,16 @@ function process_mpd()
                 $bandwidth = $Period_arr[$k]['Representation']['bandwidth'][$j]; // get bandwidth of given representation
                 $id = $Period_arr[$k]['Representation']['id'][$j]; // get id of given representation
 
-                $init = str_replace(array('$Bandwidth$', '$RepresentationID$'), array($bandwidth, $id), $initialization); //get initialization segment template is replaced by bandwidth and id 
-                //test is $direct contains "/" in the end
-                if (substr($direct, -1) == '/')
-                    $initurl = $direct . $init; //full initialization URL
-                else
-                    $initurl = $direct . "/" . $init; //full initialization URL
-                $segm_url[] = $initurl; //add segment to URL
+                if($initialization != ""){
+                    $init = str_replace(array('$Bandwidth$', '$RepresentationID$'), array($bandwidth, $id), $initialization); //get initialization segment template is replaced by bandwidth and id 
+                    //test is $direct contains "/" in the end
+                    if (substr($direct, -1) == '/')
+                        $initurl = $direct . $init; //full initialization URL
+                    else
+                        $initurl = $direct . "/" . $init; //full initialization URL
+                    $segm_url[] = $initurl; //add segment to URL
+                }
+                
                 $timehashmask = 0; // default value if timeline doesnt exist
                 if (!empty($timehash))
                 { // if time line exist
@@ -449,7 +482,7 @@ function process_mpd()
                     //set proper timing from "t" attribute
                     //check "r" etc.
 //                        }
-                    $segmentinfo = dynamicnumber($bufferdepth, $duration, $AST, $start, $Period_arr);
+                    $segmentinfo = dynamicnumber($bufferdepth, $duration, $AST, $start, $startnumber, $Period_arr);
                     $segmentno = $segmentinfo[1]; //Latest available segment number
                     $i = $segmentinfo[0]; // first segment in buffer
                 }
@@ -617,6 +650,14 @@ function process_mpd()
             {
                 $RepXML = $AdaptationXML->addChild('Representation');
                 $RepXML->addAttribute('id', $k1 + 1);
+                
+                $str = '{';
+                for($l1 = 0; $l1 < sizeof($period_url[$j1][$k1]); $l1++)
+                {
+                    $str = $str . $period_url[$j1][$k1][$l1] . ',';
+                }
+                $str = substr($str, 0, strlen($str)-1) . '}';
+                $RepXML->addAttribute('url', $str);
             }
         }
     }
