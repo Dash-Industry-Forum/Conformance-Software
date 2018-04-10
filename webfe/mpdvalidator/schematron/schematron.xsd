@@ -53,6 +53,8 @@
 			<assert test="if (contains(ancestor::dash:MPD/@profiles, 'http://dashif.org/guidelines/dash') and dash:SegmentList) then false() else true()">DASH-IF IOP Section 3.2.2: "the Period.SegmentList element shall not be present" violated here </assert>
 			<!-- RD2.1	DASH-IF -->
 			<assert test="if (contains(ancestor::dash:MPD/@profiles, 'http://dashif.org/guidelines/dash') and (count(child::dash:AdaptationSet[@contentType='video']) > 1) and (count(descendant::dash:Role[@value='main'])=0)) then false() else true()"> DASH-IF IOP Section 3.2.2: "If a Period contains multiple Adaptation Sets with value of the @contentType="video" then at least one Adaptation Set shall contain a Role el-ement $&lt;$Role scheme="urn:mpeg:dash:role:2011" value="main"&gt;" violated here</assert >
+                        <!-- 	DASH 8.3.2 -->
+                        <assert test="if (contains(ancestor::dash:MPD/@profiles, 'urn:mpeg:dash:profile:isoff-on-demand:2011') and (child::dash:SegmentList or child::dash:SegmentTemplate)) then false() else true()">Neither the Period.SegmentList element nor the Period.SegmentTemplate element shall be present for On-Demand profile, violated here. </assert>
 		</rule>
 	</pattern>
 	<pattern name="AdaptationSet element">
