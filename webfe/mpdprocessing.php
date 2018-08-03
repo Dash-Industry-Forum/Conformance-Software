@@ -847,7 +847,15 @@ function process_mpd()
                 {
                     $processArguments = $processArguments . $Period_arr[$count1]['height'] . " ";
                 }
-
+                
+                if($Period_arr[$count1]['sar'] !== 0){
+                    $sar_x_y = explode(':', $Period_arr[$count1]['sar']);
+                    $processArguments = $processArguments . '-sarx ' . $sar_x_y[0] . ' -sary ' . $sar_x_y[1] . " ";
+                }
+                elseif($Period_arr[$count1]['Representation']['sar'][$count2] !== 0){
+                    $sar_x_y = explode(':', $Period_arr[$count1]['Representation']['sar'][$count2]);
+                    $processArguments = $processArguments . '-sarx ' . $sar_x_y[0] . ' -sary ' . $sar_x_y[1] . " ";
+                }
 
                 if ($type === "dynamic")
                     $processArguments = $processArguments . "-dynamic ";
