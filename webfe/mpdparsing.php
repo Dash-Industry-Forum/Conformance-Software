@@ -120,7 +120,10 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
         $adapsetProfiles = $Adapt->getAttribute('profiles');
         if ($adapsetProfiles === "")
             $adapsetProfiles = $periodProfiles;
-
+        
+        $sar_AdaptSet = $Adapt->getAttribute('sar');
+        if($sar_AdaptSet === '')
+            $sar_AdaptSet = 0;
 
         $bitstreamSwitching = $Adapt->getAttribute('bitstreamSwitching');
         if ($bitstreamSwitching === "")
@@ -380,8 +383,9 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
 
                 $sarvar = $temprep->getAttribute('sar');
                 if (empty($sarvar))
-                    $sarvar = 0;
+                    $sarvar = $sar_AdaptSet;
                 $sar[$i] = $sarvar;
+                
                 $bandwidthvar = $temprep->getAttribute('bandwidth');
                 if (empty($bandwidthvar))
                     $bandwidthvar = 0;
@@ -420,7 +424,7 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
     // Array of all adapationsets containing all attributes and nodes including Presentations 
 
     $Adapt_arr = array('startWithSAP' => $startWithSAP, 'segmentAlignment' => $segmentAlignment, 'subsegmentAlignment' => $subsegmentAlignment, 'bitstreamSwitching' => $bitstreamSwitching,
-        'id' => $idadapt, 'scanType' => $scanType, 'mimeType' => $mimeType, 'SegmentTemplate' => $Adapt_seg_temp, 'SegmentBase' => $basearray, 'codecs' => $codecs_AdaptSet, 'width' => $width_AdaptSet, 'height' => $height_AdaptSet, 'Representation' => $Rep_arr, 'AudioChannelValue' => $audioCh_Adapt_value, 'indexRange' => $indexRange_AdaptSet, 'ContentProtection' => $ContentProtect_arr,'alignedToSet'=>$AlignedSet_Adapt_value, 'language' => $lang_AdaptSet, 'Role' => $Role_AdaptSet);
+        'id' => $idadapt, 'scanType' => $scanType, 'mimeType' => $mimeType, 'SegmentTemplate' => $Adapt_seg_temp, 'SegmentBase' => $basearray, 'codecs' => $codecs_AdaptSet, 'width' => $width_AdaptSet, 'height' => $height_AdaptSet, 'sar' => $sar_AdaptSet, 'Representation' => $Rep_arr, 'AudioChannelValue' => $audioCh_Adapt_value, 'indexRange' => $indexRange_AdaptSet, 'ContentProtection' => $ContentProtect_arr,'alignedToSet'=>$AlignedSet_Adapt_value, 'language' => $lang_AdaptSet, 'Role' => $Role_AdaptSet);
 
 
     /* $Rep_arr=array('id'=>$id,'codecs'=>$codecs,'width'=>$width,'height'=>$height,'scanType'=>$scanType,'frameRate'=>$frameRate,
