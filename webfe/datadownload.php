@@ -25,6 +25,7 @@ function downloaddata($directory, $array_file)
     $totaldownloaded = 0; // bytes downloaded
     $totalDataProcessed = 0; //bytes processed within segments
     $totalDataDownloaded = 0;
+    $downloadMdat=0;
     // Load XML with SimpleXml from string
     //$progressXML = simplexml_load_string('<root><percent>0</percent><dataProcessed>0</dataProcessed><dataDownloaded>0</dataDownloaded><completed>false</completed></root>'); //xml file containing progress to be fetched by client
 
@@ -96,9 +97,21 @@ function downloaddata($directory, $array_file)
                     else
                     {
                         //error_log( "mdat:dontdownload");
-                        fwrite($sizefile, ($initoffset + $sizepos + 8) . " " . ($size - 8) . "\n"); // add the original size of the mdat to text file without the name and size bytes(8 bytes) 
-                        fwrite($newfile, substr($content, $location - 1, 8));  //copy only the mdat name and size to the segment 
-                        ////fwrite($newfile,str_pad("0",$size-8,"0")); //Incase of the requirement of stuffing mdat with zeros
+                        if($downloadMdat) //To stuff complete mdat data with zeros.
+                        {
+                            fwrite($sizefile, ($initoffset + $sizepos + 8) . " " . 0 . "\n");
+                            fwrite($newfile, substr($content, $location - 1, 8));  //copy only the mdat name and size to the segment
+
+                            fwrite($newfile,str_pad("0",$size-8,"0")); //Incase of the requirement of stuffing mdat with zeros
+                        }
+                        else
+                        {
+                            fwrite($sizefile, ($initoffset + $sizepos + 8) . " " . ($size - 8) . "\n"); // add the original size of the mdat to text file without the name and size bytes(8 bytes) 
+                            fwrite($newfile, substr($content, $location - 1, 8));  //copy only the mdat name and size to the segment 
+                            
+                        }
+                       
+                        
                     }
 
                     $sizepos = $sizepos + $size; // move size pointer
