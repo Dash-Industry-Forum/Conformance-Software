@@ -27,6 +27,8 @@ include 'datadownload.php';
 include 'assemble.php';
 include 'schematronIssuesAnalyzer.php';
 include 'compare.php';
+include 'MPD_HbbTV_DVB.php';
+include 'CrossValidation_HbbTV_DVB.php';
 
 set_time_limit(0); // php run without time limit
 ini_set("log_errors", 1);
@@ -111,8 +113,16 @@ $string_info = '<!doctype html>
   <meta charset="utf-8">
   <title>Log detail</title>
   <style>
-  p {
+  #info {
     color: blue;
+    margin: 8px;
+  }
+  #warning {
+    color: orange;
+    margin: 8px;
+  }
+  #error {
+    color: red;
     margin: 8px;
   }
   </style>
@@ -120,7 +130,10 @@ $string_info = '<!doctype html>
 </head>
 <body>
  
-<p>Processing...</p>
+<p id="init">Processing...</p>
+<p id="info"></p>
+<p id="warning"></p>
+<p id="error"></p>
  
 <script>
 window.onload = tester;
@@ -137,14 +150,32 @@ var location = newPathname+"/give.php";
 $.post (location,
 {val:loc[loc.length-2]+"/$Template$"},
 function(result){
+$( "#init" ).remove();
 resultant=JSON.parse(result);
-var end = "";
+var end0 = "";
+var end1 = "";
+var end2 = "";
 for(var i =0;i<resultant.length;i++)
 {
 
 resultant[i]=resultant[i]+"<br />";
-end = end+" "+resultant[i];
-$( "p" ).html( end);
+var Warning=resultant[i].search("Warning") ;
+var WARNING=resultant[i].search("WARNING");
+var errorFound=resultant[i].search("###");
+
+if(Warning===-1 && WARNING===-1 && errorFound===-1){
+end0 = end0+" "+resultant[i];
+$( "#info" ).html( end0);
+}
+else if(errorFound===-1){
+    end1 = end1+" "+resultant[i];
+    $( "#warning" ).html( end1);
+}
+else{
+    end2 = end2+" "+resultant[i];
+    $( "#error" ).html( end2);
+}
+
 }
 });
 

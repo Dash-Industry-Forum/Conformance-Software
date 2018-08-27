@@ -307,8 +307,8 @@ function setFeatureListEntry($node, $pathOfElement, $schematronIssuesReport)
             {
                 for ($i = 0; $i < $numbOfAttributes;  ++$i)
                 {
-                    $name = $node->attributes->item($i)->name;
-                    $value = $node->attributes->item($i)->value;
+                    $name = $node->attributes->item($i)->nodeName;
+                    $value = $node->attributes->item($i)->nodeValue;
 
                     if ($schemaIssues->text !== "false" and isAttributeWithSchemaIssues($name, $schemaIssues))
                     {

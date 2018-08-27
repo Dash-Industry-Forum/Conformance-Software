@@ -336,14 +336,17 @@ function compareRepresentations(){
 function xmlFileLoad($filename)
 {
     $load = simplexml_load_file($filename); // load mpd from url 
-    $dom_abs = dom_import_simplexml($load);
-    $abs = new DOMDocument('1.0');
-    $dom_abs = $abs->importNode($dom_abs, true); //create dom element to contain mpd 
+    if($load !== FALSE){
+        $dom_abs = dom_import_simplexml($load);
+        $abs = new DOMDocument('1.0');
+        $dom_abs = $abs->importNode($dom_abs, true); //create dom element to contain mpd 
             
-    $dom_abs = $abs->appendChild($dom_abs);
-            
-    $xml_atomlist = $abs->getElementsByTagName('atomlist')->item(0);
-    return $xml_atomlist;
+        $dom_abs = $abs->appendChild($dom_abs);
+        
+        $xml_atomlist = $abs->getElementsByTagName('atomlist')->item(0);
+        return $xml_atomlist;
+    }
+    return 0;
 }
 
 function getNALArray($hvcC, $type){

@@ -17,7 +17,7 @@
 /** This function is responsible for Downloading segments it take the location to save the segments 
   and an Array containing the URLs for all segments within presentation, the segment is not completely downloaded but
   it check the boxes within the segment and ignore Mdat box and download only other boxes* */
-function downloaddata($directory, $array_file)
+function downloaddata($directory, $array_file, $subtitle_rep)
 {
     global $locate, $progressXML;
     $sizefile = fopen($locate . '/mdatoffset.txt', 'a+b'); //create text file containing the original size of Mdat box that is ignored (Important for execution of conformance software
@@ -32,7 +32,7 @@ function downloaddata($directory, $array_file)
 
     $ch = curl_init();
 
-
+    $mdat_index = 0;
     for ($index = 0; $index < sizeof($array_file); $index++) //itterate on all segments
     {
         $filePath = $array_file[$index]; //get segment URL
@@ -52,7 +52,7 @@ function downloaddata($directory, $array_file)
             $tok = explode('/', $filePath); //get all directories of URL
             $filename = $tok[sizeof($tok) - 1]; // find name of segment in the last directory of URL
             $sizepos = 0;
-
+            
             while ($sizepos < $file_size) // iterate over the content of the segment
             {
 
@@ -109,9 +109,39 @@ function downloaddata($directory, $array_file)
                             fwrite($sizefile, ($initoffset + $sizepos + 8) . " " . ($size - 8) . "\n"); // add the original size of the mdat to text file without the name and size bytes(8 bytes) 
                             fwrite($newfile, substr($content, $location - 1, 8));  //copy only the mdat name and size to the segment 
                             
+                            ## For DVB subtitle checks related to mdat content
+                            ## Save the mdat boxes' content into xml files
+                            if($subtitle_rep){
+                                $subtitle_xml_string = '<subtitle>';
+
+                                $mdat_file = $directory . 'Subtitles/' . $mdat_index . '.xml';
+                                fopen($mdat_file, 'w');
+                                chmod($mdat_file, 0777);
+                                $mdat_index++;
+
+                                $total = $location + $size;
+                                if ($total < sizeof($byte_array)){
+                                    $text = substr($content, ($initoffset + $location + 7), ($size - 7));
+                                    $text = substr($text, strpos($text, '<tt'));
+                                    $subtitle_xml_string .= $text;
+                                    //fwrite($mdat_file, substr($content, ($initoffset + $sizepos + 8), ($size - 1)));
+                                }
+                                else{
+                                    $rest = partialdownload($filePath, $sizepos+8, $sizepos + $size - 1, $ch);
+                                    $text = $rest;
+                                    $text = substr($text, strpos($text, '<tt'));
+                                    $subtitle_xml_string .= $text;
+                                    //fwrite($mdat_file, $rest);
+                                }
+
+                                $subtitle_xml_string = substr($subtitle_xml_string, 0, strrpos($subtitle_xml_string, '>')+1);
+                                $subtitle_xml_string .= '</subtitle>';
+                                $mdat_data = simplexml_load_string($subtitle_xml_string);
+                                $mdat_data->asXML($mdat_file);
+                            }
                         }
-                       
-                        
+                        ##
+                        ////fwrite($newfile,str_pad("0",$size-8,"0")); //Incase of the requirement of stuffing mdat with zeros
                     }
 
                     $sizepos = $sizepos + $size; // move size pointer

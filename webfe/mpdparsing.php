@@ -17,9 +17,60 @@
 /**
   This group of functions are responsible for parsing the nodes and attributes within MPD in order to find URLs of all segments
  * */
+function periodDurationInfo($dom){
+    $MPD = $dom->getElementsByTagName('MPD')->item(0);
+    $periods = $MPD->getElementsByTagName('Period');
+    $mediapresentationduration = timeparsing($MPD->getAttribute('mediaPresentationDuration'));
+    
+    $starts = array();
+    $durations = array();
+    for($i=0; $i<$periods->length; $i++){
+        $period = $periods[$i];
+        
+        $start = $period->getAttribute('start');
+        $duration = $period->getAttribute('duration');
+        if($start == ''){
+            if($i > 0){
+                if($durations[$i-1] != '')
+                    $start = (float)($starts[$i-1] + $durations[$i-1]);
+                else{
+                    if($MPD->getAttribute('type') == 'dynamic'){
+                        //early available period
+                    }
+                }
+            }
+            else{
+                if($MPD->getAttribute('type') == 'static')
+                    $start = 0;
+                elseif($MPD->getAttribute('type') == 'dynamic'){
+                    //early available period
+                }
+            }
+        }
+        else
+            $start = timeparsing($start);
+        
+        if($duration == ''){
+            if($i != $periods->length-1){
+                $duration = $start - $starts[$i-1];
+            }
+            else{
+                $duration = $mediapresentationduration - $start;
+            }
+        }
+        else
+            $duration = timeparsing($duration);
+        
+        $starts[] = $start;
+        $durations[] = $duration;
+    }
+    
+    return [$starts, $durations];
+}
+
 function processPeriod($period, &$dir)
 {
-    global $Adapt_arr, $Period_arr, $period_baseurl, $perioddepth, $Adapt_urlbase, $profiles, $Timeoffset, $id;
+    global $Periodduration, $Adapt_arr, $Period_arr, $period_baseurl, $perioddepth, $Adapt_urlbase, $profiles, $Timeoffset, $id;
 
     $domper = new DOMDocument('1.0'); // Empty document object 
     $period = $domper->importNode($period, true); // add period node to domper
@@ -113,6 +164,10 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
         if (empty($width_AdaptSet))
             $width_AdaptSet = 0;
 
+        $framerate_AdaptSet = $Adapt->getAttribute ('frameRate');
+        if(empty($framerate_AdaptSet))
+            $framerate_AdaptSet = 0;
+        
         $lang_AdaptSet = $Adapt->getAttribute ('lang'); // Get language, if present in Adaptation Set level
         if(empty($lang_AdaptSet))
             $lang_AdaptSet=0;
@@ -120,7 +175,7 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
         $adapsetProfiles = $Adapt->getAttribute('profiles');
         if ($adapsetProfiles === "")
             $adapsetProfiles = $periodProfiles;
-        
+
         $sar_AdaptSet = $Adapt->getAttribute('sar');
         if($sar_AdaptSet === '')
             $sar_AdaptSet = 0;
@@ -378,7 +433,7 @@ function processAdaptationset($Adapt, $periodProfiles, $periodBitstreamSwitching
 
                 $frameRatevar = $temprep->getAttribute('frameRate');
                 if (empty($frameRatevar))
-                    $frameRatevar = 0;
+                    $frameRatevar = $framerate_AdaptSet;
                 $frameRate[$i] = $frameRatevar;
 
                 $sarvar = $temprep->getAttribute('sar');
@@ -522,7 +577,6 @@ function processSegmentBase($basedom)
 
     if ($basedom->hasAttribute('indexRange'))
         $basearray[2] = $basedom->getAttribute('indexRange');
-
     return $basearray;
 }
 
@@ -530,6 +584,22 @@ function processSegmentBase($basedom)
 function timeparsing($mediaPresentationDuration)
 {
     $y = str_replace("P", "", $mediaPresentationDuration); // process mediapersentation duration
+    if(strpos($y, 'Y') !== false){
+        $Y = explode("Y", $y); //get years
+
+        $y = substr($y, strpos($y, 'Y') + 1);
+    }
+    else
+        $Y[0] = 0;
+    
+    if(strpos($y, 'M') !== false && strpos($y, 'M') < strpos($y, 'T')){
+        $Mo = explode("M", $y); //get years
+
+        $y = substr($y, strpos($y, 'M') + 1);
+    }
+    else
+        $Mo[0] = 0;
+    
     if(strpos($y, 'D') !== false){
         $D = explode("D", $y); //get days
 
@@ -559,7 +629,7 @@ function timeparsing($mediaPresentationDuration)
         $M[0] = 0;
 
     $S = explode("S", $y); // get seconds
-    $presentationduration = ($D[0] * 24 * 60 * 60) + ($H[0] * 60 * 60) + ($M[0] * 60) + $S[0]; // calculate durations in seconds
+    $presentationduration = ($Y[0] * 365 * 24 * 60 * 60) + ($Mo[0] * 30 * 24 * 60 * 60) + ($D[0] * 24 * 60 * 60) + ($H[0] * 60 * 60) + ($M[0] * 60) + $S[0]; // calculate durations in seconds
 
     return $presentationduration;
 }

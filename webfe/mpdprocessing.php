@@ -16,8 +16,8 @@
 
 function process_mpd()
 {
-    global $Adapt_arr, $Period_arr, $repno, $repnolist, $period_url, $locate, $string_info
-    , $count1, $count2, $perioddepth, $adaptsetdepth, $period_baseurl, $foldername, $type, $minBufferTime, $profiles, $MPD, $session_id, $progressXML; //Global variables to be used within the main function
+    global $Adapt_arr, $Period_arr, $repno, $repnolist, $period_url, $locate, $string_info, $enforced_profile_dvb, $enforced_profile_hbbtv
+    , $presentationduration, $count1, $count2, $perioddepth, $adaptsetdepth, $period_baseurl, $foldername, $type, $minBufferTime, $profiles, $MPD, $session_id, $progressXML; //Global variables to be used within the main function
     //  $path_parts = pathinfo($mpdurl); 
     $Baseurl = false; //define if Baseurl is used or no
     $setsegflag = false;
@@ -106,6 +106,8 @@ function process_mpd()
 
     $url_array[3] = $locate; //Used for e.g. placing intermediate files etc.
     $cmaf_val = $url_array[4];     
+    $enforced_profile_dvb = $url_array[5];
+    $enforced_profile_hbbtv = $url_array[6];
     //The status of the mpd is logged in the visitor's log file.
     writeMPDStatus($url_array[0]);
     
@@ -136,6 +138,61 @@ function process_mpd()
         echo $progressXML->asXML();
         exit;
     }
+    
+    ## First determine if DVB and/or HbbTV profiles exist in the provided MPD file
+    ## If yes, then the MPD and media segments shall be validated against the profile(s)
+    $check_dvb_conformance = 0;
+    $check_hbbtv_conformance = 0;
+    $preliminary_dom_doc = new DOMDocument('1.0');
+    $preliminary_dom_sxe = $preliminary_dom_doc->importNode($dom_sxe, true);
+    $preliminary_dom_doc->appendChild($preliminary_dom_sxe);
+    $MPD_nodes = $preliminary_dom_doc->getElementsByTagName('MPD');
+    if($MPD_nodes->length != 0){
+        $MPD_node = $MPD_nodes->item(0);
+        $MPD_profiles = $MPD_node->getAttribute('profiles');
+        if(strpos($MPD_profiles, 'urn:dvb:dash:profile:dvb-dash:2014') !== FALSE || strpos($MPD_profiles, 'urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014')!== FALSE || strpos($MPD_profiles, 'urn:dvb:dash:profile:dvb-dash:isoff-ext-on-demand:2014') !== FALSE)
+            $check_dvb_conformance = 1;
+        if(strpos($MPD_profiles, 'urn:hbbtv:dash:profile:isoff-live:2012') !== FALSE)
+            $check_hbbtv_conformance = 1;
+    }
+    ##
+    
+    $dvb = 0;
+    $hbbtv = 0;
+    if($check_dvb_conformance || $enforced_profile_dvb)
+        $dvb = 1;
+    if($check_hbbtv_conformance || $enforced_profile_hbbtv)
+        $hbbtv = 1;
+    json_encode("DVB/HbbTV: $dvb $hbbtv");
+    
+    // To import DVB/HbbTV-related plotting functions into the created temporary session folder
+    if($dvb || $hbbtv){
+        copy(dirname(__FILE__) . "/bitratereport.py", $locate . '/bitratereport.py'); // copy conformance tool to session folder to allow multi-session operation
+        chmod($locate . '/bitratereport.py', 0777);
+        copy(dirname(__FILE__) . "/seg_duration.py", $locate . '/seg_duration.py'); // copy conformance tool to session folder to allow multi-session operation
+        chmod($locate . '/seg_duration.py', 0777);
+    }
+    
+    //xlink_reconstruct_MPD($dom_sxe);
+    global $cp_dom; // to have a dom document with the original unchanged mpd
+    $cp_dom = new DOMDocument('1.0');
+    $cp_dom_node = $cp_dom->importNode($dom_sxe, true);
+    $cp_dom->appendChild($cp_dom_node);
+    if($dvb){
+        $mpdreport = fopen($locate . '/mpdreport.txt', 'a+b');
+        $dom_doc = new DOMDocument('1.0');
+        $dom_node = $dom_doc->importNode($dom_sxe, true);
+        $dom_doc->appendChild($dom_node);      
+        $mpd_string = $dom_doc->saveXML();
+        $mpd_bytes = strlen($mpd_string);
+        if($mpd_bytes > 1024*256){
+            fwrite($mpdreport, "**'DVB check violated: Section 4.5- The MPD size before xlink resolution SHALL NOT exceed 256 Kbytes', found " . ($mpd_bytes/1024) . " Kbytes.\n");
+        }
+        $period_count = $dom_sxe->getElementsByTagName('Period')->length;
+        if($period_count > 64){
+            fwrite($mpdreport, "**'DVB check violated: Section 4.5- The MPD has a maximum of 64 periods before xlink resolution', found $period_count.\n");
+        }
+    }
 
     $validate_result = mpdvalidator($url_array, $locate, $foldername);
     writeMPDEndTime();
@@ -151,10 +208,6 @@ function process_mpd()
         else
             $temp_mpdres = $temp_mpdres . "false ";
     }
-    $progressXML->MPDConformance = $temp_mpdres;
-    $progressXML->MPDConformance->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/mpdreport.txt'));
-    $progressXML->MPDConformance->addAttribute('MPDLocation', $url_array[0]); // add exact MPD file location for issue debugging purposes
-    $progressXML->asXml(trim($locate . '/progress.xml'));
        
     //Create feature list here so that only MPD Conformance also shows feature list.
     $dom = new DOMDocument('1.0');
@@ -164,7 +217,18 @@ function process_mpd()
     $MPD = $dom->getElementsByTagName('MPD')->item(0); // access the parent "MPD" in mpd file
     createMpdFeatureList($dom, $schematronIssuesReport);
     $dom->save($locate."/providedMPD.mpd"); // save the MPD for issue debugging purposes
-
+    $mpd_profiles = $MPD->getAttribute('profiles');
+    if($hbbtv || $dvb){
+        $result_hbbtvDvb=HbbTV_DVB_mpdvalidator($dom, $hbbtv, $dvb);
+        if($result_hbbtvDvb!=="")
+            $temp_mpdres = $temp_mpdres . $result_hbbtvDvb;
+    }
+    
+    $progressXML->MPDConformance = $temp_mpdres;
+    $progressXML->MPDConformance->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/mpdreport.txt'));
+    $progressXML->MPDConformance->addAttribute('MPDLocation', $url_array[0]); // add exact MPD file location for issue debugging purposes
+    $progressXML->asXml(trim($locate . '/progress.xml'));
+    
     // skip the rest when we should exit
     if ($exit === true)
     { //If session should be destroyed
@@ -190,7 +254,6 @@ function process_mpd()
     $bufferdepth = $MPD->getAttribute('timeShiftBufferDepth');
     $bufferdepth = timeparsing($bufferdepth);
     $presentationduration = timeparsing($mediaPresentationDuration);
-
     //createMpdFeatureList($dom, $schematronIssuesReport);
 
     $type = $MPD->getAttribute('type'); // get mpd type
@@ -207,6 +270,7 @@ function process_mpd()
     $progressXML->Profile = $profiles;
     $progressXML->asXml(trim($locate . '/progress.xml'));
 
+    $periodDurations = periodDurationInfo($dom)[1];
     $periodCount = 0;
     foreach ($dom->documentElement->childNodes as $node)
     { // search for all nodes within mpd
@@ -215,6 +279,7 @@ function process_mpd()
             if ($type !== 'dynamic' && $periodCount === 0)
             { //only process the first Period
                 $periodNode = $node;
+		$presentationduration = $periodDurations[0];
             }
             elseif ($type === 'dynamic')
             {
@@ -694,7 +759,10 @@ function process_mpd()
             if($cmaf_val == "yes"){
                 checkRepresentationsConformance();//Check after downloading all AdaptationSets.
                 checkSwitchingSets();
-                }
+            }
+            if($hbbtv || $dvb){
+                CrossValidation_HbbTV_DVB($dom,$hbbtv,$dvb);
+            }
             crossRepresentationProcess();
             $missingexist = file_exists($locate . '/missinglink.txt'); //check if any broken urls is detected
             if ($missingexist)
@@ -707,7 +775,7 @@ function process_mpd()
             {  // check all info files if they contain Error 
                 if (file_exists($locate . '/Adapt' . $i . '_infofile.txt'))
                 {
-                    $searchadapt = file_get_contents($locate . '/Adapt' . $i . '_infofile.txt');
+                    $searchadapt = file_get_contents($locate . '/Adapt' . $i . '_CrossInfofile.txt');
                     if (strpos($searchadapt, "Error") == false)
                     {
                         $ResultXML->Period[0]->Adaptation[$i]->addChild('CrossRepresentation', 'noerror');
@@ -716,7 +784,7 @@ function process_mpd()
                     else
                     {
                         $ResultXML->Period[0]->Adaptation[$i]->addChild('CrossRepresentation', 'error');
-                        $file_error[] = "temp" . '/' . $foldername . '/' . 'Adapt' . $i . '_infofile.html'; // add error file location to array
+                        $file_error[] = "temp" . '/' . $foldername . '/' . 'Adapt' . $i . '_CrossInfofile.html'; // add error file location to array
                     }
                 }
                 else
@@ -738,9 +806,28 @@ function process_mpd()
                     $ResultXML->Period[0]->Adaptation[$i]->ComparedRepresentations->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate.'/Adapt'.$i.'_compInfo.txt'));
                 }
                 
+                if(($dvb || $hbbtv) && file_exists($locate . '/Adapt' . $i . '_hbbtv_dvb_compInfo.txt')){
+                    $searchfiles = file_get_contents($locate . '/Adapt' . $i . '_hbbtv_dvb_compInfo.txt');
+                    if(strpos($searchfiles, "DVB check violated") !== FALSE || strpos($searchfiles, "HbbTV check violated") !== FALSE || strpos($searchfiles, 'ERROR') !== FALSE){
+                        $ResultXML->Period[0]->Adaptation[$i]->addChild('HbbTVDVBComparedRepresentations', 'error');
+                        $file_error[] = $locate.'/Adapt'.$i.'_hbbtv_dvb_compInfo.html'; // add error file location to array
+                    }
+                    elseif(strpos($searchfiles, "Warning") !== FALSE || strpos($searchfiles, "WARNING") !== FALSE){
+                        $ResultXML->Period[0]->Adaptation[$i]->addChild('HbbTVDVBComparedRepresentations', 'warning');
+                        $file_error[] = $locate.'/Adapt'.$i.'_hbbtv_dvb_compInfo.html'; // add error file location to array
+                    }
+                    else{
+                        $ResultXML->Period[0]->Adaptation[$i]->addChild('HbbTVDVBComparedRepresentations', 'noerror');
+                        $file_error[] = "noerror"; // no error found in text file
+                    }
+                    $ResultXML->Period[0]->Adaptation[$i]->HbbTVDVBComparedRepresentations->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate.'/Adapt'.$i.'_hbbtv_dvb_compInfo.txt'));
+                }
+
                 $ResultXML->Period[0]->Adaptation[$i]->CrossRepresentation->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/Adapt' . $i . '_infofile.txt'));
                 $progressXML->asXml(trim($locate . '/progress.xml'));
+
             }
+            err_file_op(2);
             //Add SelectionSet and Presentation profile error elements if present to progress xml.
             if ($cmaf_val == "yes"){
                 if(file_exists($locate.'/SelectionSet_infofile.txt')){
@@ -773,6 +860,7 @@ function process_mpd()
                 }
                 //$progressXML->asXml(trim($locate.'/progress.xml'));
             }
+            
             session_destroy();
             if ($missingexist)
             {
@@ -814,7 +902,41 @@ function process_mpd()
             }
 
             $tempcount1 = $count1; //don't know why we need a buffer, but it only works this way with php 7
-            $sizearray = downloaddata($pathdir, $period_url[$count1][$count2]); // download data 
+            
+            ## For DVB subtitle checks related to mdat content
+            ## Determine the subtitle representations before segment download
+            $subtitle_rep = false;
+            $adapt = $periodNode->getElementsByTagName('AdaptationSet')->item($count1);
+            $rep = $adapt->getElementsByTagName('Representation')->item($count2);
+            
+            if(($adapt->getAttribute('mimeType') == 'application/mp4' || $rep->getAttribute('mimeType') == 'application/mp4') &&
+               ($adapt->getAttribute('codecs') == 'stpp' || $rep->getAttribute('codecs') == 'stpp')){
+                
+                $contType = $adapt->getAttribute('contentType');
+                if($contType == ''){
+                    if($adapt->getElementsByTagName('ContentComponent')->length != 0){
+                        $contComp = $adapt->getElementsByTagName('ContentComponent')->item(0);
+                        if($contComp->getAttribute('contentType') == 'text')
+                            $subtitle_rep = true;
+                    }
+                    else
+                        $subtitle_rep = true;
+                }
+                elseif($contType == 'text')
+                    $subtitle_rep = true;
+            }
+            
+            if($subtitle_rep){
+                $subtitle_dir = $pathdir . 'Subtitles/';
+                if (!file_exists($subtitle_dir)){
+                    $oldmask = umask(0);
+                    mkdir($subtitle_dir, 0777, true);
+                    umask($oldmask);
+                }
+            }
+            ##
+            
+            $sizearray = downloaddata($pathdir, $period_url[$count1][$count2], $subtitle_rep); // download data 
             if ($sizearray !== 0)
             {
 
@@ -863,10 +985,10 @@ function process_mpd()
                 if ($Period_arr[$count1]['Representation']['startWithSAP'][$count2] != "")
                     $processArguments = $processArguments . "-startwithsap " . $Period_arr[$count1]['Representation']['startWithSAP'][$count2] . " ";
 
-                if (strpos($Period_arr[$count1]['Representation']['profiles'][$count2], "urn:mpeg:dash:profile:isoff-on-demand:2011") !== false)
+                if (strpos($Period_arr[$count1]['Representation']['profiles'][$count2], "urn:mpeg:dash:profile:isoff-on-demand:2011") !== false || strpos($Period_arr[$count1]['Representation']['profiles'][$count2], "urn:dvb:dash:profile:dvb-dash:isoff-ext-on-demand:2014") !== false)
                     $processArguments = $processArguments . "-isoondemand ";
 
-                if (strpos($Period_arr[$count1]['Representation']['profiles'][$count2], "urn:mpeg:dash:profile:isoff-live:2011") !== false)
+                if (strpos($Period_arr[$count1]['Representation']['profiles'][$count2], "urn:mpeg:dash:profile:isoff-live:2011") !== false || strpos($Period_arr[$count1]['Representation']['profiles'][$count2], "urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014") !== false)
                     $processArguments = $processArguments . "-isolive ";
 
                 if (strpos($Period_arr[$count1]['Representation']['profiles'][$count2], "urn:mpeg:dash:profile:isoff-main:2011") !== false)
@@ -879,9 +1001,17 @@ function process_mpd()
                     $dash264 = true;
                 }
 
-                if ($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true)
-                {
-                    $processArguments = $processArguments . "-dash264enc ";
+                if($dvb || $hbbtv){
+                    if ($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0)
+                    {
+                        $processArguments = $processArguments . "-dash264enc ";
+                    }
+                }
+                else{
+                    if ($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0 && $dash264 == true)
+                    {
+                        $processArguments = $processArguments . "-dash264enc ";
+                    }
                 }
 
                 $processArguments = $processArguments . "-codecs ";
@@ -954,8 +1084,30 @@ function process_mpd()
                         }
                     }
                 }
-                 
-
+                
+                if($dvb || $hbbtv){
+                    if($Period_arr[$count1]['frameRate'] === NULL)
+                        $processArguments = $processArguments . " -framerate " . $Period_arr[$count1]['Representation']['frameRate'][$count2];
+                    else
+                        $processArguments = $processArguments . " -framerate " . $Period_arr[$count1]['frameRate'];
+                    
+                    $codec_arr = explode('.', $codecs);
+                    if((strpos($codecs, 'hev')!==FALSE || strpos($codecs, 'hvc')!==FALSE)) {
+                        if(!empty($codec_arr[1]))
+                            $processArguments = $processArguments . " -codecprofile " . $codec_arr[1];
+                        if(!empty($codec_arr[3]))
+                            $processArguments = $processArguments . " -codectier " . substr($codec_arr[3], 0, 1);
+                        if(!empty($codec_arr[3]) && strlen($codec_arr[3]) > 1)
+                            $processArguments = $processArguments . " -codeclevel " . substr($codec_arr[3], 1);
+                    }
+                    if(strpos($codecs, 'avc')!==FALSE){
+                        if(!empty($codec_arr[1]) && strlen($codec_arr[1]) > 1)
+                            $processArguments = $processArguments . " -codecprofile " . (string)hexdec(substr($codec_arr[1], 0, 2));
+                        if(!empty($codec_arr[1]) && strlen($codec_arr[1]) == 6)
+                            $processArguments = $processArguments . " -codeclevel " . (string)hexdec(substr($codec_arr[1], -2));
+                    }
+                }
+                
                 error_log("validatemp4");
                 // Work out which validator binary to use
                 $validatemp4 = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? "validatemp4-vs2010.exe" : "ValidateMP4.exe";
@@ -975,12 +1127,24 @@ function process_mpd()
                         fwrite($config_file, $pie . "\n");
                 }
 
-                fclose($config_file);
-
-                if($cmaf_val == "yes")
-                    $command = $locate . '/' . $validatemp4 . " -atomxml -cmaf -logconsole -configfile " . $file_loc;//
+                if($cmaf_val == "yes" || $dvb || $hbbtv){
+                    $command = $locate . '/' . $validatemp4 . " -atomxml";
+                    if($cmaf_val == "yes")
+                        $command = $command . " -cmaf";
+                    if($dvb)
+                        $command = $command . " -dvb";
+                    if($hbbtv){
+                        $command = $command . " -hbbtv";
+                        if(strpos($processArguments, '-isolive') === FALSE)
+                            fwrite($config_file, "-isolive\n");
+                    }
+                    $command = $command . " -logconsole -configfile " . $file_loc;
+                }
                 else
                     $command = $locate . '/' . $validatemp4 . " -logconsole -configfile " . $file_loc;
+                
+                
+                fclose($config_file);
                 file_put_contents("command.txt", $command);
                 $output = [];
                 $returncode = 0; //the return code should stay 0 when there is no error!
@@ -1007,7 +1171,45 @@ function process_mpd()
 
                 $destiny[] = $locate . '/' . $repno . "_infofile.txt";
                 rename($locate . '/' . "stderr.txt", $locate . '/' . $repno . "log.txt"); //Rename conformance software output file to representation number file
-                $temp_string = str_replace(array('$Template$'), array($repno . "log"), $string_info); // this string shows a text file on HTML
+                
+                // Compare representations
+                //if($shouldCompare){
+                if($cmaf_val == "yes" || $dvb || $hbbtv){
+                    $new_pathdir = $locate . "/Adapt" . $count1;
+                    if (!file_exists($new_pathdir)){
+                        $oldmask = umask(0);
+                        mkdir($new_pathdir, 0777, true); // create folder for each presentation
+                        umask($oldmask);
+                    }
+                    rename($locate . '/' . "atominfo.xml", $new_pathdir . '/' . $repno . ".xml");
+                
+                    //if($cmaf_val == "yes"){
+                        $new_pathdir =  $new_pathdir . "/comparisonResults"; 
+                        if (!file_exists($new_pathdir)){
+                            $oldmask = umask(0);
+                            mkdir($new_pathdir, 0777, true); // create folder for each presentation
+                            umask($oldmask);
+                        }
+                    }
+                //}
+               // else{
+               //     unlink($locate . '/' . "atominfo.xml");
+               // }
+                
+                if($dvb || $hbbtv){
+                    $media_types = media_types($periodNode);
+                    common_validation($dom,$hbbtv,$dvb, $sizearray,$Period_arr[$count1]['Representation']['bandwidth'][$count2], $start, $media_types);
+                    $copy_string_info=$string_info;
+                    $index = strpos($copy_string_info, '</body>');
+                    
+                    $bitrate_report_name = 'Adapt' . $count1 . 'rep' . $count2 . '.png';
+                    $segemnet_duration_name = 'Adapt' . $count1 . '_rep' . $count2 . '.png';
+                    $copy_string_info = substr($copy_string_info, 0, $index) ."<img id=\"bitrateReport\" src=\"$segemnet_duration_name\" width=\"650\" height=\"350\">".
+                    "<img id=\"bitrateReport\" src=\"$bitrate_report_name\" width=\"650\" height=\"350\">" .substr($copy_string_info, $index);
+                    $temp_string = str_replace(array('$Template$'), array($repno . "log"), $copy_string_info);
+                }
+                else
+                    $temp_string = str_replace(array('$Template$'), array($repno . "log"), $string_info); // this string shows a text file on HTML
 
                 file_put_contents($locate . '/' . $repno . "log.html", $temp_string); // Create html file containing log file result
                 $file_location[] = "temp" . '/' . $foldername . '/' . $repno . "log.html"; // add it to file location which is sent to client to get URL of log file on server
@@ -1033,35 +1235,26 @@ function process_mpd()
                     $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2 - 1] = "error";
                     $file_location[] = "error"; //else notify client with error
                 }
-                
-                // Compare representations
-                //if($shouldCompare){
-                if($cmaf_val == "yes"){
-                    $new_pathdir = $locate . "/Adapt" . $count1;
-                    if (!file_exists($new_pathdir)){
-                        $oldmask = umask(0);
-                        mkdir($new_pathdir, 0777, true); // create folder for each presentation
-                        umask($oldmask);
-                    }
-                    rename($locate . '/' . "atominfo.xml", $new_pathdir . '/' . $repno . ".xml");
-                
-                    //if($cmaf_val == "yes"){
-                        $new_pathdir =  $new_pathdir . "/comparisonResults"; 
-                        if (!file_exists($new_pathdir)){
-                            $oldmask = umask(0);
-                            mkdir($new_pathdir, 0777, true); // create folder for each presentation
-                            umask($oldmask);
+                if($dvb || $hbbtv){
+                    if (strpos($search, "###") === false){
+                        if(strpos($search, "Warning") === false && strpos($search, "WARNING") === false){
+                            $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2 - 1] = "noerror";
+                            $file_location[] = "noerror";
+                        }
+                        else{
+                            $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2 - 1] = "warning";
+                            $file_location[] = "warning";
                         }
                     }
-                //}
-               // else{
-               //     unlink($locate . '/' . "atominfo.xml");
-               // }
-                
+                    else{
+                        $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2 - 1] = "error";
+                        $file_location[] = "error";
+                    }
+                }
                 
                 $ResultXML->Period[0]->Adaptation[$tempcount1]->Representation[$count2 - 1]->addAttribute('url', str_replace($_SERVER['DOCUMENT_ROOT'], 'http://' . $_SERVER['SERVER_NAME'], $locate . '/' . $repno . "log.txt"));
                 $progressXML->asXml(trim($locate . '/progress.xml'));
-
+                err_file_op(1);
                 $_SESSION['count2'] = $count2; //Save the counters to session variables in order to use it the next time the client request download of next presentation
                 $_SESSION['count1'] = $count1;
                 $send_string = json_encode($file_location);
@@ -1087,4 +1280,61 @@ function process_mpd()
     }
 }
 
+//The function to remove repeated error statements from the log files.
+function err_file_op($reqFile)
+{
+    global $locate, $already_processed;
+    if($reqFile==1)
+        $LogFiles=glob($locate."/*log.txt");
+    else
+        $LogFiles=glob($locate."/*compInfo.txt");
+    
+    //$CrossRepDASH=glob($locate."/*CrossInfofile.txt");
+    //$all_report_files = array_merge($RepLogFiles, $CrossValidDVB, $CrossRepDASH); // put all the filepaths in a single array
+   
+    foreach ($LogFiles as $file_location)
+    {       
+        if(!in_array($file_location, $already_processed))
+        {
+            $duplicate_file = substr_replace($file_location, "full.txt", -4);
+            copy($file_location, $duplicate_file);
+            $segment_report = file($file_location, FILE_IGNORE_NEW_LINES);
+            $segment_report = remove_duplicate($segment_report);
+            file_put_contents($file_location, $segment_report);
+            $already_processed[] = $file_location;
+        }
+    }
+    
+
+}
+function remove_duplicate($error_array)
+{
+    $new_array = array();
+    //since we don't have any \n chars in the str we have the whole error string in one line
+    for($i = 0; $i < count($error_array); $i++)
+    {
+        $new_array[$i] = str_word_count($error_array[$i],1);
+        $new_array[$i] = implode(" ",$new_array[$i]);
+    }
+    //add feature to tell how many times an error was repeated
+    $count_instances = array_count_values($new_array);
+    $new_array = array_unique($new_array);
+    foreach ($new_array as $key => $value)//removing some lines that are not necessary
+    {
+        if((strlen($value) > 5) && ($value != ""))
+        {
+            $repetitions = $count_instances[$value];
+            if($repetitions > 1)
+            {
+                $new_array[$key] = "(".$repetitions.' repetition\s) '.$error_array[$key]."\n";
+            }
+            else
+            {
+                $new_array[$key] = $error_array[$key]."\n";
+            }
+        }
+    } 
+    
+    return $new_array;
+}
 ?>
