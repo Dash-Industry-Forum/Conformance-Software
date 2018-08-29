@@ -25,7 +25,7 @@ function periodDurationInfo($dom){
     $starts = array();
     $durations = array();
     for($i=0; $i<$periods->length; $i++){
-        $period = $periods[$i];
+        $period = $periods->item($i);
         
         $start = $period->getAttribute('start');
         $duration = $period->getAttribute('duration');
