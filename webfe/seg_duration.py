@@ -26,7 +26,7 @@ if (sys.argv[2] == 'Not_Set'):
 	duration, = plt.plot([], label='MPD duration = '+sys.argv[2])
 else:
 	duration, = plt.plot([], label='MPD duration = '+sys.argv[2]+' sec')
-plt.legend(handles=[max, min, avg, duration], loc=0)
-
+#plt.legend(handles=[max, min, avg, duration], loc=0)
+plt.legend()
 
 plt.savefig(sys.argv[3])

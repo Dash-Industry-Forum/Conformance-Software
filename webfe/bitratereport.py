@@ -23,6 +23,6 @@ max, = plt.plot([], label='Max ='+str(format(max_val,'.2f'))+' bps')
 min, = plt.plot([], label='Min ='+str(format(min_val,'.2f'))+' bps')
 avg, = plt.plot([], label='Avg ='+str(format(avg_val,'.2f'))+' bps')
 bandwidth,=plt.plot([], label='Rep bitrate ='+sys.argv[2]+' bps')
-plt.legend(handles=[max, min, avg,bandwidth], loc=0)
-
+#plt.legend(handles=[max, min, avg,bandwidth], loc=0)
+plt.legend()
 plt.savefig(sys.argv[3])
