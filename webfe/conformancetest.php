@@ -1390,9 +1390,7 @@ function finishTest()
             window.open("conformancetest.php?mpdurl="+ChainedToUrl);
         }
     }
-    //Once test completed, refresh enforced profiles to zero.
-    $.post( "writeProfiles.php",
-           {hbbtv: 0, dvb:0});
+
     setStatusTextlabel("Conformance test completed");
 }
 

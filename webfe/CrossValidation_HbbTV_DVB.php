@@ -826,7 +826,7 @@ function common_validation_DVB($opfile, $dom, $xml_rep, $adapt_count, $rep_count
             // Section 5.1.2 on AVC content's SAP type
             if($hdlr_type == 'vide' && strpos($sdType, 'avc') !== FALSE){
                 if($sidx_boxes->length != 0){
-                    $subseg = $sidx_boxes[$sidx_index]->getElementsByTagName('subsegment')->item(0);
+                    $subseg = $sidx_boxes->item($sidx_index)->getElementsByTagName('subsegment')->item(0);
                     if($subseg != NULL && $subseg->getAttribute('starts_with_SAP') == '1'){
                         $sap_type = $subseg->getAttribute('SAP_type');
                         if($sap_type != '1' && $sap_type != '2')
@@ -868,7 +868,7 @@ function common_validation_DVB($opfile, $dom, $xml_rep, $adapt_count, $rep_count
                 // Section 5.1.2 on AVC content's SAP type
                 if($hdlr_type == 'vide' && strpos($sdType, 'avc') !== FALSE){
                     if($sidx_boxes->length != 0){
-                        $subseg = $sidx_boxes[$sidx_index]->getElementsByTagName('subsegment')->item(0);
+                        $subseg = $sidx_boxes->item($sidx_index)->getElementsByTagName('subsegment')->item(0);
                         if($subseg != NULL && $subseg->getAttribute('starts_with_SAP') == '1'){
                             $sap_type = $subseg->getAttribute('SAP_type');
                             if($sap_type != '1' && $sap_type != '2')
@@ -883,7 +883,7 @@ function common_validation_DVB($opfile, $dom, $xml_rep, $adapt_count, $rep_count
         // Section 6.2 on HE_AACv2 and 6.5 on MPEG Surround audio content's SAP type
         if($hdlr_type == 'soun' && strpos($sdType, 'mp4a') !== FALSE){
             if($sidx_boxes->length != 0){
-                $subsegments = $sidx_boxes[$sidx_index]->getElementsByTagName('subsegment');
+                $subsegments = $sidx_boxes->item($sidx_index)->getElementsByTagName('subsegment');
                 if($subsegments->length != 0){
                     foreach($subsegments as $subsegment){
                         if($subsegment->getAttribute('starts_with_SAP') == '1'){
