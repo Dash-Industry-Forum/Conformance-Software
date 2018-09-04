@@ -120,46 +120,56 @@
     * {
         margin: 0;
       }
+      
     html, body {
         height: 100%;
         /*background-image: url("http://localhost/Conformance-Software/webfe/img/background_image/page_background4.jpg");
         background-size:     cover;                     
         background-repeat:   no-repeat;
         background-position: center center; */
-
     }
+    
     .page-wrap {
         min-height: 100%;
         /* equal to footer height */
         margin-bottom: -90px; 
     }
+    
     .page-wrap:after {
         content: "";
         display: block;
     }
+    
     .site-footer, .page-wrap:after {
         height: 90px; 
     }
+    
     .site-footer {
         background: #e0f5f6;
     }
+    
     .mytext {
         width: 600px;
     }
+    
     div.hidden{
         display: none;
     }
+    
     div.normal{
         display: block;
     }
+    
     #tot{
         text-align:center;
     }
+    
     #groupA{
         text-align:center;
         margin-left:-5%;
         margin-top:1%;
     }
+    
     .box{
         display:inline-block;
         text-align:center;
@@ -169,21 +179,26 @@
         color: #05acfb;
         margin-top:0.2%;    
     }
+    
     #progressbar{
         text-align:center;
     }
+    
     #to{
         text-align:center;
         border-width:medium;
     }
+    
     #dash{
         text-align:center;
         margin-top: 15%;
         
     }
+    
     p.sansserif {
         font-family: Arial, Helvetica, sans-serif;
     }
+    
     #btn8 {
         background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #99ccff), color-stop(1, #80b5ea) );
         background:-moz-linear-gradient( center top, #bddbfa 5%, #80b5ea 100% );
@@ -224,17 +239,20 @@
         -webkit-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
         -moz-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
         box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
-    }    
+    } 
+    
     #btn8:hover:enabled {
         background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #80b5ea), color-stop(1, #bddbfa) );
         background:-moz-linear-gradient( center top, #80b5ea 5%, #bddbfa 100% );
         filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#80b5ea', endColorstr='#bddbfa');
         background-color:#80b5ea;
     }
+    
     #btn8:active:enabled {
         /*position:relative;
         top:1px;*/
     }
+    
     #btn8:disabled {
         background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #C0C0C0), color-stop(1, #808080) );
         background:-moz-linear-gradient( center top, #808080 5%, #808080 100% );
@@ -249,32 +267,40 @@
         -moz-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
         box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
     }
+    
     input{
         text-align:center;
     }
+    
     #not{
         position:center;
     }
+    
     #treeboxbox_tree{
         position:absolute;
-        top:180px;
+        top:450px;
         left:40px;
     }
+    
     .box__dragndrop{
         display: none;
     }
+    
     .box.has-advanced-upload {
         background-color: #e6e6e6;
         outline: 1px dashed grey;
         outline-offset: -3px;
         background-color: #baeff5;    
     }
+    
     .box.has-advanced-upload .box__dragndrop {
         display: inline;
     }
+    
     .box.is-dragover {
         background-color: #b4f7fa;
     }
+    
     .box__file {
 	width: 0.1px;
 	height: 0.1px;
@@ -283,6 +309,7 @@
 	position: absolute;
 	z-index: -1;
     }
+    
     .box__file + label {
         position: relative;
         margin-top:2.5%;
@@ -290,12 +317,14 @@
         display: inline-block;
         cursor: pointer; /* "hand" cursor */
     }
+    
     .box__button {
         position: absolute;
         margin-top:0.8%;
         margin-left: 8%;
         display: none;
     }
+    
     .profiles{
         margin-top: -1%;
     }
@@ -312,12 +341,14 @@
         right:10px;
         border: 0;
     }
+    
     #settings_img{
         position:absolute;
         top:0px;
         right:0px;
         background-size: 100%;
     }
+    
     #demo{
         position:absolute;
         top:10px;
@@ -325,13 +356,12 @@
         width:200px;
         height:80px;
     }
+    
     #cont{
         position:absolute;
         top:40px;
         right:60px;
     }
-    
-    
     
     .chkbox {
         display: block;
