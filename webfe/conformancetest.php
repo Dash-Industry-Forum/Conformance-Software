@@ -21,6 +21,10 @@
         <meta name="keywords" content="DASH,DASH Conformance,DASH Validator">
         <meta name="author" content="Nomor Research GmbH">
         <link rel="icon" href="favicon.ico?v1" type="image/x-icon" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     </head>
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
@@ -113,6 +117,32 @@
     
 <style>
 
+    * {
+        margin: 0;
+      }
+    html, body {
+        height: 100%;
+        /*background-image: url("http://localhost/Conformance-Software/webfe/img/background_image/page_background4.jpg");
+        background-size:     cover;                     
+        background-repeat:   no-repeat;
+        background-position: center center; */
+
+    }
+    .page-wrap {
+        min-height: 100%;
+        /* equal to footer height */
+        margin-bottom: -90px; 
+    }
+    .page-wrap:after {
+        content: "";
+        display: block;
+    }
+    .site-footer, .page-wrap:after {
+        height: 90px; 
+    }
+    .site-footer {
+        background: #e0f5f6;
+    }
     .mytext {
         width: 600px;
     }
@@ -136,8 +166,8 @@
         width:600px;
         height:50px;
         border: 1px solid rgba(0,0,0,0.08);
-        background-color: grey;
-        margin-top:0.2%;
+        color: #05acfb;
+        margin-top:0.2%;    
     }
     #progressbar{
         text-align:center;
@@ -155,9 +185,6 @@
         font-family: Arial, Helvetica, sans-serif;
     }
     #btn8 {
-        -moz-box-shadow:inset 0px 1px 0px 0px #dcecfb;
-        -webkit-box-shadow:inset 0px 1px 0px 0px #dcecfb;
-        box-shadow:inset 0px 0px 0px 0px #dcecfb;
         background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #99ccff), color-stop(1, #80b5ea) );
         background:-moz-linear-gradient( center top, #bddbfa 5%, #80b5ea 100% );
         filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#bddbfa', endColorstr='#80b5ea');
@@ -175,23 +202,29 @@
         -moz-border-radius-bottomleft:0px;
         border-bottom-left-radius:3px;
         text-indent:-1px;
-        border:1px solid #84bbf3;
+        border: 1px solid #2d6898;
         display:inline-block;
-        color:#ffffff;
-        font-family:Helvetica;
-        font-size:16px;
+        color: #3B5957;
+        font-family: Avantgarde, TeX Gyre Adventor, URW Gothic L, sans-serif;
+        font-size:24px;
         font-weight:bold;
-        font-style:italic;
+        font-style:normal;
         height:50px;
         line-height:40px;
         width:100px;
         text-decoration:none;
         text-align:center;
-        text-shadow:1px 1px 1px #183d61;
         position:absolute;
         margin-left:0.5%;
         margin-top: -0.7%;
-    }
+        text-shadow: 0px 1px 0px rgba(255, 255, 255, .5);
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        -webkit-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
+        -moz-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
+        box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
+    }    
     #btn8:hover:enabled {
         background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #80b5ea), color-stop(1, #bddbfa) );
         background:-moz-linear-gradient( center top, #80b5ea 5%, #bddbfa 100% );
@@ -208,9 +241,13 @@
         filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#C0C0C0', endColorstr='#808080');
         background-color:#808080;
         color:#C0C0C0;
-        -moz-box-shadow:inset 0px 1px 0px 0px #808080;
-        -webkit-box-shadow:inset 0px 1px 0px 0px #808080;
-        box-shadow:inset 0px 1px 0px 0px #808080;
+        text-shadow: 0px 1px 0px rgba(255, 255, 255, .5);
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        -webkit-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
+        -moz-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
+        box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
     }
     input{
         text-align:center;
@@ -218,15 +255,10 @@
     #not{
         position:center;
     }
-    .footer {
-        height: 200px; 
-        overflow: hidden; 
-        margin-top:10%;
-    }
-    #dynamictable{
+    #treeboxbox_tree{
         position:absolute;
-        top:280px;
-        right:40px;
+        top:180px;
+        left:40px;
     }
     .box__dragndrop{
         display: none;
@@ -235,12 +267,13 @@
         background-color: #e6e6e6;
         outline: 1px dashed grey;
         outline-offset: -3px;
+        background-color: #baeff5;    
     }
     .box.has-advanced-upload .box__dragndrop {
         display: inline;
     }
     .box.is-dragover {
-        background-color: grey;
+        background-color: #b4f7fa;
     }
     .box__file {
 	width: 0.1px;
@@ -273,88 +306,201 @@
         right: 0px;
     }
     
-    #setting_btn {
-    position:absolute;
-    top:0px;
-    right:0px;
+    #settings_button{
+        position:absolute;
+        top:10px;
+        right:10px;
+        border: 0;
     }
-    .settings_img {
-    position:absolute;
-    top:5px;
-    right:7px;
+    #settings_img{
+        position:absolute;
+        top:0px;
+        right:0px;
+        background-size: 100%;
+    }
+    #demo{
+        position:absolute;
+        top:10px;
+        right:50px;
+        width:200px;
+        height:80px;
+    }
+    #cont{
+        position:absolute;
+        top:40px;
+        right:60px;
+    }
+    
+    
+    
+    .chkbox {
+        display: block;
+        position: relative;
+        padding-left: 35px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        font-size: 18px;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
     }
 
-</style>
+    /* Hide the browser's default checkbox */
+    .chkbox input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    /* Create a custom checkbox */
+    .checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 20px;
+        width: 20px;
+        background-color: #9bd3ec;
+       
+    }
+
+    /* On mouse-over, add a grey background color */
+    .chkbox:hover input ~ .checkmark {
+        background-color: #7de5eb;
+    }
+
+    /* When the checkbox is checked, add a blue background */
+    .chkbox input:checked ~ .checkmark {
+        background-color: #2196F3;
+    }
+
+    /* Create the checkmark/indicator (hidden when not checked) */
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+    }
+
+    /* Show the checkmark when checked */
+    .chkbox input:checked ~ .checkmark:after {
+        display: block;
+    }
+
+    /* Style the checkmark/indicator */
+    .chkbox .checkmark:after {
+        left: 9px;
+        top: 5px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 3px 3px 0;
+        -webkit-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        transform: rotate(45deg);
+    }
     
+    #conformance_only{
+        position: absolute;
+        left: 42%;
+    }
     
+</style>    
 <body>
-<div id="settings_btn">
-   <input type="image" src="img/settings.jpg" class="settings_img" id="settings_button" width="45" height="30" onclick="enforceProfile()"/>
-</div>
-
-<div id="dash">
-    <br>
-    <img id="img2" border="0" src="dashlogo.jpeg" alt ="DASH Conformance" width="543" height="88" >
-    <img id="img2" border="0" src="Dash1.jpeg" width="191" height="61" >
-    <br>    <br>
-</div>
-<p align="center" class="sansserif">Validation (Conformance check) of ISO/IEC 23009-1 MPEG-DASH MPD and Segments</p>
-<div id="groupA">
-    <div>
-        <input type="text" id='urlinput' name="urlinput" class="mytext" placeholder="Enter MPD URL" onkeyup="CheckKey(event)"/>
-
+<div class="page-wrap">    
+    <div class="container">
+        <button type="submit" class="btn btn-info" id="settings_button" data-toggle="collapse" data-target="#demo" >
+        <img src="img/settings.jpg" class="settings_img" id="settings_img"  width="45" height="45" />
+        </button>  
+        <div id="demo" class="collapse">    
+            <legend>Enforce profile(s):</legend>
+            <div data-role="controlgroup" id="cont">
+              
+                <label class="chkbox" for="dvbprofile">DVB
+                    <input type="checkbox" name="dvbprofile" id="dvbprofile" >
+                    <span class="checkmark"></span>
+                </label>
+                    <label class="chkbox" for="hbbtvprofile">HbbTV
+                    <input type="checkbox" name="hbbtvprofile" id="hbbtvprofile" >
+                <span class="checkmark"></span>
+                </label>
+            </div>  
+        </div>  
     </div>
-    <div>
-        <div class="box"  >
-            <div class="box__input" id="drop_div">
-                <input class="box__file" type="file" name="file" id="file" />
-                <label for="file"><strong>Choose a file</strong><span class="box__dragndrop"> or drag it here</span>.</label>
-                <button class="box__button" type="submit">Upload</button>
-            </div>
+
+    <div id="dash">
+        <br>
+        <img id="img2" border="0" src="dashlogo.jpeg" alt ="DASH Conformance" width="543" height="88" >
+        <img id="img2" border="0" src="Dash1.jpeg" width="191" height="61" >
+        <br>    <br>
+    </div>
+    <p align="center" class="sansserif">Validation (Conformance check) of ISO/IEC 23009-1 MPEG-DASH MPD and Segments</p>
+    <div id="groupA">
+        <div>
+            <input type="text" id='urlinput' name="urlinput" class="mytext" placeholder="Enter MPD URL" onkeyup="CheckKey(event)"/>
+
         </div>
-        <button id="btn8" onclick="submit()">Submit</button>
-    </div>
-  <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://localhost/content/TestCases/1b/thomson-networks/2/manifest.mpd" onkeyup="CheckKey(event)"/-->
-  <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd" onkeyup="CheckKey(event)"/-->
-  <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.193.185/Content/TestCases/1b/qualcomm/1/MultiRate_Broken.mpd" onkeyup="CheckKey(event)"/-->
+        <div>
+            <div class="box"  >
+                <div class="box__input" id="drop_div">
+                    <input class="box__file" type="file" name="file" id="file" />
+                    <label for="file"><strong>Choose a file</strong><span class="box__dragndrop"> or drag it here</span>.</label>
+                    <button class="box__button" type="submit">Upload</button>
+                </div>
+            </div>
+            <button id="btn8" onclick="submit()"> GO </button>
+        </div>
+      <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://localhost/content/TestCases/1b/thomson-networks/2/manifest.mpd" onkeyup="CheckKey(event)"/-->
+      <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd" onkeyup="CheckKey(event)"/-->
+      <!--input type="text" id='urlinput' name="urlinput" class="mytext" value="http://10.4.193.185/Content/TestCases/1b/qualcomm/1/MultiRate_Broken.mpd" onkeyup="CheckKey(event)"/-->
 
-    <!--b>or</b>
+        <!--b>or</b>
 
-    <input type="file" name="afile" id="afile" /-->
-    <!--<input type="file" id="selectfile" /> Uploading local mpd for testing -->
-    
-    <form action="">
-        <p class="sansserif"><input type="checkbox" id="mpdvalidation" class = "validation" value="0">MPD conformance only</p><br>
-    </form>
-    
-    <a id="dynamic" href="url" target="_blank" style="visibility:hidden;" >Dynamic timing validation</a>
+        <input type="file" name="afile" id="afile" /-->
+        <!--<input type="file" id="selectfile" /> Uploading local mpd for testing -->
 
-</div>
-
-<div id="progressbar" style="width:100px;background:#FFFFF;"></div>
-
-<div id = "not">
-    <br>    <br>
-</div>
-
-<div id="to" >
-    <p align="center"></p>
-    <p id="par" class="sansserif" style="visibility:hidden;">Loading....</p>
-    <p id="profile" class="sansserif" style="visibility:hidden;">Profiles: </p>
-    <a id="list" href="url" target="_blank" style="visibility:hidden;" >Feature list</a>
-</div>
-    
-<table>
-    <tr>
-        <td valign="top">
-            <div id="treeboxbox_tree" style="width:500px; height:400px;background-color:#0000;border :none;; overflow:auto;"></div>
-        </td>
+      <!--  <form action="">
+            <p class="sansserif"><input type="checkbox" id="mpdvalidation" class = "validation" value="0">MPD conformance only</p><br>
+        </form> -->
         
-        <td rowspan="2" style="padding-left:25" valign="top">
-        </td>
-    </tr>
-</table>
+            
 
+
+        <a id="dynamic" href="url" target="_blank" style="visibility:hidden;" >Dynamic timing validation</a>
+
+    </div>
+    
+    <div id="conformance_only">
+        <label class="chkbox">MPD conformance only
+            <input type="checkbox" id="mpdvalidation"  value="0">
+            <span class="checkmark"></span>
+        </label>
+    </div>        
+    
+    
+    <div id="progressbar" style="width:100px;background:#FFFFF;"></div>
+
+    <div id = "not">
+        <br>    <br>
+    </div>
+
+    <div id="to" >
+        <p align="center"></p>
+        <p id="par" class="sansserif" style="visibility:hidden;">Loading....</p>
+        <p id="profile" class="sansserif" style="visibility:hidden;">Profiles: </p>
+        <a id="list" href="url" target="_blank" style="visibility:hidden;" >Feature list</a>
+    </div>
+
+    <table>
+        <tr>
+            <td valign="top">
+                <div id="treeboxbox_tree" style="width:500px; height:400px;background-color:#0000;border :none;; overflow-y:auto;"></div>
+            </td>
+
+            <td rowspan="2" style="padding-left:25" valign="top">
+            </td>
+        </tr>
+    </table>
+</div>
 
 <script type="text/javascript">
 var progressXMLRequest;
@@ -384,8 +530,8 @@ var progressSegmentsTimer;
 var pollingTimer;
 var ChainedToUrl;
 var cmaf = "<?php echo $cmaf; ?>";
-//var dvb = 0;
-//var hbbtv = 0;
+var dvb = 0;
+var hbbtv = 0;
 
 /////////////////////////////////////////////////////////////
 //Check if 'drag and drop' feature is supported by the browser, if not, then traditional file upload can be used.
@@ -590,12 +736,11 @@ function submit()
    	stringurl[2] = 0 ;
     
     stringurl[4] = "<?php echo $cmaf; ?>";
-  
-    $.post("readProfiles.php",     
-           ).done(function(response){ 
-                var resArray = eval('(' + response + ')');
-                           dvb=resArray[0];
-                           hbbtv=resArray[1];             
+    
+    if($("#dvbprofile").is(':checked'))
+        dvb = 1;
+    if($("#hbbtvprofile").is(':checked'))
+        hbbtv= 1;       
             
     stringurl[5]=dvb;
     stringurl[6]=hbbtv;
@@ -621,8 +766,8 @@ function submit()
             data: fd,
             contentType: false,
             processData: false
-        });
-    }else{  // Pass to server only, no JS response model.
+        });}
+    else{  // Pass to server only, no JS response model.
            UrlExists(stringurl[0], function(urlStatus){
                  //console.log(urlStatus);
                 if(urlStatus === 200 && stringurl[0]!=""){
@@ -641,8 +786,8 @@ function submit()
      //Start polling of progress.xml for the progress percentage results.
     progressTimer = setInterval(function(){progressupdate()},100);
     pollingTimer = setInterval(function(){pollingProgress()},800);//Start polling of progress.xml for the MPD conformance results.
-    });
-}
+    };
+
 
 function pollingProgress()
 {
@@ -1286,10 +1431,6 @@ function setStatusTextlabel(textToSet)
     document.getElementById('par').style.visibility='visible';
 }
 
-function enforceProfile()
-{
-    window.open("enforceProfiles.php");
-}
 
 function UrlExists(url, cb){
     jQuery.ajax({
@@ -1314,13 +1455,29 @@ function UrlExists(url, cb){
     ga('send', 'pageview');
 </script>
 
-<footer>
+
+<footer class="site-footer">
+    <center> <p id="footerVersion"></p>
+        <p><a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues"><b>Report issue</b></a></p>
+    </center>
+    <center> <p>
+            <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/"><b>GitHub</b></a></p>
+    </center>
+</footer>
+
+
+
+
+
+
+
+<!--<footer>
     <center> <p id="footerVersion"></p>
         <p><a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
     </center>
     <center> <p>
         <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/">GitHub</a></p>
     </center>
-</footer>
+</footer> -->
 </body>
 </html>
