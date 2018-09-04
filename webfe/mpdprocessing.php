@@ -1326,7 +1326,7 @@ function remove_duplicate($error_array)
             $repetitions = $count_instances[$value];
             if($repetitions > 1)
             {
-                $new_array[$key] = "(".$repetitions.' repetition\s) '.$error_array[$key]."\n";
+                $new_array[$key] = " (".$repetitions.' repetition\s of similar type) '.$error_array[$key]."\n";
             }
             else
             {

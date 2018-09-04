@@ -127,6 +127,7 @@ $string_info = '<!doctype html>
   }
   </style>
   <script src="https://code.jquery.com/jquery-1.9.1.js"></script>
+  <p>***Legend: <font color="red">Errors</font>, <font color="orange">Warnings</font>, <font color="blue">Information</font> ***  </p>
 </head>
 <body>
  
