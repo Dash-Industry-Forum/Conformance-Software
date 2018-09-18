@@ -1172,6 +1172,9 @@ function process_mpd()
                 $destiny[] = $locate . '/' . $repno . "_infofile.txt";
                 rename($locate . '/' . "stderr.txt", $locate . '/' . $repno . "log.txt"); //Rename conformance software output file to representation number file
                 
+                if(file_exists($locate . '/' ."sample_data.txt"))
+                    rename ($locate . '/' ."sample_data.txt", $locate . '/' . $repno."sample_data.xml");
+                
                 // Compare representations
                 //if($shouldCompare){
                 if($cmaf_val == "yes" || $dvb || $hbbtv){
@@ -1326,7 +1329,7 @@ function remove_duplicate($error_array)
             $repetitions = $count_instances[$value];
             if($repetitions > 1)
             {
-                $new_array[$key] = " (".$repetitions.' repetition\s of similar type) '.$error_array[$key]."\n";
+                $new_array[$key] = "(".$repetitions.' repetition\s) '.$error_array[$key]."\n";
             }
             else
             {
