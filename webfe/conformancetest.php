@@ -1311,14 +1311,18 @@ function progress()  //Progress of Segments' Conformance
         }
 //            console.log("errors");
 
-            automate(repid[counting],lastloc,"log");
-            tree.setItemImage2( lastloc,'csh_winstyle/iconText.gif','csh_winstyle/iconText.gif','csh_winstyle/iconText.gif');
+        automate(repid[counting],lastloc,"log");
+        tree.setItemImage2( lastloc,'csh_winstyle/iconText.gif','csh_winstyle/iconText.gif','csh_winstyle/iconText.gif');
+        kidsloc.push(lastloc);
+        urlarray.push("temp/"+dirid+"/"+ "Adapt"+(adaptationid-1)+"rep"+(representationid-2) + "log.html");
+        lastloc++;  
 
-            kidsloc.push(lastloc);
-            urlarray.push("temp/"+dirid+"/"+ "Adapt"+(adaptationid-1)+"rep"+(representationid-2) + "log.html");
-
-            lastloc++;  
-        
+        var location = "temp/"+dirid+"/"+ "Adapt"+(adaptationid-1)+"rep"+(representationid-2) + "sample_data.xml";
+        automate(repid[counting],lastloc,"Estimate");
+        tree.setItemImage2( lastloc,'csh_winstyle/calculator.gif','csh_winstyle/calculator.gif','csh_winstyle/calculator.gif');
+        kidsloc.push(lastloc);
+        urlarray.push("Estimate.php?location=" + location );
+        lastloc++;
 
         counting++;
 
@@ -1395,7 +1399,7 @@ function finishTest()
     $.post( "writeProfiles.php",
            {hbbtv: 0, dvb:0});
     //maybe put the sample processing function here
-    ProcessSampleData(dirid);
+    //ProcessSampleData(dirid);
     setStatusTextlabel("Conformance test completed");
 }
 
@@ -1472,144 +1476,6 @@ function UrlExists(url, cb){
         complete:  function(xhr){
             if(typeof cb === 'function')
                cb.apply(this, [xhr.status]);
-        }
-    });
-}
-
-function ProcessSampleData(location)
-{
-    location = "/var/www/html/Conformance-Software/webfe/temp/" + location;
-           
-    $.post("xml_sample_Data.php",{"location":location}).done(function(data)
-    {
-        var str_list_of_xmls = data;
-        var arr_list_of_xmls = str_list_of_xmls.split(";");
-        var xml_file, Sample_data;
-        for( xml_file of arr_list_of_xmls)
-        {
-            xml_file = xml_file.split("html").pop();
-            Sample_data = loadXMLDoc(xml_file);
-            if (Sample_data !== null)
-            {
-                var bandwidth, minBufferTime, timescale, initSize, announcedSAP, dataSizeToRemove, duration; // to be read from the xml file
-
-                bandwidth = parseFloat(Sample_data.getElementsByTagName("MPDInfo").item(0).getAttribute("bandwidth"));
-                minBufferTime = parseFloat(Sample_data.getElementsByTagName("MPDInfo").item(0).getAttribute("minBufferTime"));
-                initSize = parseFloat(Sample_data.getElementsByTagName("Representation").item(0).getAttribute("initSize"));
-                timescale = parseFloat(Sample_data.getElementsByTagName("Representation").item(0).getAttribute("timescale"));
-                
-                var trackNonConforming = false;
-                var currentBandwidth = bandwidth;
-                var increment_factor = 2;
-                var decrement_factor = 0.75;
-                var upper_bound = 0;
-                var lower_bound = 0;
-                var done = false;
-                var mod_val = 0; 
-
-                var bufferFullness, lastOffset, timeNowInTicks, totalDataRemoved, totalBitsAdded; //get moofCount from counting the number of instances with annauncedSAP attribute
-
-                do
-                {  
-                    bufferFullness = currentBandwidth * minBufferTime; //bits (not Bytes)
-                    lastOffset = initSize;
-                    timeNowInTicks = minBufferTime * timescale;
-                    totalDataRemoved = 0;
-                    totalBitsAdded = 0;
-                    trackNonConforming = false;
-
-                    for(var moof_index = 0; moof_index < Sample_data.getElementsByTagName("moof").length; moof_index ++)
-                    {
-                        var moof = Sample_data.getElementsByTagName("moof").item(moof_index);
-                        announcedSAP = moof.getAttribute("a"); 
-                        if (announcedSAP && bufferFullness > currentBandwidth * minBufferTime) //There is no buffer overflow for DASH buffer model, only case is on a SAP, as DASH spec. defines the requiremnt that the playback could be from any SAP and at the SAP, the buffer fullness is bandwidth*minBufferTime
-                            {
-                                totalDataRemoved += ((bufferFullness - currentBandwidth * minBufferTime) / 8.0); //The clipped data, for debug information
-                                bufferFullness = currentBandwidth * minBufferTime;
-                            }
-              
-                        for(var traf_index = 0; traf_index < moof.getElementsByTagName("traf").length; traf_index ++)
-                        {    
-                            var traf = moof.getElementsByTagName("traf").item(traf_index);
-                            for(var trun_index = 0; trun_index < traf.getElementsByTagName("trun").length; trun_index ++)
-                            {    
-                                var trun = traf.getElementsByTagName("trun").item(trun_index);
-                                for(var sample_index = 0; sample_index < trun.getElementsByTagName("s").length; sample_index ++)  
-                                {
-                                    var sample = trun.getElementsByTagName("s").item(sample_index);
-                                    dataSizeToRemove = parseFloat(sample.getAttribute("z"));
-                                    duration = parseFloat(sample.getAttribute("d"));
-                                    totalDataRemoved += dataSizeToRemove;
-                                    if ((dataSizeToRemove * 8) > bufferFullness) //Bufferfullness is in bits
-                                    {
-                                        if (!trackNonConforming) 
-                                        {
-                                            if (currentBandwidth == bandwidth)
-                                                console.log("Buffer underrun conformance error: first (and only one reported here) for sample ", sample_index + 1," of run ", trun_index + 1, " of track fragment ", traf_index + 1, " of fragment ", moof_index + 1, ", bandwidth: ", currentBandwidth);
-                                            trackNonConforming = true;
-                                            break;
-                                        }                     
-                                    }
-
-                                    bufferFullness -= (dataSizeToRemove * 8);
-                                    bufferFullness += (currentBandwidth * ( duration / timescale));
-                                    totalBitsAdded += (currentBandwidth * (duration / timescale));
-                                    timeNowInTicks += duration;
-
-                                }
-                                if (trackNonConforming) break;
-                            }
-                            if (trackNonConforming) break;
-                        }
-                        if (trackNonConforming) break;
-                    }
-                    
-                    if (trackNonConforming) // not passing with the current value
-                    {
-                        if(upper_bound == 0) // if it has yet to pass for the first time then increment
-                            currentBandwidth *= increment_factor;
-                        else // it has already passed once and the upper bound was assigned so it goes here for first time when we find the lower bound
-                        {    
-                            if(lower_bound == 0) // first time it doesn't pass after it has passed at least once so we can assign lower bound now
-                            {    
-                                lower_bound = currentBandwidth;
-                                mod_val = upper_bound - lower_bound;
-                            }
-                            mod_val /= 2; 
-                            currentBandwidth += mod_val; // to be eleborated more
-                        }
-                    }
-                    else // passing with the current value
-                    {
-                        if((lower_bound != 0) && (mod_val <= 50))
-                            done = true;
-                        
-                        if (currentBandwidth == bandwidth)
-                            done = true;
-                        else
-                        {
-                            if(upper_bound == 0) // assign only the first time the condition is fulfilled
-                                upper_bound = currentBandwidth;
-                            if(mod_val == 0)
-                                currentBandwidth *= decrement_factor;
-                            else if(done != true)
-                            {    
-                                mod_val /= 2; 
-                                currentBandwidth -= mod_val;
-                            }
-                        }
-   
-                    }
-                    
-                }
-                while (!done); 
-                
-                
-                if(currentBandwidth != bandwidth)
-                    {
-                        console.log("Estimated bandwidth: ", currentBandwidth);        
-                    }
-            }    
         }
     });
 }
