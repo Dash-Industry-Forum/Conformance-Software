@@ -128,7 +128,7 @@
         background-repeat:   no-repeat;
         background-position: center center; */
     }
-    
+        
     .page-wrap {
         min-height: 100%;
         /* equal to footer height */
@@ -141,13 +141,13 @@
     }
     
     .site-footer, .page-wrap:after {
-        height: 90px; 
+        height: 90px;        
     }
     
     .site-footer {
         background: #e0f5f6;
     }
-    
+
     .mytext {
         width: 600px;
     }
@@ -249,6 +249,7 @@
     }
     
     #btn8:active:enabled {
+        transform: translateY(4px);
         /*position:relative;
         top:1px;*/
     }
@@ -278,7 +279,7 @@
     
     #treeboxbox_tree{
         position:absolute;
-        top:180px;
+        top:250px;
         left:40px;
     }
     
@@ -523,7 +524,7 @@
     <table>
         <tr>
             <td valign="top">
-                <div id="treeboxbox_tree" style="width:500px; height:400px;background-color:#0000;border :none;; overflow-y:auto;"></div>
+                <div id="treeboxbox_tree" style="background-color:#0000;overflow:hidden;border :none; "></div>
             </td>
 
             <td rowspan="2" style="padding-left:25" valign="top">
@@ -1310,14 +1311,18 @@ function progress()  //Progress of Segments' Conformance
         }
 //            console.log("errors");
 
-            automate(repid[counting],lastloc,"log");
-            tree.setItemImage2( lastloc,'csh_winstyle/iconText.gif','csh_winstyle/iconText.gif','csh_winstyle/iconText.gif');
+        automate(repid[counting],lastloc,"log");
+        tree.setItemImage2( lastloc,'csh_winstyle/iconText.gif','csh_winstyle/iconText.gif','csh_winstyle/iconText.gif');
+        kidsloc.push(lastloc);
+        urlarray.push("temp/"+dirid+"/"+ "Adapt"+(adaptationid-1)+"rep"+(representationid-2) + "log.html");
+        lastloc++;  
 
-            kidsloc.push(lastloc);
-            urlarray.push("temp/"+dirid+"/"+ "Adapt"+(adaptationid-1)+"rep"+(representationid-2) + "log.html");
-
-            lastloc++;  
-        
+        var location = "temp/"+dirid+"/"+ "Adapt"+(adaptationid-1)+"rep"+(representationid-2) + "sample_data.xml";
+        automate(repid[counting],lastloc,"Estimate");
+        tree.setItemImage2( lastloc,'csh_winstyle/calculator.gif','csh_winstyle/calculator.gif','csh_winstyle/calculator.gif');
+        kidsloc.push(lastloc);
+        urlarray.push("Estimate.php?location=" + location );
+        lastloc++;
 
         counting++;
 
@@ -1390,7 +1395,11 @@ function finishTest()
             window.open("conformancetest.php?mpdurl="+ChainedToUrl);
         }
     }
-
+    //Once test completed, refresh enforced profiles to zero.
+    $.post( "writeProfiles.php",
+           {hbbtv: 0, dvb:0});
+    //maybe put the sample processing function here
+    //ProcessSampleData(dirid);
     setStatusTextlabel("Conformance test completed");
 }
 
@@ -1459,7 +1468,6 @@ function setStatusTextlabel(textToSet)
     document.getElementById('par').style.visibility='visible';
 }
 
-
 function UrlExists(url, cb){
     jQuery.ajax({
         url:      url,
@@ -1471,6 +1479,7 @@ function UrlExists(url, cb){
         }
     });
 }
+
 </script>
 
 <script>
@@ -1483,7 +1492,6 @@ function UrlExists(url, cb){
     ga('send', 'pageview');
 </script>
 
-
 <footer class="site-footer">
     <center> <p id="footerVersion"></p>
         <p><a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues"><b>Report issue</b></a></p>
@@ -1493,19 +1501,5 @@ function UrlExists(url, cb){
     </center>
 </footer>
 
-
-
-
-
-
-
-<!--<footer>
-    <center> <p id="footerVersion"></p>
-        <p><a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/issues">Report issue</a></p>
-    </center>
-    <center> <p>
-        <a target="_blank" href="https://github.com/DASHIndustryForum/Conformance-Software/">GitHub</a></p>
-    </center>
-</footer> -->
 </body>
 </html>
