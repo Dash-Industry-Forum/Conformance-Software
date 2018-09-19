@@ -445,16 +445,16 @@
                     <input type="checkbox" name="dashifprofile" id="dashifprofile" >
                     <span class="checkmark"></span>
                 </label>
-                <label class="chkbox" for="cmafprofile">CMAF
-                    <input type="checkbox" name="cmafprofile" id="cmafprofile" >
-                    <span class="checkmark"></span>
-                </label>
                 <label class="chkbox" for="dvbprofile">DVB
                     <input type="checkbox" name="dvbprofile" id="dvbprofile" >
                     <span class="checkmark"></span>
                 </label>
                 <label class="chkbox" for="hbbtvprofile">HbbTV
                     <input type="checkbox" name="hbbtvprofile" id="hbbtvprofile" >
+                    <span class="checkmark"></span>
+                </label>
+                <label class="chkbox" for="cmafprofile">CMAF
+                    <input type="checkbox" name="cmafprofile" id="cmafprofile" >
                     <span class="checkmark"></span>
                 </label>
             </div>  
