@@ -345,17 +345,27 @@ function process_mpd()
             $periods[] = $Period_arr;
         }
         
+        $period_info=periodDurationInfo($dom);
         $now = time();
-        for($p=0; $p< sizeof($periods); $p++){
-            if(!empty($periodNodes[$p]->getAttribute('duration')))
-                $p_duration = $periodNodes[$p]->getAttribute('duration');
-            
-            $whereami = $now - (strtotime($AST) + $starts[$p]);
-            $p_duration = timeparsing($p_duration);
-            if($whereami <= $p_duration){
-                $Period_arr = $periods[$p];
-                $start = $starts[$p];
-                break;
+        if(sizeof($periods)==1)
+        {
+            $Period_arr = $periods[0];
+            $periodNode=$periodNodes[0];
+            $start = $period_info[0][0];
+        }
+        else{
+            for($p=0; $p< sizeof($periods); $p++){
+
+                $p_duration = $period_info[1][$p];
+
+                $whereami = $now - (strtotime($AST) + $period_info[0][$p]);
+
+                if($whereami <= $p_duration){
+                    $Period_arr = $periods[$p];
+                    $periodNode=$periodNodes[$p];
+                    $start = $period_info[0][$p];
+                    break;
+                }
             }
         }
     }
