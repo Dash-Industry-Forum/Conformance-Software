@@ -108,6 +108,7 @@ function process_mpd()
     $cmaf_val = $url_array[4];     
     $enforced_profile_dvb = $url_array[5];
     $enforced_profile_hbbtv = $url_array[6];
+    $enforced_profile_dashif=$url_array[7];
     //The status of the mpd is logged in the visitor's log file.
     writeMPDStatus($url_array[0]);
     
@@ -995,11 +996,12 @@ function process_mpd()
                     $processArguments = $processArguments . "-isomain ";
 
                 $dash264 = false;
-                if (strpos($Period_arr[$count1]['Representation']['profiles'][$count2], "http://dashif.org/guidelines/dash264") !== false)
+                if ((strpos($Period_arr[$count1]['Representation']['profiles'][$count2], "http://dashif.org/guidelines/dash264") !== false)||($enforced_profile_dashif))
                 {
                     $processArguments = $processArguments . "-dash264base ";
                     $dash264 = true;
                 }
+                    
 
                 if($dvb || $hbbtv){
                     if ($Period_arr[$count1]['Representation']['ContentProtectionElementCount'][$count2] > 0)

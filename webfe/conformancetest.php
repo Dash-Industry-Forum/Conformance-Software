@@ -84,12 +84,7 @@
         if(url !== "")
         {
             document.getElementById("urlinput").value=url;
-            dvb="<?php echo $dvb; ?>";
-            hbbtv= "<?php echo $hbbtv; ?>";
-            if(dvb== "true")
-                dvb=1;
-            if(hbbtv=="true")
-                hbbtv=1;   
+           
             submit();
         }
      
@@ -446,13 +441,21 @@
             <legend>Enforce profile(s):</legend>
             <div data-role="controlgroup" id="cont">
               
+                <label class="chkbox" for="dashifprofile">DASH-IF
+                    <input type="checkbox" name="dashifprofile" id="dashifprofile" >
+                    <span class="checkmark"></span>
+                </label>
                 <label class="chkbox" for="dvbprofile">DVB
                     <input type="checkbox" name="dvbprofile" id="dvbprofile" >
                     <span class="checkmark"></span>
                 </label>
-                    <label class="chkbox" for="hbbtvprofile">HbbTV
+                <label class="chkbox" for="hbbtvprofile">HbbTV
                     <input type="checkbox" name="hbbtvprofile" id="hbbtvprofile" >
-                <span class="checkmark"></span>
+                    <span class="checkmark"></span>
+                </label>
+                <label class="chkbox" for="cmafprofile">CMAF
+                    <input type="checkbox" name="cmafprofile" id="cmafprofile" >
+                    <span class="checkmark"></span>
                 </label>
             </div>  
         </div>  
@@ -563,6 +566,7 @@ var ChainedToUrl;
 var cmaf = "<?php echo $cmaf; ?>";
 var dvb = 0;
 var hbbtv = 0;
+var dashif=0;
 
 /////////////////////////////////////////////////////////////
 //Check if 'drag and drop' feature is supported by the browser, if not, then traditional file upload can be used.
@@ -708,6 +712,8 @@ function  progressEventHandler(){
                 if (document.getElementById("profile").innerHTML === "Profiles: ")
                 {
                     var profileList = progressXML.getElementsByTagName("Profile")[0].childNodes[0].nodeValue;
+                    if(dashif && profileList.search("http://dashif.org/guidelines/dash264")===-1)
+                        profileList+= ", http://dashif.org/guidelines/dash264";
                     document.getElementById("profile").innerHTML="Profiles: " + profileList;            
                     document.getElementById('profile').style.visibility='visible';
                 }
@@ -768,13 +774,20 @@ function submit()
     
     stringurl[4] = "<?php echo $cmaf; ?>";
     
+
     if($("#dvbprofile").is(':checked'))
         dvb = 1;
     if($("#hbbtvprofile").is(':checked'))
-        hbbtv= 1;       
-            
+        hbbtv= 1;
+    if($("#cmafprofile").is(':checked'))
+        cmaf = "yes";
+    if($("#dashifprofile").is(':checked'))
+        dashif = 1;
+    
+    stringurl[4]=cmaf;
     stringurl[5]=dvb;
     stringurl[6]=hbbtv;
+    stringurl[7]=dashif;
     
     initVariables();
     setUpTreeView();
