@@ -693,7 +693,7 @@ function  progressEventHandler(){
 
 		if( numPeriods > 1 )
 		{
-                    progressText = progressText + "<br><font color='red'> MPD with multiple Periods (" + numPeriods + "). Only segments of the first period will be checked.</font>"
+                    progressText = progressText + "<br><font color='red'> MPD with multiple Periods (" + numPeriods + "). Only segments of the current period will be checked.</font>"
 		}
 		
                 if( dynamicsegtimeline)
@@ -1454,7 +1454,7 @@ function setStatusTextlabel(textToSet)
 
     if( numPeriods > 1 )
     {
-        status = status + "<br><font color='red'> MPD with multiple Periods (" + numPeriods + "). Only segments of the first period were checked.</font>"
+        status = status + "<br><font color='red'> MPD with multiple Periods (" + numPeriods + "). Only segments of the current period were checked.</font>"
     }
 
     if( dynamicsegtimeline)
