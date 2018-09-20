@@ -163,12 +163,13 @@ resultant[i]=resultant[i]+"<br />";
 var Warning=resultant[i].search("Warning") ;
 var WARNING=resultant[i].search("WARNING");
 var errorFound=resultant[i].search("###");
+var cmafError=resultant[i].search("CMAF check violated");
 
-if(Warning===-1 && WARNING===-1 && errorFound===-1){
+if(Warning===-1 && WARNING===-1 && errorFound===-1 && cmafError===-1){
 end0 = end0+" "+resultant[i];
 $( "#info" ).html( end0);
 }
-else if(errorFound===-1){
+else if(errorFound===-1 && cmafError===-1){
     end1 = end1+" "+resultant[i];
     $( "#warning" ).html( end1);
 }

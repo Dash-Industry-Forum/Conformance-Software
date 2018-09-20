@@ -617,7 +617,7 @@ function checkSwitchingSets(){
             checkCMAFTracks($files,$filecount,$opfile,$Adapt);
             
         }
-        fprintf($opfile, "\n-----Conformance checks completed----- ");
+        //fprintf($opfile, "\n-----Conformance checks completed----- ");
         fclose($opfile);
     }
     //Check CMAF Presentation profile conformance
@@ -1002,7 +1002,7 @@ function checkAlignedSwitchingSets(){
         fprintf($opfile, "**'CMAF check violated: Section 7.3.4.4- Aligned Switching Sets SHALL contain two or more CMAF switching sets', but only one found. \n");
 
     }
-    fprintf($opfile, "\n-----Conformance checks completed----- ");
+    //fprintf($opfile, "\n-----Conformance checks completed----- ");
     fclose($opfile);
 }
 
@@ -1343,7 +1343,7 @@ function checkCMAFPresentation()
         }
     }
      
-    fprintf($opfile, "\n-----Conformance checks completed----- ");
+    //fprintf($opfile, "\n-----Conformance checks completed----- ");
     fclose($opfile);
 }
 
@@ -1429,7 +1429,7 @@ function checkSelectionSet()
         }
     }
     
-    fprintf($opfile, "\n-----Conformance checks completed----- ");
+    //fprintf($opfile, "\n-----Conformance checks completed----- ");
     fclose($opfile);
 }
 
