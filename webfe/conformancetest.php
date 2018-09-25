@@ -1331,7 +1331,7 @@ function progress()  //Progress of Segments' Conformance
         lastloc++;  
 
         var location = "temp/"+dirid+"/"+ "Adapt"+(adaptationid-1)+"rep"+(representationid-2) + "sample_data.xml";
-        automate(repid[counting],lastloc,"Estimate");
+        automate(repid[counting],lastloc,"Estimate bitrate");
         tree.setItemImage2( lastloc,'csh_winstyle/calculator.gif','csh_winstyle/calculator.gif','csh_winstyle/calculator.gif');
         kidsloc.push(lastloc);
         urlarray.push("Estimate.php?location=" + location );
