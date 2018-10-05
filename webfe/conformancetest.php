@@ -140,7 +140,8 @@
     }
     
     .site-footer {
-        background: #e0f5f6;
+        background: #909090;
+        margin-top: auto;
     }
 
     .mytext {
@@ -170,8 +171,8 @@
         text-align:center;
         width:600px;
         height:50px;
-        border: 1px solid rgba(0,0,0,0.08);
-        color: #05acfb;
+        border: 1px solid #fff;
+        color: #fff;
         margin-top:0.2%;    
     }
     
@@ -195,8 +196,7 @@
     }
     
     #btn8 {
-        background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #99ccff), color-stop(1, #80b5ea) );
-        background:-moz-linear-gradient( center top, #bddbfa 5%, #80b5ea 100% );
+        background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #007bff), color-stop(1, #007bff) );
         filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#bddbfa', endColorstr='#80b5ea');
         background-color:#bddbfa;
         -webkit-border-top-left-radius:0px;
@@ -212,12 +212,12 @@
         -moz-border-radius-bottomleft:0px;
         border-bottom-left-radius:3px;
         text-indent:-1px;
-        border: 1px solid #2d6898;
+        border: 1px solid #007bff;
         display:inline-block;
-        color: #3B5957;
+        color: #fff;
         font-family: Avantgarde, TeX Gyre Adventor, URW Gothic L, sans-serif;
         font-size:24px;
-        font-weight:bold;
+        font-weight:normal;
         font-style:normal;
         height:50px;
         line-height:40px;
@@ -227,18 +227,14 @@
         position:absolute;
         margin-left:0.5%;
         margin-top: -0.7%;
-        text-shadow: 0px 1px 0px rgba(255, 255, 255, .5);
         -webkit-border-radius: 5px;
         -moz-border-radius: 5px;
         border-radius: 5px;
-        -webkit-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
-        -moz-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
-        box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
     } 
     
     #btn8:hover:enabled {
-        background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #80b5ea), color-stop(1, #bddbfa) );
-        background:-moz-linear-gradient( center top, #80b5ea 5%, #bddbfa 100% );
+        background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #0069d9), color-stop(1, #0069d9) );
+        background:-moz-linear-gradient( center top, #0062cc 5%, #0062cc 100% );
         filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#80b5ea', endColorstr='#bddbfa');
         background-color:#80b5ea;
     }
@@ -250,18 +246,14 @@
     }
     
     #btn8:disabled {
-        background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #C0C0C0), color-stop(1, #808080) );
-        background:-moz-linear-gradient( center top, #808080 5%, #808080 100% );
-        filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#C0C0C0', endColorstr='#808080');
-        background-color:#808080;
-        color:#C0C0C0;
+        background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #fff), color-stop(1, #007bff) );
+        background:-moz-linear-gradient( center top, #007bff 5%, #007bff 100% );
+        background-color:#007bff;
+        color:#fff;
         text-shadow: 0px 1px 0px rgba(255, 255, 255, .5);
         -webkit-border-radius: 5px;
         -moz-border-radius: 5px;
         border-radius: 5px;
-        -webkit-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
-        -moz-box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
-        box-shadow: 0px 6px 0px #2b638f, 0px 3px 15px rgba(0,0,0,.4), inset 0px 1px 0px rgba(255,255,255,.3), inset 0px 0px 3px rgba(255,255,255,.5);
     }
     
     input{
@@ -283,10 +275,10 @@
     }
     
     .box.has-advanced-upload {
-        background-color: #e6e6e6;
-        outline: 1px dashed grey;
+        background-color: #007bff;
+        outline: 1px dashed #007bff;
         outline-offset: -3px;
-        background-color: #baeff5;    
+        background-color: #007bff;      
     }
     
     .box.has-advanced-upload .box__dragndrop {
@@ -754,7 +746,7 @@ function progressupdate()
 
 function submit()
 {
-    document.getElementById("dash").style.marginTop="1%";
+    //document.getElementById("dash").style.marginTop="1%";
     mpdprocessed = false;
     url = document.getElementById("urlinput").value; 
  
@@ -1289,6 +1281,7 @@ function progress()  //Progress of Segments' Conformance
         }
 
 //        console.log("go");
+        adjustFooter();
         clearTimeout(progressTimer);
         setStatusTextlabel("Conformance test completed");
         finishTest();
@@ -1339,6 +1332,7 @@ function progress()  //Progress of Segments' Conformance
 
         counting++;
 
+        adjustFooter();
         progress();
     }
 }
@@ -1488,6 +1482,18 @@ function UrlExists(url, cb){
     });
 }
 
+function adjustFooter(){
+    var docHeight = Math.max( document.body.scrollHeight, document.documentElement.scrollHeight,
+                              document.body.offsetHeight, document.documentElement.offsetHeight,
+                              document.body.clientHeight, document.documentElement.clientHeight
+                    );
+    var footerHeight = $('.site-footer').height();
+    var footerTop = $('.site-footer').position().top + footerHeight;
+    
+    if (footerTop < docHeight) {
+     $('.site-footer').css('margin-top', 1.5*footerHeight + (docHeight - footerTop) + 'px');
+    }
+}
 </script>
 
 <script>
