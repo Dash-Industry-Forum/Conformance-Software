@@ -814,7 +814,7 @@ function submit()
         });}
     else{  // Pass to server only, no JS response model.
            UrlExists(stringurl[0], function(urlStatus){
-                 console.log(urlStatus);
+                 //console.log(urlStatus);
                 if(urlStatus === 200 && stringurl[0]!=""){
                     $.post("process.php",{urlcode:JSON.stringify(stringurl),sessionid:JSON.stringify(SessionID),foldername: dirid});
                 }
@@ -1387,7 +1387,6 @@ function loadXMLDoc(dname)
     }
     xhttp.open("GET",dname,false);
     xhttp.send("");
-    console.log(xhttp.status);
     return xhttp.responseXML;
 }
 
