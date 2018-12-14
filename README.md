@@ -1,3 +1,6 @@
+Deprecated repo, moved to: https://github.com/Dash-Industry-Forum/DASH-IF-Conformance
+
+
 Conformance-Software
 ====================
 
